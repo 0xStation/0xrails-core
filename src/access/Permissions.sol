@@ -11,6 +11,11 @@ abstract contract Permissions is IPermissions {
         VIEWS
     ===========*/
 
+    modifier onlyPermission(bytes8 operation) {
+        _checkPermission(operation, msg.sender);
+        _;
+    }
+
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
         return interfaceId == type(IPermissions).interfaceId;
     }
