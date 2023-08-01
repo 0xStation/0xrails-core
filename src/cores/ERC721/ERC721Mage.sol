@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Mage} from "../Mage.sol";
-import {ERC721A} from "lib/ERC721A/contracts/ERC721A.sol";
+import {Mage} from "src/Mage.sol";
+import {ERC721AUpgradeable} from "./ERC721AUpgradeable.sol";
 import {Strings} from "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 import {Address} from "lib/openzeppelin-contracts/contracts/utils/Address.sol";
 import {
@@ -13,7 +13,7 @@ import {IERC721Mage} from "./interface/IERC721Mage.sol";
 
 /// @notice apply Mage pattern to ERC721 NFTs
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
-contract ERC721Mage is Mage, ERC721A, IERC721Mage {
+contract ERC721Mage is Mage, ERC721AUpgradeable, IERC721Mage {
     constructor(string memory name, string memory symbol) ERC721A(name, symbol) {}
 
     /*==============
