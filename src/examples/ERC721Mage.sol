@@ -40,12 +40,8 @@ contract ERC721Mage is Mage, ERC721A, IERC721Mage {
         SETTERS
     =============*/
 
-    function batchMintTo(address recipient, uint256 quantity) external onlyPermission(Operations.MINT) {
+    function mintTo(address recipient, uint256 quantity) external onlyPermission(Operations.MINT) {
         _safeMint(recipient, quantity);
-    }
-
-    function mintTo(address recipient) external onlyPermission(Operations.MINT) {
-        _safeMint(recipient, 1);
     }
 
     function burn(uint256 tokenId) external {
