@@ -14,14 +14,12 @@ import {IERC721Mage} from "./interface/IERC721Mage.sol";
 /// @notice apply Mage pattern to ERC721 NFTs
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
 contract ERC721Mage is Mage, ERC721AUpgradeable, IERC721Mage {
-    constructor(string memory name, string memory symbol) ERC721A(name, symbol) {}
-
     /*==============
         METADATA
     ==============*/
 
-    function supportsInterface(bytes4 interfaceId) public view override(Mage, ERC721A) returns (bool) {
-        return Mage.supportsInterface(interfaceId) || ERC721A.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view override(Mage, ERC721AUpgradeable) returns (bool) {
+        return Mage.supportsInterface(interfaceId) || ERC721AUpgradeable.supportsInterface(interfaceId);
     }
 
     // must override ERC721A implementation
