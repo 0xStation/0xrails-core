@@ -143,7 +143,7 @@ contract ERC721AUpgradeable is Initializable, IERC721A {
     //     _currentIndex = _startTokenId();
     // }
 
-    function initialize(string memory name, string memory symbol) external initializer {
+    function _initialize(string memory name, string memory symbol) internal onlyInitializing {
         _setName(name);
         _setSymbol(symbol);
         _currentIndex = _startTokenId();
