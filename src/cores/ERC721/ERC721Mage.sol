@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Strings} from "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
-import {Address} from "lib/openzeppelin-contracts/contracts/utils/Address.sol";
+import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
+import {Address} from "openzeppelin-contracts/utils/Address.sol";
 import {Mage} from "../../Mage.sol";
 import {ERC721AUpgradeable} from "./ERC721AUpgradeable.sol";
 import {

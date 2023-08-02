@@ -5,7 +5,7 @@
 pragma solidity ^0.8.4;
 
 import {IERC721A} from "lib/ERC721A/contracts/interfaces/IERC721A.sol";
-import {Initializable} from "lib/openzeppelin-contracts/contracts/proxy/utils/Initializable.sol";
+import {Initializable} from "openzeppelin-contracts/proxy/utils/Initializable.sol";
 
 /**
  * @dev Interface of ERC721 token receiver.

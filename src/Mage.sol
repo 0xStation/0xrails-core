@@ -5,7 +5,7 @@ import {Access} from "./access/Access.sol";
 import {GuardRouter} from "./guard/GuardRouter.sol";
 import {ExtensionRouter} from "./extension/ExtensionRouter.sol";
 import {Execute} from "./lib/Execute.sol";
-import {Multicall} from "lib/openzeppelin-contracts/contracts/utils/Multicall.sol";
+import {Multicall} from "openzeppelin-contracts/utils/Multicall.sol";
 
 /**
  * A Solidity framework for creating complex and evolving onchain structures.
