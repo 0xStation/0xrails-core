@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Mage} from "src/Mage.sol";
-import {ERC721AUpgradeable} from "./ERC721AUpgradeable.sol";
 import {Strings} from "lib/openzeppelin-contracts/contracts/utils/Strings.sol";
 import {Address} from "lib/openzeppelin-contracts/contracts/utils/Address.sol";
+import {Mage} from "../../Mage.sol";
+import {ERC721AUpgradeable} from "./ERC721AUpgradeable.sol";
 import {
     ITokenURIExtension, IContractURIExtension
-} from "src/extension/examples/metadataRouter/IMetadataExtensions.sol";
-import {Operations} from "src/access/examples/Operations.sol";
+} from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
+import {Operations} from "../../access/examples/Operations.sol";
 import {IERC721Mage} from "./interface/IERC721Mage.sol";
 
 /// @notice apply Mage pattern to ERC721 NFTs
