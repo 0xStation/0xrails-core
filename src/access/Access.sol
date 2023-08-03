@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Ownable2Step} from "openzeppelin-contracts/access/Ownable2Step.sol";
-import {Permissions} from "./Permissions.sol";
-import {Operations} from "./examples/Operations.sol";
+import {Permissions} from "./permissions/Permissions.sol";
+import {Operations} from "../lib/Operations.sol";
 
-abstract contract Access is Ownable2Step, Permissions {
+abstract contract Access is Permissions {
+    // support multiple owner implementations, e.g. explicit storage vs NFT-owner (ERC-6551)
+    function owner() public view virtual returns (address) {}
+
     function hasPermission(bytes8 operation, address account) public view override returns (bool) {
         // 3 tiers: has operation permission, has admin permission, or is owner
         if (super.hasPermission(operation, account)) {

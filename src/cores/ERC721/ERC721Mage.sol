@@ -8,7 +8,7 @@ import {ERC721AUpgradeable} from "./ERC721AUpgradeable.sol";
 import {
     ITokenURIExtension, IContractURIExtension
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
-import {Operations} from "../../access/examples/Operations.sol";
+import {Operations} from "../../lib/Operations.sol";
 import {IERC721Mage} from "./interface/IERC721Mage.sol";
 
 /// @notice apply Mage pattern to ERC721 NFTs
