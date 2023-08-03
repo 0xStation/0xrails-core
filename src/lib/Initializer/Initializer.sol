@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {InterfaceInternal} from "./Interface.sol";
-import {Storage} from "./Storage.sol";
+import {IInitializerInternal} from "./IInitializer.sol";
+import {InitializerStorage} from "./InitializerStorage.sol";
 
-abstract contract Initializer is InterfaceInternal {
+abstract contract Initializer is IInitializerInternal {
     /*===============
         MODIFIERS
     ===============*/
 
     modifier initializer() {
-        Storage.Layout storage layout = Storage.layout();
+        InitializerStorage.Layout storage layout = InitializerStorage.layout();
         if (layout._initialized) {
             revert AlreadyInitialized();
         }
@@ -24,7 +24,7 @@ abstract contract Initializer is InterfaceInternal {
     }
 
     modifier onlyInitializing() {
-        Storage.Layout storage layout = Storage.layout();
+        InitializerStorage.Layout storage layout = InitializerStorage.layout();
         if (!layout._initializing) {
             revert NotInitializing();
         }
@@ -37,7 +37,7 @@ abstract contract Initializer is InterfaceInternal {
     ===========*/
 
     function initialized() public view returns (bool) {
-        Storage.Layout storage layout = Storage.layout();
+        InitializerStorage.Layout storage layout = InitializerStorage.layout();
         return layout._initialized;
     }
 }

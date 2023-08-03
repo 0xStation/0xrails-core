@@ -5,11 +5,16 @@ import {InterfaceInternal} from "./Interface.sol";
 import {Storage} from "./Storage.sol";
 
 abstract contract Internal is InterfaceInternal {
-/*===========
+    /*===========
         VIEWS
     ===========*/
+    function foo() external virtual {}
 
-/*=============
+    /*=============
         SETTERS
     =============*/
+
+    /*====================
+        AUTHORITZATION
+    ====================*/
 }

@@ -17,12 +17,6 @@ abstract contract OwnerInternal is IOwnerInternal {
         return OwnerStorage.layout().pendingOwner;
     }
 
-    function _checkOwner() internal view virtual {
-        if (owner() != msg.sender) {
-            revert OwnerUnauthorizedAccount(msg.sender);
-        }
-    }
-
     /*=============
         SETTERS
     =============*/
@@ -50,5 +44,20 @@ abstract contract OwnerInternal is IOwnerInternal {
             revert OwnerUnauthorizedAccount(msg.sender);
         }
         _transferOwnership(newOwner);
+    }
+
+    /*===================
+        AUTHORIZATION
+    ===================*/
+
+    modifier onlyOwner() {
+        _checkOwner();
+        _;
+    }
+
+    function _checkOwner() internal view virtual {
+        if (owner() != msg.sender) {
+            revert OwnerUnauthorizedAccount(msg.sender);
+        }
     }
 }

@@ -29,11 +29,6 @@ abstract contract Extensions is ExtensionsInternal, IExtensionsExternal {
         SETTERS
     =============*/
 
-    modifier canUpdateExtensions() {
-        _checkCanUpdateExtensions();
-        _;
-    }
-
     function addExtension(bytes4 selector, address implementation) public virtual canUpdateExtensions {
         _addExtension(selector, implementation);
     }
@@ -49,6 +44,11 @@ abstract contract Extensions is ExtensionsInternal, IExtensionsExternal {
     /*===================
         AUTHORIZATION
     ===================*/
+
+    modifier canUpdateExtensions() {
+        _checkCanUpdateExtensions();
+        _;
+    }
 
     function _checkCanUpdateExtensions() internal virtual {}
 }

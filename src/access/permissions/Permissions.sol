@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {IPermissionsExternal} from "./interface/IPermissions.sol";
+import {IPermissionsExternal, IPermissions} from "./interface/IPermissions.sol";
 import {PermissionsInternal} from "./PermissionsInternal.sol";
 
 abstract contract Permissions is PermissionsInternal, IPermissionsExternal {
@@ -10,17 +10,12 @@ abstract contract Permissions is PermissionsInternal, IPermissionsExternal {
     ===========*/
 
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
-        return interfaceId == type(IPermissionsExternal).interfaceId;
+        return interfaceId == type(IPermissions).interfaceId;
     }
 
     /*=============
         SETTERS
     =============*/
-
-    modifier canUpdatePermissions() {
-        _checkCanUpdatePermissions();
-        _;
-    }
 
     function grantPermission(bytes8 operation, address account) public virtual canUpdatePermissions {
         _grantPermission(operation, account);
@@ -37,6 +32,11 @@ abstract contract Permissions is PermissionsInternal, IPermissionsExternal {
     /*===================
         AUTHORIZATION
     ===================*/
+
+    modifier canUpdatePermissions() {
+        _checkCanUpdatePermissions();
+        _;
+    }
 
     function _checkCanUpdatePermissions() internal virtual {}
 }

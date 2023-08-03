@@ -9,11 +9,6 @@ abstract contract Owner is OwnerInternal, IOwnerExternal {
         SETTERS
     =============*/
 
-    modifier onlyOwner() {
-        _checkOwner();
-        _;
-    }
-
     function renounceOwnership() public virtual onlyOwner {
         _transferOwnership(address(0));
     }

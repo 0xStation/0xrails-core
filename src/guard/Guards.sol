@@ -17,11 +17,6 @@ abstract contract Guards is GuardsInternal, IGuardsExternal {
         SETTERS
     =============*/
 
-    modifier canUpdateGuards() {
-        _checkCanUpdateGuards();
-        _;
-    }
-
     function addGuard(bytes8 operation, address implementation) public virtual canUpdateGuards {
         _addGuard(operation, implementation);
     }
@@ -37,6 +32,11 @@ abstract contract Guards is GuardsInternal, IGuardsExternal {
     /*===================
         AUTHORIZATION
     ===================*/
+
+    modifier canUpdateGuards() {
+        _checkCanUpdateGuards();
+        _;
+    }
 
     function _checkCanUpdateGuards() internal virtual {}
 }

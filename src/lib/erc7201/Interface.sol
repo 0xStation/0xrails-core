@@ -2,15 +2,17 @@
 pragma solidity ^0.8.13;
 
 interface InterfaceInternal {
-// events
+    // events
 
-// errors
+    // errors
 
-// views
+    // views
+    function foo() external;
 }
 
 interface InterfaceExternal {
-// setters
+    // setters
+    function bar() external;
 }
 
 interface Interface is InterfaceInternal, InterfaceExternal {}

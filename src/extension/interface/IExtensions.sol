@@ -9,8 +9,10 @@ interface IExtensionsInternal {
         string signature;
     }
 
+    // events
     event ExtensionUpdated(bytes4 indexed selector, address indexed oldExtension, address indexed newExtension);
 
+    // errors
     error ExtensionDoesNotExist(bytes4 selector);
     error ExtensionAlreadyExists(bytes4 selector);
     error ExtensionUnchanged(bytes4 selector, address oldImplementation, address newImplementation);

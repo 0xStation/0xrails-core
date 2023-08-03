@@ -8,9 +8,11 @@ interface IPermissionsInternal {
         uint40 updatedAt;
     }
 
+    // events
     event PermissionGranted(bytes8 indexed operation, address indexed account);
     event PermissionRevoked(bytes8 indexed operation, address indexed account);
 
+    // errors
     error PermissionDoesNotExist(bytes8 operation, address account);
     error PermissionAlreadyExists(bytes8 operation, address account);
 

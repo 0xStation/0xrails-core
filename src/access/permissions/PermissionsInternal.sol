@@ -9,21 +9,12 @@ abstract contract PermissionsInternal is IPermissionsInternal {
         VIEWS
     ===========*/
 
-    modifier onlyPermission(bytes8 operation) {
-        _checkPermission(operation, msg.sender);
-        _;
-    }
-
     function hashOperation(string memory name) public pure returns (bytes8) {
         return PermissionsStorage._hashOperation(name);
     }
 
     function hasPermission(bytes8 operation, address account) public view virtual returns (bool) {
         return PermissionsStorage.layout()._permissions[PermissionsStorage._packKey(operation, account)].exists;
-    }
-
-    function _checkPermission(bytes8 operation, address account) internal view {
-        if (!hasPermission(operation, account)) revert PermissionDoesNotExist(operation, account);
     }
 
     function getAllPermissions() public view returns (Permission[] memory permissions) {
@@ -77,5 +68,18 @@ abstract contract PermissionsInternal is IPermissionsInternal {
         layout._permissionKeys.pop(); // delete guard in last index and decrement length
 
         emit PermissionRevoked(operation, account);
+    }
+
+    /*===================
+        AUTHORIZATION
+    ===================*/
+
+    modifier onlyPermission(bytes8 operation) {
+        _checkPermission(operation, msg.sender);
+        _;
+    }
+
+    function _checkPermission(bytes8 operation, address account) internal view {
+        if (!hasPermission(operation, account)) revert PermissionDoesNotExist(operation, account);
     }
 }

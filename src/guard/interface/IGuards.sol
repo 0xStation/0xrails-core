@@ -8,8 +8,10 @@ interface IGuardsInternal {
         uint40 updatedAt;
     }
 
+    // events
     event GuardUpdated(bytes8 indexed operation, address indexed oldGuard, address indexed newGuard);
 
+    // errors
     error GuardDoesNotExist(bytes8 operation);
     error GuardAlreadyExists(bytes8 operation, address guard);
     error GuardUnchanged(bytes8 operation, address oldImplementation, address newImplementation);

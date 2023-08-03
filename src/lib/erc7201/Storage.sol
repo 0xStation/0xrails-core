@@ -5,7 +5,7 @@ library Storage {
     bytes32 internal constant SLOT = bytes32(uint256(keccak256("namespace")) - 1);
 
     struct Layout {
-        bool implementMe;
+        bool b;
     }
 
     function layout() internal pure returns (Layout storage l) {
