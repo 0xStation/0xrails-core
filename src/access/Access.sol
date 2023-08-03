@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Permissions} from "./permissions/Permissions.sol";
-import {Operations} from "./examples/Operations.sol";
+import {Operations} from "../lib/Operations.sol";
 
 abstract contract Access is Permissions {
     // support multiple owner implementations, e.g. explicit storage vs NFT-owner (ERC-6551)
