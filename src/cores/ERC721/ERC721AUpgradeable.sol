@@ -5,7 +5,7 @@
 pragma solidity ^0.8.4;
 
 import {IERC721A} from "lib/ERC721A/contracts/interfaces/IERC721A.sol";
-import {Initializable} from "openzeppelin-contracts/proxy/utils/Initializable.sol";
+import {Initializer} from "../../lib/Initializer/Initializer.sol";
 
 /**
  * @dev Interface of ERC721 token receiver.
@@ -17,21 +17,9 @@ interface ERC721A__IERC721Receiver {
 }
 
 /**
- * @title ERC721A
- *
- * @dev Implementation of the [ERC721](https://eips.ethereum.org/EIPS/eip-721)
- * Non-Fungible Token Standard, including the Metadata extension.
- * Optimized for lower gas during batch mints.
- *
- * Token IDs are minted in sequential order (e.g. 0, 1, 2, 3, ...)
- * starting from `_startTokenId()`.
- *
- * Assumptions:
- *
- * - An owner cannot have more than 2**64 - 1 (max value of uint64) of supply.
- * - The maximum token ID cannot exceed 2**256 - 1 (max value of uint256).
+ * @dev Forked from source ERC721A implementation, but altered constructor into an initializer
  */
-contract ERC721AUpgradeable is Initializable, IERC721A {
+contract ERC721AUpgradeable is Initializer, IERC721A {
     // Bypass for a `--via-ir` bug (https://github.com/chiru-labs/ERC721A/pull/364).
     struct TokenApprovalRef {
         address value;
@@ -135,7 +123,7 @@ contract ERC721AUpgradeable is Initializable, IERC721A {
     //                          CONSTRUCTOR
     // =============================================================
 
-    // replace constructor with initialization
+    // IMPORTANT: replace constructor with initialization
 
     // constructor(string memory name_, string memory symbol_) {
     //     _name = name_;
