@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {ExtensionRouter} from "../../ExtensionRouter.sol";
-import {IExtensionRouter} from "../../interface/IExtensionRouter.sol";
+import {Extensions} from "../../Extensions.sol";
+import {IExtensions} from "../../interface/IExtensions.sol";
 import {IExtensionBeacon, IExtensionBeaconFollower} from "./IExtensionBeacon.sol";
 import {IExtension} from "../../interface/IExtension.sol";
 import {TimeVersionedBeaconFollower as TVBF} from "src/lib/TimeVersionedBeaconFollower.sol";
 
-abstract contract ExtensionBeaconFollower is ExtensionRouter, IExtensionBeaconFollower {
+abstract contract ExtensionBeaconFollower is Extensions, IExtensionBeaconFollower {
     TVBF.TimeVersionedBeacon internal extensionBeacon;
 
     /*===========
@@ -28,7 +28,7 @@ abstract contract ExtensionBeaconFollower is ExtensionRouter, IExtensionBeaconFo
     }
 
     function getAllExtensions() public view override returns (Extension[] memory extensions) {
-        Extension[] memory beaconExtensions = IExtensionRouter(extensionBeacon.implementation).getAllExtensions();
+        Extension[] memory beaconExtensions = IExtensions(extensionBeacon.implementation).getAllExtensions();
         Extension[] memory localExtensions = super.getAllExtensions();
         uint256 lenBeacon = beaconExtensions.length;
         uint256 lenLocal = localExtensions.length;
@@ -61,8 +61,7 @@ abstract contract ExtensionBeaconFollower is ExtensionRouter, IExtensionBeaconFo
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IExtensionRouter).interfaceId
-            || interfaceId == type(IExtensionBeaconFollower).interfaceId;
+        return interfaceId == type(IExtensions).interfaceId || interfaceId == type(IExtensionBeaconFollower).interfaceId;
     }
 
     /*=============

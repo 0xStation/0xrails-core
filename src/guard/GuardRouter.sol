@@ -5,7 +5,7 @@ import {IGuardRouter} from "./interface/IGuardRouter.sol";
 import {IGuard} from "./interface/IGuard.sol";
 import {Contract} from "src/lib/Contract.sol";
 
-abstract contract GuardRouter is IGuardRouter, Contract {
+abstract contract GuardRouter is IGuardRouter {
     // default value for a guard that always rejects
     address constant MAX_ADDRESS = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
 
@@ -85,7 +85,7 @@ abstract contract GuardRouter is IGuardRouter, Contract {
     ===============*/
 
     function _addGuard(bytes8 operation, address implementation) internal {
-        _requireContract(implementation);
+        Contract._requireContract(implementation);
         GuardData memory oldGuard = _guards[operation];
         if (oldGuard.implementation != address(0)) revert GuardAlreadyExists(operation, oldGuard.implementation);
 
@@ -117,7 +117,7 @@ abstract contract GuardRouter is IGuardRouter, Contract {
     }
 
     function _updateGuard(bytes8 operation, address implementation) internal {
-        _requireContract(implementation);
+        Contract._requireContract(implementation);
         GuardData memory oldGuard = _guards[operation];
         if (oldGuard.implementation == address(0)) revert GuardDoesNotExist(operation);
         if (implementation == oldGuard.implementation) {

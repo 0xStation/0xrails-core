@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 
-abstract contract Contract {
+library Contract {
     error InvalidContract(address implementation);
 
     function _requireContract(address implementation) internal view {
