@@ -16,11 +16,25 @@ library GuardsStorage {
         uint40 updatedAt; //       [24..63]
         address implementation; // [64..223]
     }
+    // thought: add parameters `bool useBefore` and `bool useAfter` to configure if a guard should use both checks or just one
+
+    enum CheckType {
+        BEFORE,
+        AFTER
+    }
 
     function layout() internal pure returns (Layout storage l) {
         bytes32 slot = SLOT;
         assembly {
             l.slot := slot
         }
+    }
+
+    function autoReject(address guard) internal pure returns (bool) {
+        return guard == MAX_ADDRESS;
+    }
+
+    function autoApprove(address guard) internal pure returns (bool) {
+        return guard == address(0);
     }
 }

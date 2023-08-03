@@ -12,7 +12,7 @@ abstract contract Extensions is ExtensionsInternal, IExtensionsExternal {
 
     fallback() external payable virtual {
         address implementation = extensionOf(msg.sig);
-        Address.functionDelegateCall(implementation, msg.data);
+        Address.functionDelegateCall(implementation, msg.data); // library checks for target contract existence
     }
 
     receive() external payable virtual {}

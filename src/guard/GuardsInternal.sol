@@ -7,29 +7,48 @@ import {GuardsStorage} from "./GuardsStorage.sol";
 import {Contract} from "../lib/Contract.sol";
 
 abstract contract GuardsInternal is IGuardsInternal {
+    using GuardsStorage for address;
     /*===========
         HOOKS
     ===========*/
 
     modifier checkGuardBeforeAndAfter(bytes8 operation, bytes calldata data) {
-        checkGuardBefore(operation, data);
+        _checkGuard(operation, data, GuardsStorage.CheckType.BEFORE);
         _;
-        checkGuardAfter(operation, data);
+        _checkGuard(operation, data, GuardsStorage.CheckType.AFTER);
     }
 
     function checkGuardBefore(bytes8 operation, bytes memory data) public view returns (address guard) {
-        guard = guardOf(operation);
-        if (guard == GuardsStorage.MAX_ADDRESS || (guard != address(0) && !IGuard(guard).checkBefore(msg.sender, data)))
-        {
-            revert GuardRejected(operation, msg.sender, guard, data);
-        }
+        return _checkGuard(operation, data, GuardsStorage.CheckType.BEFORE);
     }
 
     function checkGuardAfter(bytes8 operation, bytes memory data) public view returns (address guard) {
+        return _checkGuard(operation, data, GuardsStorage.CheckType.AFTER);
+    }
+
+    function _checkGuard(bytes8 operation, bytes memory data, GuardsStorage.CheckType check)
+        internal
+        view
+        returns (address guard)
+    {
         guard = guardOf(operation);
-        if (guard == GuardsStorage.MAX_ADDRESS || (guard != address(0) && !IGuard(guard).checkAfter(msg.sender, data)))
-        {
+        if (guard.autoReject()) {
             revert GuardRejected(operation, msg.sender, guard, data);
+        } else if (guard.autoApprove()) {
+            return guard;
+        }
+
+        bool guardApproves;
+        if (check == GuardsStorage.CheckType.BEFORE) {
+            guardApproves = IGuard(guard).checkBefore(msg.sender, data);
+        } else {
+            guardApproves = IGuard(guard).checkAfter(msg.sender, data);
+        }
+
+        if (!guardApproves) {
+            revert GuardRejected(operation, msg.sender, guard, data);
+        } else {
+            return guard;
         }
     }
 
