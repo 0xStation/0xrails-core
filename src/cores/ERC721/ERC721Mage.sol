@@ -4,6 +4,8 @@ pragma solidity ^0.8.13;
 import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 import {Mage} from "../../Mage.sol";
+import {Owner, OwnerInternal} from "../../access/owner/Owner.sol";
+import {Access} from "../../access/Access.sol";
 import {ERC721AUpgradeable} from "./ERC721AUpgradeable.sol";
 import {
     ITokenURIExtension, IContractURIExtension
@@ -13,7 +15,12 @@ import {IERC721Mage} from "./interface/IERC721Mage.sol";
 
 /// @notice apply Mage pattern to ERC721 NFTs
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
-contract ERC721Mage is Mage, ERC721AUpgradeable, IERC721Mage {
+contract ERC721Mage is Mage, Owner, ERC721AUpgradeable, IERC721Mage {
+    // owner stored explicitly
+    function owner() public view override(Access, OwnerInternal) returns (address) {
+        return OwnerInternal.owner();
+    }
+
     /*==============
         METADATA
     ==============*/

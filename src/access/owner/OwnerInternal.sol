@@ -9,7 +9,7 @@ abstract contract OwnerInternal is IOwnerInternal {
         VIEWS
     ===========*/
 
-    function owner() public view returns (address) {
+    function owner() public view virtual returns (address) {
         return OwnerStorage.layout().owner;
     }
 
