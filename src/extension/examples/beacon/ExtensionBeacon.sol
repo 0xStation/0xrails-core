@@ -18,26 +18,14 @@ abstract contract ExtensionBeacon is ExtensionRouter, IExtensionBeacon {
         returns (address implementation)
     {
         ExtensionData memory extension = _extensions[selector];
-        if (extension.implementation == address(0)) revert SelectorNotExtended(selector);
-        if (extension.info > lastValidUpdatedAt) {
-            revert ExtensionUpdatedAfter(selector, uint40(extension.info), lastValidUpdatedAt);
+        if (extension.implementation == address(0)) revert ExtensionDoesNotExist(selector);
+        if (extension.updatedAt > lastValidUpdatedAt) {
+            revert ExtensionUpdatedAfter(selector, extension.updatedAt, lastValidUpdatedAt);
         }
         return extension.implementation;
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IExtensionRouter).interfaceId || interfaceId == type(IExtensionBeacon).interfaceId;
-    }
-
-    /*=============
-        SETTERS
-    =============*/
-
-    function addExtension(bytes4 selector, address implementation) public override canUpdateExtensions {
-        _addExtension(selector, implementation, uint40(block.timestamp));
-    }
-
-    function updateExtension(bytes4 selector, address implementation) public override canUpdateExtensions {
-        _updateExtension(selector, implementation, uint40(block.timestamp));
     }
 }

@@ -30,7 +30,7 @@ abstract contract GuardRouter is IGuardRouter, Contract {
         for (uint256 i; i < len; i++) {
             bytes8 operation = _operations[i];
             GuardData memory guard = _guards[operation];
-            guards[i] = Guard(operation, guard.implementation);
+            guards[i] = Guard(operation, guard.implementation, guard.updatedAt);
         }
         return guards;
     }
@@ -69,7 +69,7 @@ abstract contract GuardRouter is IGuardRouter, Contract {
     }
 
     function addGuard(bytes8 operation, address implementation) public virtual canUpdateGuards {
-        _addGuard(operation, implementation, 0);
+        _addGuard(operation, implementation);
     }
 
     function removeGuard(bytes8 operation) public virtual canUpdateGuards {
@@ -77,19 +77,19 @@ abstract contract GuardRouter is IGuardRouter, Contract {
     }
 
     function updateGuard(bytes8 operation, address implementation) public virtual canUpdateGuards {
-        _updateGuard(operation, implementation, 0);
+        _updateGuard(operation, implementation);
     }
 
     /*===============
         INTERNALS
     ===============*/
 
-    function _addGuard(bytes8 operation, address implementation, uint80 info) internal {
+    function _addGuard(bytes8 operation, address implementation) internal {
         _requireContract(implementation);
         GuardData memory oldGuard = _guards[operation];
-        if (oldGuard.implementation != address(0)) revert OperationAlreadyGuarded(operation, oldGuard.implementation);
+        if (oldGuard.implementation != address(0)) revert GuardAlreadyExists(operation, oldGuard.implementation);
 
-        GuardData memory guard = GuardData(uint16(_operations.length), implementation, info); // new length will be `len + 1`, so this guard has index `len`
+        GuardData memory guard = GuardData(uint24(_operations.length), uint40(block.timestamp), implementation); // new length will be `len + 1`, so this guard has index `len`
 
         _guards[operation] = guard;
         _operations.push(operation); // set new operation at index and increment length
@@ -99,7 +99,7 @@ abstract contract GuardRouter is IGuardRouter, Contract {
 
     function _removeGuard(bytes8 operation) internal {
         GuardData memory oldGuard = _guards[operation];
-        if (oldGuard.implementation == address(0)) revert OperationNotGuarded(operation);
+        if (oldGuard.implementation == address(0)) revert GuardDoesNotExist(operation);
 
         uint256 lastIndex = _operations.length - 1;
         // if removing extension not at the end of the array, swap extension with last in array
@@ -116,14 +116,15 @@ abstract contract GuardRouter is IGuardRouter, Contract {
         emit GuardUpdated(operation, oldGuard.implementation, address(0));
     }
 
-    function _updateGuard(bytes8 operation, address implementation, uint80 info) internal {
+    function _updateGuard(bytes8 operation, address implementation) internal {
         _requireContract(implementation);
         GuardData memory oldGuard = _guards[operation];
+        if (oldGuard.implementation == address(0)) revert GuardDoesNotExist(operation);
         if (implementation == oldGuard.implementation) {
             revert GuardUnchanged(operation, oldGuard.implementation, implementation);
         }
 
-        GuardData memory newGuard = GuardData(uint16(oldGuard.index), implementation, info);
+        GuardData memory newGuard = GuardData(uint24(oldGuard.index), uint40(block.timestamp), implementation);
         _guards[operation] = newGuard;
 
         emit GuardUpdated(operation, oldGuard.implementation, implementation);

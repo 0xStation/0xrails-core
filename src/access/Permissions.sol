@@ -34,7 +34,7 @@ abstract contract Permissions is IPermissions {
         for (uint256 i; i < len; i++) {
             uint256 permissionKey = _permissionKeys[i];
             (bytes8 operation, address account) = _unpackKey(permissionKey);
-            permissions[i] = Permission(operation, account);
+            permissions[i] = Permission(operation, account, _permissions[permissionKey].updatedAt);
         }
         return permissions;
     }
@@ -49,7 +49,7 @@ abstract contract Permissions is IPermissions {
     }
 
     function grantPermission(bytes8 operation, address account) public virtual canUpdatePermissions {
-        _grantPermission(operation, account, 0);
+        _grantPermission(operation, account);
     }
 
     function revokePermission(bytes8 operation, address account) public virtual canUpdatePermissions {
@@ -78,12 +78,11 @@ abstract contract Permissions is IPermissions {
         if (!hasPermission(operation, account)) revert PermissionDoesNotExist(operation, account);
     }
 
-    function _grantPermission(bytes8 operation, address account, uint232 info) internal {
+    function _grantPermission(bytes8 operation, address account) internal {
         uint256 permissionKey = _packKey(operation, account);
-        PermissionData memory oldPermission = _permissions[permissionKey];
-        if (oldPermission.exists) revert PermissionAlreadyExists(operation, account);
+        if (_permissions[_packKey(operation, account)].exists) revert PermissionAlreadyExists(operation, account);
 
-        PermissionData memory permission = PermissionData(uint16(_permissionKeys.length), true, info); // new length will be `len + 1`, so this permission has index `len`
+        PermissionData memory permission = PermissionData(uint24(_permissionKeys.length), uint40(block.timestamp), true); // new length will be `len + 1`, so this permission has index `len`
 
         _permissions[permissionKey] = permission;
         _permissionKeys.push(permissionKey); // set new permissionKey at index and increment length
@@ -109,14 +108,6 @@ abstract contract Permissions is IPermissions {
         _permissionKeys.pop(); // delete guard in last index and decrement length
 
         emit PermissionRevoked(operation, account);
-    }
-
-    function _updatePermission(bytes8 operation, address account, uint232 info) internal {
-        uint256 permissionKey = _packKey(operation, account);
-        PermissionData storage permission = _permissions[permissionKey];
-        if (!permission.exists) revert PermissionDoesNotExist(operation, account);
-
-        permission.info = info;
     }
 
     /*===================

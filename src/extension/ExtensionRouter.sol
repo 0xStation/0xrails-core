@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {IExtensionRouter} from "./interface/IExtensionRouter.sol";
 import {IExtension} from "./interface/IExtension.sol";
-import {Contract} from "src/lib/Contract.sol";
+import {Contract} from "../lib/Contract.sol";
 
 abstract contract ExtensionRouter is IExtensionRouter, Contract {
     bytes4[] internal _selectors;
@@ -65,7 +65,10 @@ abstract contract ExtensionRouter is IExtensionRouter, Contract {
             bytes4 selector = _selectors[i + 1];
             ExtensionData memory extension = _extensions[selector];
             extensions[i] = Extension(
-                selector, extension.implementation, IExtension(extension.implementation).signatureOf(selector)
+                selector,
+                extension.implementation,
+                extension.updatedAt,
+                IExtension(extension.implementation).signatureOf(selector)
             );
         }
         return extensions;
@@ -81,7 +84,7 @@ abstract contract ExtensionRouter is IExtensionRouter, Contract {
     }
 
     function addExtension(bytes4 selector, address implementation) public virtual canUpdateExtensions {
-        _addExtension(selector, implementation, 0);
+        _addExtension(selector, implementation);
     }
 
     function removeExtension(bytes4 selector) public virtual canUpdateExtensions {
@@ -89,29 +92,30 @@ abstract contract ExtensionRouter is IExtensionRouter, Contract {
     }
 
     function updateExtension(bytes4 selector, address implementation) public virtual canUpdateExtensions {
-        _updateExtension(selector, implementation, 0);
+        _updateExtension(selector, implementation);
     }
 
     /*===============
         INTERNALS
     ===============*/
 
-    function _addExtension(bytes4 selector, address implementation, uint80 info) internal {
+    function _addExtension(bytes4 selector, address implementation) internal {
         _requireContract(implementation);
         ExtensionData memory oldExtension = _extensions[selector];
-        if (oldExtension.implementation != address(0)) revert SelectorAlreadyExtended(selector);
+        if (oldExtension.implementation != address(0)) revert ExtensionAlreadyExists(selector);
 
-        ExtensionData memory extension = ExtensionData(uint16(_selectors.length), implementation, info); // new length will be `len + 1`, so this extension has index `len`
+        ExtensionData memory extension =
+            ExtensionData(uint24(_selectors.length), uint40(block.timestamp), implementation); // new length will be `len + 1`, so this extension has index `len`
 
         _extensions[selector] = extension;
         _selectors.push(selector); // set new selector at index and increment length
 
-        emit Extend(selector, address(0), implementation);
+        emit ExtensionUpdated(selector, address(0), implementation);
     }
 
     function _removeExtension(bytes4 selector) internal {
         ExtensionData memory oldExtension = _extensions[selector];
-        if (oldExtension.implementation == address(0)) revert SelectorNotExtended(selector);
+        if (oldExtension.implementation == address(0)) revert ExtensionDoesNotExist(selector);
 
         uint256 lastIndex = _selectors.length - 1;
         // if removing extension not at the end of the array, swap extension with last in array
@@ -125,20 +129,22 @@ abstract contract ExtensionRouter is IExtensionRouter, Contract {
         delete _extensions[selector];
         _selectors.pop(); // delete extension in last index and decrement length
 
-        emit Extend(selector, oldExtension.implementation, address(0));
+        emit ExtensionUpdated(selector, oldExtension.implementation, address(0));
     }
 
-    function _updateExtension(bytes4 selector, address implementation, uint80 info) internal {
+    function _updateExtension(bytes4 selector, address implementation) internal {
         _requireContract(implementation);
         ExtensionData memory oldExtension = _extensions[selector];
+        if (oldExtension.implementation == address(0)) revert ExtensionDoesNotExist(selector);
         if (implementation == oldExtension.implementation) {
-            revert ExtensionUnchanged(oldExtension.implementation, implementation);
+            revert ExtensionUnchanged(selector, oldExtension.implementation, implementation);
         }
 
-        ExtensionData memory newExtension = ExtensionData(uint16(oldExtension.index), implementation, info);
+        ExtensionData memory newExtension =
+            ExtensionData(uint24(oldExtension.index), uint40(block.timestamp), implementation);
         _extensions[selector] = newExtension;
 
-        emit Extend(selector, oldExtension.implementation, implementation);
+        emit ExtensionUpdated(selector, oldExtension.implementation, implementation);
     }
 
     /*===================

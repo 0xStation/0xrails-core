@@ -20,9 +20,9 @@ abstract contract ExtensionBeaconFollower is ExtensionRouter, IExtensionBeaconFo
 
         // no local implementation, fetch from beacon
         TVBF.TimeVersionedBeacon memory beacon = extensionBeacon;
-        if (beacon.implementation == address(0)) revert SelectorNotExtended(selector);
+        if (beacon.implementation == address(0)) revert ExtensionDoesNotExist(selector);
         implementation = IExtensionBeacon(beacon.implementation).extensionOf(selector, beacon.lastValidUpdatedAt);
-        if (implementation == address(0)) revert SelectorNotExtended(selector);
+        if (implementation == address(0)) revert ExtensionDoesNotExist(selector);
 
         return implementation;
     }

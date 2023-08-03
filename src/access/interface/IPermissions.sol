@@ -3,14 +3,15 @@ pragma solidity ^0.8.13;
 
 interface IPermissions {
     struct PermissionData {
-        uint16 index; // 16 bits
-        bool exists; // 8 bits
-        uint232 info; // 232 bits
+        uint24 index; //     [0..23]
+        uint40 updatedAt; // [24..63]
+        bool exists; //      [64-71]
     }
 
     struct Permission {
         bytes8 operation;
         address account;
+        uint40 updatedAt;
     }
 
     event PermissionGranted(bytes8 indexed operation, address indexed account);
