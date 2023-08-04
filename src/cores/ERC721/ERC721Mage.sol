@@ -12,13 +12,18 @@ import {
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
 import {Operations} from "../../lib/Operations.sol";
 import {IERC721Mage} from "./interface/IERC721Mage.sol";
+import {MageToken} from "../MageToken.sol";
+import {IMageToken} from "../IMageToken.sol";
 
 /// @notice apply Mage pattern to ERC721 NFTs
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
-contract ERC721Mage is Mage, Owner, ERC721AUpgradeable, IERC721Mage {
-    // owner stored explicitly
-    function owner() public view override(Access, OwnerInternal) returns (address) {
-        return OwnerInternal.owner();
+contract ERC721Mage is MageToken, ERC721AUpgradeable, IMageToken, IERC721Mage {
+    function initialize(address owner_, string calldata name_, string calldata symbol_, bytes calldata initData)
+        public
+        initializer
+    {
+        MageToken._initialize(owner_, initData);
+        ERC721AUpgradeable._initialize(name_, symbol_);
     }
 
     /*==============
