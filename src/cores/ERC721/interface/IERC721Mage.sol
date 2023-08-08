@@ -5,4 +5,5 @@ pragma solidity ^0.8.13;
 interface IERC721Mage {
     function mintTo(address recipient, uint256 quantity) external;
     function burn(uint256 tokenId) external;
+    function initialize(address owner, string calldata name, string calldata symbol) external;
 }

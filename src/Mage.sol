@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Multicall} from "openzeppelin-contracts/utils/Multicall.sol";
 import {UUPSUpgradeable} from "openzeppelin-contracts/proxy/utils/UUPSUpgradeable.sol";
+import {Multicall} from "openzeppelin-contracts/utils/Multicall.sol";
 
 import {Access} from "./access/Access.sol";
 import {Guards} from "./guard/Guards.sol";
