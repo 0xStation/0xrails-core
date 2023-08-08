@@ -15,11 +15,11 @@ contract MageToken is Mage, Initializer, Owner {
     }
 
     // initalize owner and make other calls if needed
-    function _initialize(address owner_, bytes calldata initData) internal onlyInitializing {
-        if (initData.length > 0) {
+    function _initialize(address owner_, bytes[] calldata initCalls) internal onlyInitializing {
+        if (initCalls.length > 0) {
             // grant sender owner to ensure they have all permissions for further initialization
             _transferOwnership(msg.sender);
-            Address.functionDelegateCall(address(this), initData);
+            multicall(initCalls);
             // if sender and owner arg are different, transfer ownership to desired address
             if (msg.sender != owner_) {
                 _transferOwnership(owner_);

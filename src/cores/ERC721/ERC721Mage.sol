@@ -16,11 +16,11 @@ import {IMageToken} from "../IMageToken.sol";
 /// @notice apply Mage pattern to ERC721 NFTs
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
 contract ERC721Mage is MageToken, ERC721AUpgradeable, IMageToken, IERC721Mage {
-    function initialize(address owner_, string calldata name_, string calldata symbol_, bytes calldata initData)
+    function initialize(address owner_, string calldata name_, string calldata symbol_, bytes[] calldata initCalls)
         public
         initializer
     {
-        MageToken._initialize(owner_, initData);
+        MageToken._initialize(owner_, initCalls);
         ERC721AUpgradeable._initialize(name_, symbol_);
     }
 

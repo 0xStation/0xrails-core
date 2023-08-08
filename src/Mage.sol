@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Multicall} from "openzeppelin-contracts/utils/Multicall.sol";
 import {UUPSUpgradeable} from "openzeppelin-contracts/proxy/utils/UUPSUpgradeable.sol";
 
 import {Access} from "./access/Access.sol";
@@ -9,6 +8,7 @@ import {Guards} from "./guard/Guards.sol";
 import {Extensions} from "./extension/Extensions.sol";
 import {SupportsInterface} from "./lib/SupportsInterface/SupportsInterface.sol";
 import {Execute} from "./lib/Execute.sol";
+import {Multicall} from "./lib/Multicall.sol";
 
 /**
  * A Solidity framework for creating complex and evolving onchain structures.
