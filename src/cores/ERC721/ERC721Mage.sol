@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import {Address} from "openzeppelin-contracts/utils/Address.sol";
+
 import {Mage} from "../../Mage.sol";
 import {Owner, OwnerInternal} from "../../access/owner/Owner.sol";
 import {Access} from "../../access/Access.sol";
@@ -23,9 +25,28 @@ contract ERC721Mage is Mage, Owner, Initializer, ERC721AUpgradeable, IERC721Mage
         return OwnerInternal.owner();
     }
 
-    function initialize(address owner_, string calldata name_, string calldata symbol_) public initializer {
-        _transferOwnership(owner_);
+    /// @dev cannot call initialize within a proxy constructor, only post-deployment in a factory
+    function initialize(address owner_, string calldata name_, string calldata symbol_, bytes calldata initData)
+        external
+        initializer
+    {
         ERC721AUpgradeable._initialize(name_, symbol_);
+        if (initData.length > 0) {
+            /// @dev if called within a constructor, self-delegatecall will not work because this address does not yet have
+            /// bytecode implementing the init functions -> revert here with nicer error message
+            if (address(this).code.length == 0) {
+                revert CannotInitializeWhileConstructing();
+            }
+            // make msg.sender the owner to ensure they have all permissions for further initialization
+            _transferOwnership(msg.sender);
+            Address.functionDelegateCall(address(this), initData);
+            // if sender and owner arg are different, transfer ownership to desired address
+            if (msg.sender != owner_) {
+                _transferOwnership(owner_);
+            }
+        } else {
+            _transferOwnership(owner_);
+        }
     }
 
     /*==============
