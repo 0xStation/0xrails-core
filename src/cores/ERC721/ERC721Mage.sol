@@ -20,6 +20,11 @@ import {Initializer} from "../../lib/Initializer/Initializer.sol";
 /// @notice apply Mage pattern to ERC721 NFTs
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
 contract ERC721Mage is Mage, Owner, Initializer, ERC721AUpgradeable, IERC721Mage {
+    // override starting tokenId exposed by 721A
+    function _startTokenId() internal view override returns (uint256) {
+        return 1;
+    }
+
     // owner stored explicitly
     function owner() public view override(Access, OwnerInternal) returns (address) {
         return OwnerInternal.owner();
