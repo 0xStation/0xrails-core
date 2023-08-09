@@ -21,7 +21,7 @@ import {Initializer} from "../../lib/Initializer/Initializer.sol";
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
 contract ERC721Mage is Mage, Owner, Initializer, ERC721AUpgradeable, IERC721Mage {
     // override starting tokenId exposed by 721A
-    function _startTokenId() internal view override returns (uint256) {
+    function _startTokenId() internal pure override returns (uint256) {
         return 1;
     }
 

@@ -10,9 +10,9 @@ abstract contract Extensions is ExtensionsInternal, IExtensionsExternal {
         CALL ROUTING
     ==================*/
 
-    fallback() external payable virtual {
+    fallback(bytes calldata) external payable virtual returns (bytes memory) {
         address implementation = extensionOf(msg.sig);
-        Address.functionDelegateCall(implementation, msg.data); // library checks for target contract existence
+        return Address.functionDelegateCall(implementation, msg.data); // library checks for target contract existence
     }
 
     receive() external payable virtual {}
