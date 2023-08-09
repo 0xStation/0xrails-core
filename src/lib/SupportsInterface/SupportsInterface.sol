@@ -34,5 +34,5 @@ abstract contract SupportsInterface is SupportsInterfaceInternal, ISupportsInter
         _;
     }
 
-    function _checkCanUpdateInterfaces() internal virtual {}
+    function _checkCanUpdateInterfaces() internal virtual;
 }

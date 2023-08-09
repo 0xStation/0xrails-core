@@ -50,5 +50,5 @@ abstract contract Extensions is ExtensionsInternal, IExtensionsExternal {
         _;
     }
 
-    function _checkCanUpdateExtensions() internal virtual {}
+    function _checkCanUpdateExtensions() internal virtual;
 }

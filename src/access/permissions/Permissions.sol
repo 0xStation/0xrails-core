@@ -38,5 +38,5 @@ abstract contract Permissions is PermissionsInternal, IPermissionsExternal {
         _;
     }
 
-    function _checkCanUpdatePermissions() internal virtual {}
+    function _checkCanUpdatePermissions() internal virtual;
 }
