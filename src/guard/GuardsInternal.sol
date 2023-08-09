@@ -33,7 +33,7 @@ abstract contract GuardsInternal is IGuardsInternal {
     {
         guard = guardOf(operation);
         if (guard.autoReject()) {
-            revert GuardRejected(operation, msg.sender, guard, data);
+            revert GuardRejected(operation, guard);
         } else if (guard.autoApprove()) {
             return guard;
         }
@@ -46,7 +46,7 @@ abstract contract GuardsInternal is IGuardsInternal {
         }
 
         if (!guardApproves) {
-            revert GuardRejected(operation, msg.sender, guard, data);
+            revert GuardRejected(operation, guard);
         } else {
             return guard;
         }
