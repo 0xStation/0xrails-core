@@ -25,7 +25,7 @@ contract TimeRangeGuard is IGuard {
 
     function getValidTimeRange(address primitive) public view returns (uint40 start, uint40 end) {
         TimeRange memory range = _validTimeRange[primitive];
-        require(start != 0 && end != 0, "RANGE_UNDEFINED");
+        require(range.start != 0 && range.end != 0, "RANGE_UNDEFINED");
         return (range.start, range.end);
     }
 

@@ -77,8 +77,6 @@ abstract contract GuardsInternal is IGuardsInternal {
         SETTERS
     =============*/
 
-    /// @notice Due to EXTCODESIZE check within `_requireContract()`, this function will revert if called 
-    /// during the constructor of the contract at `implementation`. Deploy `implementation` contract first.
     function _addGuard(bytes8 operation, address implementation) internal {
         GuardsStorage.Layout storage layout = GuardsStorage.layout();
         Contract._requireContract(implementation);
@@ -114,8 +112,6 @@ abstract contract GuardsInternal is IGuardsInternal {
         emit GuardUpdated(operation, oldGuard.implementation, address(0));
     }
 
-    /// @notice Due to EXTCODESIZE check within `_requireContract()`, this function will revert if called 
-    /// during the constructor of the contract at `implementation`. Deploy `implementation` contract first.
     function _updateGuard(bytes8 operation, address implementation) internal {
         GuardsStorage.Layout storage layout = GuardsStorage.layout();
         Contract._requireContract(implementation);
