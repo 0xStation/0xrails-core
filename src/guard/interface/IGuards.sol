@@ -15,7 +15,7 @@ interface IGuardsInternal {
     error GuardDoesNotExist(bytes8 operation);
     error GuardAlreadyExists(bytes8 operation, address guard);
     error GuardUnchanged(bytes8 operation, address oldImplementation, address newImplementation);
-    error GuardRejected(bytes8 operation, address operator, address guard, bytes data);
+    error GuardRejected(bytes8 operation, address guard);
 
     // hooks
     function checkGuardBefore(bytes8 operation, bytes calldata data) external view returns (address guard);
