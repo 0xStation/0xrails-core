@@ -9,5 +9,5 @@ abstract contract Execute {
         Address.functionCallWithValue(target, data, value); // library checks for target contract existence
     }
 
-    function _checkCanExecute() internal view virtual {}
+    function _checkCanExecute() internal view virtual;
 }

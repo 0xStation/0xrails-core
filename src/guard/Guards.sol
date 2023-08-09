@@ -17,6 +17,8 @@ abstract contract Guards is GuardsInternal, IGuardsExternal {
         SETTERS
     =============*/
 
+    /// @notice Due to EXTCODESIZE check within `_requireContract()`, this function will revert if called 
+    /// during the constructor of the contract at `implementation`. Deploy `implementation` contract first.
     function addGuard(bytes8 operation, address implementation) public virtual canUpdateGuards {
         _addGuard(operation, implementation);
     }
@@ -38,5 +40,5 @@ abstract contract Guards is GuardsInternal, IGuardsExternal {
         _;
     }
 
-    function _checkCanUpdateGuards() internal virtual {}
+    function _checkCanUpdateGuards() internal virtual;
 }

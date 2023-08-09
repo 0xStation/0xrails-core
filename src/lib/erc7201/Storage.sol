@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 library Storage {
-    bytes32 internal constant SLOT = bytes32(uint256(keccak256("namespace")) - 1);
+    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("namespace")) - 1));
 
     struct Layout {
         bool b;
