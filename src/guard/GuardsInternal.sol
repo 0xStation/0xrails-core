@@ -79,7 +79,10 @@ abstract contract GuardsInternal is IGuardsInternal {
 
     function _addGuard(bytes8 operation, address implementation) internal {
         GuardsStorage.Layout storage layout = GuardsStorage.layout();
-        Contract._requireContract(implementation);
+        // require implementation is contract unless it is MAX_ADDRESS
+        if (implementation != GuardsStorage.MAX_ADDRESS) {
+            Contract._requireContract(implementation); // fails on adding address(0) here
+        }
         GuardsStorage.GuardData memory oldGuard = layout._guards[operation];
         if (oldGuard.implementation != address(0)) revert GuardAlreadyExists(operation, oldGuard.implementation);
 
