@@ -20,7 +20,7 @@ contract PermissionsTest is Test, Permissions {
 
     function test_packKey(bytes8 someOp, address someAddress) public {
         /* 
-        .  Here is a deconstructed rundown including values at each step of function `_packKey()`:
+        .  Here is a deconstructed rundown including values at each step of function `_packKey(adminOp, address(type(uint160).max))`:
         .  ```return (uint256(uint64(operation)) | uint256(uint160(account)) << 64);```     
         .  Left-pack account by typecasting to uint256: 
         .  ```addressToUint == 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff```
@@ -28,7 +28,8 @@ contract PermissionsTest is Test, Permissions {
         .  ```leftShift64 == 0x00000000ffffffffffffffffffffffffffffffffffffffff0000000000000000```
         .  Left-pack operation by typecasting to uint256: 
         .  ```op == 0x000000000000000000000000000000000000000000000000df8b4c520ffe197c```
-        .  Or packed operation against packed + shifted account: `_packedKey == 0xffffffffffffffffffffffffffffffffffffffffdf8b4c520ffe197c`
+        .  Or packed operation against packed + shifted account: 
+        .  ```_packedKey == 0x00000000ffffffffffffffffffffffffffffffffffffffffdf8b4c520ffe197c```
         */
         uint256 addressToUint = uint256(uint160(someAddress)); 
         uint256 leftShift64 = addressToUint << 64;
@@ -37,7 +38,7 @@ contract PermissionsTest is Test, Permissions {
 
         // desired / expected key:
         bytes32 expected = bytes32(abi.encodePacked(someAddress, adminOp)) >> 32;
-        // expected == 0xffffffffffffffffffffffffffffffffffffffffdf8b4c520ffe197c
+        // expected == 0x00000000ffffffffffffffffffffffffffffffffffffffffdf8b4c520ffe197c
         assertEq(bytes32(_packedKey), expected);
 
         // using fuzzed operation
