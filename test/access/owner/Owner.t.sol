@@ -15,6 +15,9 @@ contract OwnerTest is Test, Owner {
     // on deployment, whether within a constructor or proxy `init()` function
     function setUp() public {
         initialOwner = msg.sender;
+
+        vm.expectEmit(true, true, false, true);
+        emit OwnershipTransferred(address(0x0), initialOwner);
         _transferOwnership(initialOwner);
     }
 
@@ -33,6 +36,8 @@ contract OwnerTest is Test, Owner {
     }
 
     function test_renounceOwnership() public {
+        vm.expectEmit(true, true, false, true);
+        emit OwnershipTransferred(initialOwner, address(0x0));
         vm.prank(initialOwner);
         renounceOwnership();
 
@@ -47,6 +52,8 @@ contract OwnerTest is Test, Owner {
     function test_transferOwnership(address someAddress) public {
         vm.assume(someAddress != address(0x0) && someAddress != initialOwner);
 
+        vm.expectEmit(true, true, false, true);
+        emit OwnershipTransferStarted(initialOwner, someAddress);
         vm.prank(initialOwner);
         transferOwnership(someAddress);
 
@@ -66,6 +73,8 @@ contract OwnerTest is Test, Owner {
     function test_acceptOwnership(address someAddress) public {
         vm.assume(someAddress != address(0x0) && someAddress != initialOwner);
 
+        vm.expectEmit(true, true, false, true);
+        emit OwnershipTransferStarted(initialOwner, someAddress);
         // initiate ownership transfer
         vm.startPrank(initialOwner);
         transferOwnership(someAddress);
@@ -76,6 +85,8 @@ contract OwnerTest is Test, Owner {
         acceptOwnership();
 
         vm.stopPrank;
+        vm.expectEmit(true, true, false, true);
+        emit OwnershipTransferred(initialOwner, someAddress);
         // call as pendingOwner
         vm.prank(someAddress);
         acceptOwnership();
