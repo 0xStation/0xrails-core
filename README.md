@@ -9,9 +9,14 @@ Currently, Mage is being developed and applied in production for [GroupOS](https
 
 <img width="566" alt="image" src="https://github.com/0xStation/mage/assets/38736612/f20a4d8b-4b42-4607-ba03-fd635ff1ea94">
 
-### Helpful commands
+## Deployments
 
-Deploy [ERC721Mage](./src/cores/ERC721/ERC721Mage.sol) with:
+| EVM Network | ERC721Mage Address                                                                                                           |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Goerli      | [0x1877bb419cc2d12608683e801e7ca13c896d380b](https://goerli.etherscan.io/address/0x1877bb419cc2d12608683e801e7ca13c896d380b) |
+
+To deploy and verify [ERC721Mage](./src/cores/ERC721/ERC721Mage.sol), run:
+
 ```
 forge create --private-key $PRIVATE_KEY --verify --chain-id 5 --rpc-url $GOERLI_RPC_URL --api-key $ETHERSCAN_API_KEY src/cores/ERC721/ERC721Mage.sol:ERC721Mage
 ```
