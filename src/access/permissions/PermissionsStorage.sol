@@ -24,7 +24,8 @@ library PermissionsStorage {
     }
 
     function _packKey(bytes8 operation, address account) internal pure returns (uint256) {
-        return (uint256(bytes32(operation)) | uint256(uint160(account)) << 64);
+        // `operation` cast to uint64 to keep it on the small Endian side, packed with account to its left; leftmost 4 bytes remain empty
+        return (uint256(uint64(operation)) | uint256(uint160(account)) << 64);
     }
 
     function _unpackKey(uint256 key) internal pure returns (bytes8 operation, address account) {
