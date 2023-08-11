@@ -15,7 +15,7 @@ library PermissionsStorage {
         uint40 updatedAt; //          [24..63]
         bool exists; //              [64-71]
         OperationVariant variant; // [72-79]
-    }
+   } 
 
     enum OperationVariant {
         PERMIT,
