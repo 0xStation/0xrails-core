@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.8;
 
-interface IOwnerInternal {
+interface IOwnableInternal {
     // events
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
@@ -16,11 +16,11 @@ interface IOwnerInternal {
     function pendingOwner() external view returns (address);
 }
 
-interface IOwnerExternal {
+interface IOwnableExternal {
     // setters
     function renounceOwnership() external;
     function transferOwnership(address newOwner) external;
     function acceptOwnership() external;
 }
 
-interface IOwner is IOwnerInternal, IOwnerExternal {}
+interface IOwnable is IOwnableInternal, IOwnableExternal {}

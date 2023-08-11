@@ -2,10 +2,10 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {Owner} from "src/access/owner/Owner.sol";
-import {OwnerStorage} from "src/access/owner/OwnerStorage.sol";
+import {Ownable} from "src/access/ownable/Ownable.sol";
+import {OwnableStorage} from "src/access/ownable/OwnableStorage.sol";
 
-contract OwnerTest is Test, Owner {
+contract OwnableTest is Test, Ownable {
     
     address initialOwner; // to store msg.sender of setUp() deployment
 
@@ -24,13 +24,13 @@ contract OwnerTest is Test, Owner {
     function test_setUp() public returns (bytes32) {
         // sanity checks
         assertEq(owner(), initialOwner);
-        OwnerStorage.Layout storage layout = OwnerStorage.layout();
+        OwnableStorage.Layout storage layout = OwnableStorage.layout();
         assertEq(layout.owner, owner());
         assertEq(layout.pendingOwner, address(0x0));
         
         bytes32 slit;
         assembly { slit := layout.slot }
-        bytes32 slot = keccak256(abi.encode(uint256(keccak256("mage.Owner")) - 1)); //OwnerStorage.SLOT);
+        bytes32 slot = keccak256(abi.encode(uint256(keccak256("mage.Owner")) - 1));
         
         assertEq(slit, slot);
     }
@@ -44,7 +44,7 @@ contract OwnerTest is Test, Owner {
         assertEq(owner(), address(0x0));
         assertEq(pendingOwner(), address(0x0));
         // check storage
-        OwnerStorage.Layout storage layout = OwnerStorage.layout();
+        OwnableStorage.Layout storage layout = OwnableStorage.layout();
         assertEq(layout.owner, address(0x0));
         assertEq(layout.pendingOwner, address(0x0));
     }
@@ -60,7 +60,7 @@ contract OwnerTest is Test, Owner {
         assertEq(owner(), initialOwner); // assert owner remains the same
         assertEq(pendingOwner(), someAddress); // assert pendingOwner set
         // check storage
-        OwnerStorage.Layout storage layout = OwnerStorage.layout();
+        OwnableStorage.Layout storage layout = OwnableStorage.layout();
         assertEq(layout.owner, initialOwner);
         assertEq(layout.pendingOwner, someAddress);
 
@@ -94,7 +94,7 @@ contract OwnerTest is Test, Owner {
         assertEq(owner(), someAddress);
         assertEq(pendingOwner(), address(0x0));
         // check storage
-        OwnerStorage.Layout storage layout = OwnerStorage.layout();
+        OwnableStorage.Layout storage layout = OwnableStorage.layout();
         assertEq(layout.owner, someAddress);
         assertEq(layout.pendingOwner, address(0x0));
     }

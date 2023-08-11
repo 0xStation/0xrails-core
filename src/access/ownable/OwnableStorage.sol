@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.8;
 
-library OwnerStorage {
+library OwnableStorage {
     bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("mage.Owner")) - 1));
 
     struct Layout {

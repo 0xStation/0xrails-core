@@ -15,7 +15,7 @@ import {Execute} from "./lib/Execute.sol";
  * Mage is an acronym for the architecture pattern's four layers: Module, Access, Guard, and Extension.
  * All Mage-inherited contracts receive a batteries-included contract development kit.
  */
-contract Mage is Access, Guards, Extensions, SupportsInterface, Execute, Multicall, UUPSUpgradeable {
+abstract contract Mage is Access, Guards, Extensions, SupportsInterface, Execute, Multicall, UUPSUpgradeable {
     function contractURI() public view virtual returns (string memory uri) {}
 
     function supportsInterface(bytes4 interfaceId)
