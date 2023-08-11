@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {OwnerInternal} from "./OwnerInternal.sol";
-import {IOwnerExternal} from "./interface/IOwner.sol";
+import {OwnableInternal} from "./OwnableInternal.sol";
+import {IOwnableExternal} from "./interface/IOwnable.sol";
 
-abstract contract Owner is OwnerInternal, IOwnerExternal {
+abstract contract Ownable is OwnableInternal, IOwnableExternal {
     /*=============
         SETTERS
     =============*/

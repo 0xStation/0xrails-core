@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 
 import {Mage} from "../../Mage.sol";
-import {Owner, OwnerInternal} from "../../access/owner/Owner.sol";
+import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
 import {ERC721AUpgradeable} from "./ERC721AUpgradeable.sol";
 import {
@@ -13,21 +13,21 @@ import {
 import {Operations} from "../../lib/Operations.sol";
 import {IERC721Mage} from "./interface/IERC721Mage.sol";
 import {Mage} from "../../Mage.sol";
-import {Owner, OwnerInternal} from "../../access/owner/Owner.sol";
+import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
 import {Initializer} from "../../lib/Initializer/Initializer.sol";
 
 /// @notice apply Mage pattern to ERC721 NFTs
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
-contract ERC721Mage is Mage, Owner, Initializer, ERC721AUpgradeable, IERC721Mage {
+contract ERC721Mage is Mage, Ownable, Initializer, ERC721AUpgradeable, IERC721Mage {
     // override starting tokenId exposed by 721A
     function _startTokenId() internal pure override returns (uint256) {
         return 1;
     }
 
     // owner stored explicitly
-    function owner() public view override(Access, OwnerInternal) returns (address) {
-        return OwnerInternal.owner();
+    function owner() public view override(Access, OwnableInternal) returns (address) {
+        return OwnableInternal.owner();
     }
 
     /// @dev cannot call initialize within a proxy constructor, only post-deployment in a factory

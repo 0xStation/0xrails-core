@@ -6,7 +6,7 @@ import {Operations} from "../lib/Operations.sol";
 
 abstract contract Access is Permissions {
     // support multiple owner implementations, e.g. explicit storage vs NFT-owner (ERC-6551)
-    function owner() public view virtual returns (address) {}
+    function owner() public view virtual returns (address);
 
     function hasPermission(bytes8 operation, address account) public view override returns (bool) {
         // 3 tiers: has operation permission, has admin permission, or is owner
