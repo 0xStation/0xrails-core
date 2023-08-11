@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {IPermissionsExternal, IPermissions} from "./interface/IPermissions.sol";
 import {PermissionsInternal} from "./PermissionsInternal.sol";
+import {PermissionsStorage as Storage} from "./PermissionsStorage.sol";
 
 abstract contract Permissions is PermissionsInternal, IPermissionsExternal {
     /*===========
@@ -17,16 +18,20 @@ abstract contract Permissions is PermissionsInternal, IPermissionsExternal {
         SETTERS
     =============*/
 
-    function grantPermission(bytes8 operation, address account) public virtual canUpdatePermissions {
-        _grantPermission(operation, account);
+    function setPermission(bytes8 operation, Storage.OperationVariant variant, address account)
+        public
+        virtual
+        canUpdatePermissions
+    {
+        _setPermission(operation, variant, account);
     }
 
-    function revokePermission(bytes8 operation, address account) public virtual canUpdatePermissions {
-        _revokePermission(operation, account);
+    function removePermission(bytes8 operation, address account) public virtual canUpdatePermissions {
+        _removePermission(operation, account);
     }
 
     function renouncePermission(bytes8 operation) public virtual {
-        _revokePermission(operation, msg.sender);
+        _removePermission(operation, msg.sender);
     }
 
     /*===================

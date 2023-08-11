@@ -6,12 +6,11 @@ import {Ownable} from "src/access/ownable/Ownable.sol";
 import {OwnableStorage} from "src/access/ownable/OwnableStorage.sol";
 
 contract OwnableTest is Test, Ownable {
-    
     address initialOwner; // to store msg.sender of setUp() deployment
 
     bytes err;
 
-    // this `setUp()` function assumes contracts that inherit Owner will call `_transferOwnership(msg.sender)` 
+    // this `setUp()` function assumes contracts that inherit Owner will call `_transferOwnership(msg.sender)`
     // on deployment, whether within a constructor or proxy `init()` function
     function setUp() public {
         initialOwner = msg.sender;
@@ -27,11 +26,13 @@ contract OwnableTest is Test, Ownable {
         OwnableStorage.Layout storage layout = OwnableStorage.layout();
         assertEq(layout.owner, owner());
         assertEq(layout.pendingOwner, address(0x0));
-        
+
         bytes32 slit;
-        assembly { slit := layout.slot }
+        assembly {
+            slit := layout.slot
+        }
         bytes32 slot = keccak256(abi.encode(uint256(keccak256("mage.Owner")) - 1));
-        
+
         assertEq(slit, slot);
     }
 
