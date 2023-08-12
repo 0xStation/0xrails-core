@@ -25,7 +25,7 @@ interface IPermissionsInternal {
 
     // views
     function hashOperation(string memory name) external view returns (bytes8);
-    function hasPermission(bytes8 operation, address account) external view returns (bool);
+    function hasPermission(bytes8 operation, PermissionsStorage.OperationVariant, address account) external view returns (bool);
     function getAllPermissions() external view returns (Permission[] memory permissions);
 }
 
