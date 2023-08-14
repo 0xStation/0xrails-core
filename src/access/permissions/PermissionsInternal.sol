@@ -22,9 +22,8 @@ abstract contract PermissionsInternal is IPermissionsInternal {
         Storage.PermissionData memory permission = Storage.layout()._permissions[Storage._packKey(operation, account)];
 
         bool operationMatch;
-        if (permission.variant == OperationVariant.PERMIT_AND_EXECUTE || permission.variant == variant) operationMatch == true;
+        if (permission.variant == Storage.OperationVariant.PERMIT_AND_EXECUTE || permission.variant == variant) operationMatch = true;
         return permission.exists && operationMatch;
-        // return permission.exists && permission.variant == variant;
     }
 
     function getAllPermissions() public view returns (Permission[] memory permissions) {

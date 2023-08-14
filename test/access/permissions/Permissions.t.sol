@@ -158,7 +158,6 @@ contract PermissionsTest is Test, Permissions {
         assertEq(newPermissionsLength, permissions.length - 1);
         // decrement newPermissionsLength
         assertEq(newPermissions[--newPermissionsLength].operation, 0);
-        return;
         assertEq(newPermissions[newPermissionsLength].account, acc);
         assertEq(newPermissions[newPermissionsLength].updatedAt, 0);
         assertFalse(hasPermission(adminOp, variant, acc));

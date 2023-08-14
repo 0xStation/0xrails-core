@@ -20,7 +20,7 @@ contract OwnableTest is Test, Ownable {
         _transferOwnership(initialOwner);
     }
 
-    function test_setUp() public returns (bytes32) {
+    function test_setUp() public {
         // sanity checks
         assertEq(owner(), initialOwner);
         OwnableStorage.Layout storage layout = OwnableStorage.layout();
