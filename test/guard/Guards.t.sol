@@ -152,17 +152,22 @@ contract GuardsTest is Test, Guards, IGuards {
         bytes8 operation2, 
         bytes8 operation3
     ) public {
+        // prevent overlapping operations
+        vm.assume(operation != operation2 && operation2 != operation3 && operation != operation3);
         addGuard(operation, address(timeRangeGuard));
 
-        // assert timeRangeGuard not setUp
+        // assert timeRangeGuard not setUp- reverts at `getValidTimeRange()` call
         vm.expectRevert('RANGE_UNDEFINED');
         this.checkGuardBefore(operation, '');
         vm.expectRevert('RANGE_UNDEFINED');
         this.checkGuardBefore(operation, '');
 
+        // set up
         timeRangeGuard.setUp(uint40(block.timestamp), type(uint40).max);
 
         timeRangeGuard.getValidTimeRange(address(this));
+        
+        // move forward any amt of blocks to pass `_checkTimeRange()` check on start
         skip(42);
         assertEq(this.checkGuardBefore(operation, ''), address(timeRangeGuard));
         assertEq(this.checkGuardAfter(operation, ''), address(timeRangeGuard));
@@ -172,7 +177,10 @@ contract GuardsTest is Test, Guards, IGuards {
 
         // operation2 is autoapproved by default
         assertEq(_checkGuard(operation2, '', GuardsStorage.CheckType.BEFORE), address(0x0));
-        assertEq(_checkGuard(operation3, '', GuardsStorage.CheckType.BEFORE), autoRejectAddr);
+        // since operation3 is set to autoReject address, expect GuardRejected error
+        err = abi.encodeWithSelector(GuardRejected.selector, operation3, autoRejectAddr);
+        vm.expectRevert(err);
+        _checkGuard(operation3, '', GuardsStorage.CheckType.BEFORE);
     }
 
     /*==============

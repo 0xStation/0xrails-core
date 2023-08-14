@@ -141,10 +141,11 @@ contract PermissionsTest is Test, Permissions {
 
         PermissionsStorage.OperationVariant variant = PermissionsStorage.OperationVariant(_variant % 3 );
 
-        // add permissions
+        // add incrementing permissions starting from adminOp
         for (uint8 i; i < numPermissions; ++i) {
-            // add adminOp Permission to account
-            setPermission(bytes8(uint64(adminOp) + i), variant, acc);
+            bytes8 currentOp = bytes8(uint64(adminOp) + i);
+            // add currentOp Permission to account
+            setPermission(currentOp, variant, acc);
         }
 
         // check added
@@ -156,16 +157,11 @@ contract PermissionsTest is Test, Permissions {
         Permission[] memory newPermissions = getAllPermissions();
         uint256 newPermissionsLength = newPermissions.length;
         assertEq(newPermissionsLength, permissions.length - 1);
-        // decrement newPermissionsLength
-        assertEq(newPermissions[--newPermissionsLength].operation, 0);
-        assertEq(newPermissions[newPermissionsLength].account, acc);
+        // decrement newPermissionsLength to read last index of array
+        assertEq(newPermissions[--newPermissionsLength].account, acc);
         assertEq(newPermissions[newPermissionsLength].updatedAt, 0);
         assertFalse(hasPermission(adminOp, variant, acc));
-
-        err = abi.encodeWithSelector(PermissionDoesNotExist.selector, adminOp, acc);
-        vm.expectRevert(err);
-        _checkPermission(adminOp, variant, acc);
-
+        
         // check storage
         PermissionsStorage.Layout storage layout = PermissionsStorage.layout();
         uint256 permissionKey = PermissionsStorage._packKey(adminOp, acc);
@@ -173,6 +169,12 @@ contract PermissionsTest is Test, Permissions {
         assertFalse(permissionData.exists);
         assertEq(permissionData.updatedAt, 0);
         assertEq(permissionData.index, 0);
+        assertEq(uint8(layout._permissions[permissionKey].variant), 0);
+
+        // _checkPermission should now revert on deleted permission
+        err = abi.encodeWithSelector(PermissionInvalid.selector, adminOp, variant, acc);
+        vm.expectRevert(err);
+        _checkPermission(adminOp, variant, acc);
 
         // remove another Permission
         removePermission(bytes8(uint64(adminOp) + uint64(newPermissionsLength)), acc);
@@ -185,6 +187,8 @@ contract PermissionsTest is Test, Permissions {
 
             removePermission(bytes8(uint64(adminOp) + j), acc);
         }
+        // assert all permissions were removed
+        assertEq(getAllPermissions().length, 0);
     }
 
     function test_removePermissionRevertPermissionDoesNotExist(
