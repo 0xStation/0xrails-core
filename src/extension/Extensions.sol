@@ -29,16 +29,12 @@ abstract contract Extensions is ExtensionsInternal, IExtensionsExternal {
         SETTERS
     =============*/
 
-    function addExtension(bytes4 selector, address implementation) public virtual canUpdateExtensions {
-        _addExtension(selector, implementation);
+    function setExtension(bytes4 selector, address implementation) public virtual canUpdateExtensions {
+        _setExtension(selector, implementation);
     }
 
     function removeExtension(bytes4 selector) public virtual canUpdateExtensions {
         _removeExtension(selector);
-    }
-
-    function updateExtension(bytes4 selector, address implementation) public virtual canUpdateExtensions {
-        _updateExtension(selector, implementation);
     }
 
     /*===================
