@@ -11,10 +11,8 @@ import {
     ITokenURIExtension, IContractURIExtension
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
 import {Operations} from "../../lib/Operations.sol";
+import {PermissionsStorage} from "../../access/permissions/PermissionsStorage.sol";
 import {IERC721Mage} from "./interface/IERC721Mage.sol";
-import {Mage} from "../../Mage.sol";
-import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
-import {Access} from "../../access/Access.sol";
 import {Initializer} from "../../lib/Initializer/Initializer.sol";
 
 /// @notice apply Mage pattern to ERC721 NFTs
@@ -78,13 +76,15 @@ contract ERC721Mage is Mage, Ownable, Initializer, ERC721AUpgradeable, IERC721Ma
         SETTERS
     =============*/
 
-    function mintTo(address recipient, uint256 quantity) external onlyPermission(Operations.MINT) {
+    function mintTo(address recipient, uint256 quantity) 
+        external onlyPermission(Operations.MINT, PermissionsStorage.OperationVariant.EXECUTE) 
+    {
         _safeMint(recipient, quantity);
     }
 
     function burn(uint256 tokenId) external {
         if (msg.sender != ownerOf(tokenId)) {
-            _checkPermission(Operations.BURN, msg.sender);
+            _checkPermission(Operations.BURN, PermissionsStorage.OperationVariant.EXECUTE, msg.sender);
         }
         _burn(tokenId);
     }
