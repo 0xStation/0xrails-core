@@ -112,28 +112,6 @@ contract PermissionsTest is Test, Permissions {
         assertEq(uint8(permissionData2.variant), uint8(variant));
     }
 
-    // function test_setPermissionRevertPermissionAlreadyExists(
-    //     bytes8 operation,
-    //     uint8 _variant,
-    //     bytes8 operation2,
-    //     address acc,
-    //     address acc2
-    // ) public {
-    //     vm.assume(acc != acc2); // either operations or accounts may collide but not both
-
-    //     PermissionsStorage.OperationVariant variant = PermissionsStorage.OperationVariant(_variant % 3 );
-
-    //     setPermission(operation, variant, acc);
-    //     setPermission(operation2, variant, acc2);
-
-    //     // err = abi.encodeWithSelector(PermissionAlreadyExists.selector, operation, acc);
-    //     // vm.expectRevert(err);
-    //     setPermission(operation, variant, acc);
-    //     // err = abi.encodeWithSelector(PermissionAlreadyExists.selector, operation2, acc2);
-    //     // vm.expectRevert(err);
-    //     setPermission(operation2, variant, acc2);
-    // }
-
     function test_removePermission(address acc, uint8 _variant, uint8 numPermissions)
         public
     {
