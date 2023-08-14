@@ -42,19 +42,35 @@ abstract contract ExtensionsInternal is IExtensionsInternal {
         SETTERS
     =============*/
 
-    function _addExtension(bytes4 selector, address implementation) internal {
+    function _setExtension(bytes4 selector, address implementation) internal {
         ExtensionsStorage.Layout storage layout = ExtensionsStorage.layout();
         Contract._requireContract(implementation);
         ExtensionsStorage.ExtensionData memory oldExtension = layout._extensions[selector];
-        if (oldExtension.implementation != address(0)) revert ExtensionAlreadyExists(selector);
+        address oldImplementation = oldExtension.implementation;
+        if (oldImplementation != address(0)) {
+            // update existing Extension, reverting if `implementation` is unchanged
+            if (implementation == oldImplementation) {
+                revert ExtensionUnchanged(selector, oldImplementation, implementation);
+            }
 
-        ExtensionsStorage.ExtensionData memory extension =
-            ExtensionsStorage.ExtensionData(uint24(layout._selectors.length), uint40(block.timestamp), implementation); // new length will be `len + 1`, so this extension has index `len`
+            // update only necessary struct members to save on SSTOREs
+            layout._extensions[selector].updatedAt = uint40(block.timestamp);
+            layout._extensions[selector].implementation = implementation;
+        } else {
+            // add new Extension
+            // new length will be `len + 1`, so this extension has index `len`
+            ExtensionsStorage.ExtensionData memory extension = 
+                ExtensionsStorage.ExtensionData(
+                    uint24(layout._selectors.length), 
+                    uint40(block.timestamp), 
+                    implementation
+                ); 
 
-        layout._extensions[selector] = extension;
-        layout._selectors.push(selector); // set new selector at index and increment length
+            layout._extensions[selector] = extension;
+            layout._selectors.push(selector); // set new selector at index and increment length
+        }
 
-        emit ExtensionUpdated(selector, address(0), implementation);
+        emit ExtensionUpdated(selector, oldImplementation, implementation);
     }
 
     function _removeExtension(bytes4 selector) internal {
@@ -68,28 +84,12 @@ abstract contract ExtensionsInternal is IExtensionsInternal {
             bytes4 lastSelector = layout._selectors[lastIndex];
             ExtensionsStorage.ExtensionData memory lastExtension = layout._extensions[lastSelector];
             lastExtension.index = oldExtension.index;
-            layout._extensions[lastSelector] = lastExtension;
             layout._selectors[oldExtension.index] = lastSelector;
+            layout._extensions[lastSelector] = lastExtension;
         }
         delete layout._extensions[selector];
         layout._selectors.pop(); // delete extension in last index and decrement length
 
         emit ExtensionUpdated(selector, oldExtension.implementation, address(0));
-    }
-
-    function _updateExtension(bytes4 selector, address implementation) internal {
-        ExtensionsStorage.Layout storage layout = ExtensionsStorage.layout();
-        Contract._requireContract(implementation);
-        ExtensionsStorage.ExtensionData memory oldExtension = layout._extensions[selector];
-        if (oldExtension.implementation == address(0)) revert ExtensionDoesNotExist(selector);
-        if (implementation == oldExtension.implementation) {
-            revert ExtensionUnchanged(selector, oldExtension.implementation, implementation);
-        }
-
-        ExtensionsStorage.ExtensionData memory newExtension =
-            ExtensionsStorage.ExtensionData(uint24(oldExtension.index), uint40(block.timestamp), implementation);
-        layout._extensions[selector] = newExtension;
-
-        emit ExtensionUpdated(selector, oldExtension.implementation, implementation);
     }
 }

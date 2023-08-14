@@ -24,9 +24,8 @@ interface IExtensionsInternal {
 
 interface IExtensionsExternal {
     // setters
-    function addExtension(bytes4 selector, address implementation) external;
+    function setExtension(bytes4 selector, address implementation) external;
     function removeExtension(bytes4 selector) external;
-    function updateExtension(bytes4 selector, address implementation) external;
 }
 
 interface IExtensions is IExtensionsInternal, IExtensionsExternal {}
