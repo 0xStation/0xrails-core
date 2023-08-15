@@ -18,30 +18,21 @@ abstract contract Permissions is PermissionsInternal, IPermissionsExternal {
         SETTERS
     =============*/
 
-    function setPermission(bytes8 operation, Storage.OperationVariant variant, address account)
-        public
-        virtual
-        canUpdatePermissions
-    {
-        _setPermission(operation, variant, account);
+    function addPermission(bytes8 operation, address account) public virtual {
+        _checkCanUpdatePermissions();
+        _addPermission(operation, account);
     }
 
-    function removePermission(bytes8 operation, address account) public virtual canUpdatePermissions {
+    function removePermission(bytes8 operation, address account) public virtual {
+        if (account != msg.sender) {
+            _checkCanUpdatePermissions();
+        }
         _removePermission(operation, account);
-    }
-
-    function renouncePermission(bytes8 operation) public virtual {
-        _removePermission(operation, msg.sender);
     }
 
     /*===================
         AUTHORIZATION
     ===================*/
-
-    modifier canUpdatePermissions() {
-        _checkCanUpdatePermissions();
-        _;
-    }
 
     function _checkCanUpdatePermissions() internal virtual;
 }

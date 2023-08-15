@@ -54,34 +54,25 @@ contract PermissionsTest is Test, Permissions {
         assertEq(unpackedAddr, someAddress);
     }
 
-    function test_setPermission(
-        bytes8 operation,
-        uint8 _variant,
-        bytes8 operation2,
-        address acc,
-        address acc2
-    ) public {
+    function test_addPermission(bytes8 operation, bytes8 operation2, address acc, address acc2) public {
         vm.assume(operation != operation2);
 
-        PermissionsStorage.OperationVariant variant = PermissionsStorage.OperationVariant(_variant % 3 );
-
         // ensure permissions do not yet exist
-        bool exists = hasPermission(operation, variant, acc);
-        bool exists2 = hasPermission(operation2, variant, acc2);
+        bool exists = hasPermission(operation, acc);
+        bool exists2 = hasPermission(operation2, acc2);
         assertFalse(exists);
         assertFalse(exists2);
         assertEq(getAllPermissions().length, 0);
 
         // add Permission
-        setPermission(operation, variant, acc);
+        addPermission(operation, acc);
         Permission[] memory firstPermission = getAllPermissions();
         assertEq(firstPermission.length, 1);
         assertEq(firstPermission[0].operation, operation);
-        assertEq(uint8(firstPermission[0].variant), uint8(variant));
         assertEq(firstPermission[0].account, acc);
         assertEq(firstPermission[0].updatedAt, block.timestamp);
-        assertTrue(hasPermission(operation, variant, acc));
-        _checkPermission(operation, variant, acc); // reverts on failure
+        assertTrue(hasPermission(operation, acc));
+        _checkPermission(operation, acc); // reverts on failure
 
         // check storage
         PermissionsStorage.Layout storage layout = PermissionsStorage.layout();
@@ -90,18 +81,16 @@ contract PermissionsTest is Test, Permissions {
         assertTrue(permissionData.exists);
         assertEq(permissionData.updatedAt, block.timestamp);
         assertEq(permissionData.index, 0);
-        assertEq(uint8(permissionData.variant), uint8(variant));
 
         // add Permission2
-        setPermission(operation2, variant, acc2);
+        addPermission(operation2, acc2);
         Permission[] memory twoPermissions = getAllPermissions();
         assertEq(twoPermissions.length, 2);
         assertEq(twoPermissions[1].operation, operation2);
-        assertEq(uint8(twoPermissions[1].variant), uint8(variant));
         assertEq(twoPermissions[1].account, acc2);
         assertEq(twoPermissions[1].updatedAt, block.timestamp);
-        assertTrue(hasPermission(operation2, variant, acc2));
-        _checkPermission(operation2, variant, acc2); // reverts on failure
+        assertTrue(hasPermission(operation2, acc2));
+        _checkPermission(operation2, acc2); // reverts on failure
 
         // check storage
         uint256 permissionKey2 = PermissionsStorage._packKey(operation2, acc2);
@@ -109,21 +98,16 @@ contract PermissionsTest is Test, Permissions {
         assertTrue(permissionData2.exists);
         assertEq(permissionData2.updatedAt, block.timestamp);
         assertEq(permissionData2.index, 1);
-        assertEq(uint8(permissionData2.variant), uint8(variant));
     }
 
-    function test_removePermission(address acc, uint8 _variant, uint8 numPermissions)
-        public
-    {
+    function test_removePermission(address acc, uint8 numPermissions) public {
         vm.assume(numPermissions > 3);
-
-        PermissionsStorage.OperationVariant variant = PermissionsStorage.OperationVariant(_variant % 3 );
 
         // add incrementing permissions starting from adminOp
         for (uint8 i; i < numPermissions; ++i) {
             bytes8 currentOp = bytes8(uint64(adminOp) + i);
             // add currentOp Permission to account
-            setPermission(currentOp, variant, acc);
+            addPermission(currentOp, acc);
         }
 
         // check added
@@ -138,8 +122,8 @@ contract PermissionsTest is Test, Permissions {
         // decrement newPermissionsLength to read last index of array
         assertEq(newPermissions[--newPermissionsLength].account, acc);
         assertEq(newPermissions[newPermissionsLength].updatedAt, 0);
-        assertFalse(hasPermission(adminOp, variant, acc));
-        
+        assertFalse(hasPermission(adminOp, acc));
+
         // check storage
         PermissionsStorage.Layout storage layout = PermissionsStorage.layout();
         uint256 permissionKey = PermissionsStorage._packKey(adminOp, acc);
@@ -147,12 +131,11 @@ contract PermissionsTest is Test, Permissions {
         assertFalse(permissionData.exists);
         assertEq(permissionData.updatedAt, 0);
         assertEq(permissionData.index, 0);
-        assertEq(uint8(layout._permissions[permissionKey].variant), 0);
 
         // _checkPermission should now revert on deleted permission
-        err = abi.encodeWithSelector(PermissionInvalid.selector, adminOp, variant, acc);
+        err = abi.encodeWithSelector(PermissionDoesNotExist.selector, adminOp, acc);
         vm.expectRevert(err);
-        _checkPermission(adminOp, variant, acc);
+        _checkPermission(adminOp, acc);
 
         // remove another Permission
         removePermission(bytes8(uint64(adminOp) + uint64(newPermissionsLength)), acc);
@@ -171,18 +154,15 @@ contract PermissionsTest is Test, Permissions {
 
     function test_removePermissionRevertPermissionDoesNotExist(
         bytes8 operation,
-        uint8 _variant,
         bytes8 operation2,
         address acc,
         address acc2
     ) public {
         vm.assume(acc != acc2); // either operations or accounts may collide but not both
 
-        PermissionsStorage.OperationVariant variant = PermissionsStorage.OperationVariant(_variant % 3 );
-
         // add permissions
-        setPermission(operation, variant, acc);
-        setPermission(operation2, variant, acc2);
+        addPermission(operation, acc);
+        addPermission(operation2, acc2);
 
         // remove them, twice
         removePermission(operation, acc);
@@ -196,29 +176,25 @@ contract PermissionsTest is Test, Permissions {
         removePermission(operation2, acc2);
     }
 
-    function test_renouncePermission(address acc, uint8 numPermissions, uint8 _variant)
-        public
-    {
+    function test_renouncePermission(address acc, uint8 numPermissions) public {
         vm.assume(numPermissions > 0);
         vm.assume(acc != address(0x0));
 
-        PermissionsStorage.OperationVariant variant = PermissionsStorage.OperationVariant(_variant % 3 );
-
         // add permissions for acc
         for (uint256 i; i < numPermissions; ++i) {
-            setPermission(bytes8(uint64(adminOp) + uint64(i)), variant, acc);
+            addPermission(bytes8(uint64(adminOp) + uint64(i)), acc);
         }
 
         assertEq(getAllPermissions().length, numPermissions);
 
         // acc doesn't want them, renounces adminOp then the rest
         vm.prank(acc);
-        this.renouncePermission(adminOp);
+        this.removePermission(adminOp, acc);
         assertEq(getAllPermissions().length, numPermissions--);
         err = abi.encodeWithSelector(PermissionDoesNotExist.selector, adminOp, acc);
         vm.expectRevert(err);
         removePermission(adminOp, acc);
-        assertFalse(hasPermission(adminOp, variant, acc));
+        assertFalse(hasPermission(adminOp, acc));
 
         PermissionsStorage.Layout storage layout = PermissionsStorage.layout();
         vm.startPrank(acc);
@@ -227,7 +203,7 @@ contract PermissionsTest is Test, Permissions {
             ++j;
             bytes8 currentOp = bytes8(uint64(adminOp) + j);
 
-            this.renouncePermission(currentOp);
+            this.removePermission(currentOp, address(this));
             vm.expectRevert(err);
             removePermission(adminOp, acc);
 
@@ -236,11 +212,11 @@ contract PermissionsTest is Test, Permissions {
             assertEq(currentPermissions[j].operation, currentOp);
             assertEq(currentPermissions[j].account, acc);
             assertEq(currentPermissions[j].updatedAt, block.timestamp);
-            assertFalse(hasPermission(currentOp, variant, acc));
+            assertFalse(hasPermission(currentOp, acc));
 
             err = abi.encodeWithSelector(PermissionDoesNotExist.selector, currentOp, acc);
             vm.expectRevert(err);
-            _checkPermission(currentOp, variant, acc);
+            _checkPermission(currentOp, acc);
 
             // check storage
             uint256 permissionKey = PermissionsStorage._packKey(currentOp, acc);
@@ -251,33 +227,6 @@ contract PermissionsTest is Test, Permissions {
         }
 
         assertEq(getAllPermissions().length, 0);
-    }
-
-    function test_renouncePermissionRevertPermissionDoesNotExist(
-        bytes8 operation,
-        uint8 _variant,
-        bytes8 operation2,
-        address acc,
-        address acc2
-    ) public {
-        vm.assume(acc != acc2); // either operations or accounts may collide but not both
-
-        PermissionsStorage.OperationVariant variant = PermissionsStorage.OperationVariant(_variant % 3 );
-
-        // add permissions
-        setPermission(operation, variant, acc);
-        setPermission(operation2, variant, acc2);
-
-        // remove them, twice
-        removePermission(operation, acc);
-        err = abi.encodeWithSelector(PermissionDoesNotExist.selector, operation, acc);
-        vm.expectRevert(err);
-        removePermission(operation, acc);
-
-        removePermission(operation2, acc2);
-        err = abi.encodeWithSelector(PermissionDoesNotExist.selector, operation2, acc2);
-        vm.expectRevert(err);
-        removePermission(operation2, acc2);
     }
 
     /*==============

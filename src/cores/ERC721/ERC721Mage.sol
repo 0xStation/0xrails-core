@@ -76,15 +76,13 @@ contract ERC721Mage is Mage, Ownable, Initializer, ERC721AUpgradeable, IERC721Ma
         SETTERS
     =============*/
 
-    function mintTo(address recipient, uint256 quantity) 
-        external onlyPermission(Operations.MINT, PermissionsStorage.OperationVariant.EXECUTE) 
-    {
+    function mintTo(address recipient, uint256 quantity) external onlyPermission(Operations.MINT) {
         _safeMint(recipient, quantity);
     }
 
     function burn(uint256 tokenId) external {
         if (msg.sender != ownerOf(tokenId)) {
-            _checkPermission(Operations.BURN, PermissionsStorage.OperationVariant.EXECUTE, msg.sender);
+            _checkPermission(Operations.BURN, msg.sender);
         }
         _burn(tokenId);
     }
