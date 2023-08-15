@@ -13,21 +13,12 @@ import {Contract} from "src/lib/Contract.sol";
 contract ExtensionsTest is Test, Extensions {
 
     MetadataRouterExtension public exampleExtension;
-    MaliciousExtension public maliciousExtension;
-
-    bytes4 someSelector;
 
     // to store expected revert errors
     bytes err;
 
     function setUp() public {
         exampleExtension = new MetadataRouterExtension();
-
-        // deploy and selfdestruct() extension for testing fallback
-        maliciousExtension = new MaliciousExtension();
-        someSelector = MetadataRouterExtension.getAllSelectors.selector;
-        setExtension(someSelector, address(maliciousExtension));
-        maliciousExtension.selfDestruct();
     }
 
     function test_setExtension(bytes4 selector) public {
@@ -186,6 +177,31 @@ contract ExtensionsTest is Test, Extensions {
             assertFalse(hasExtended(currentSelector));
             assertEq(getAllExtensions().length, 0);
         }
+    }
+
+    /*==============
+        OVERRIDES
+    ==============*/
+
+    function _checkCanUpdateExtensions() internal override {}
+}
+
+// Test for self destructing MaliciousExtension contract extracted into its own scope for cleanliness
+contract MaliciousExtensionsTest is Test, Extensions {
+
+    MetadataRouterExtension public exampleExtension;
+    MaliciousExtension public maliciousExtension;
+
+    bytes4 someSelector;
+
+    function setUp() public {
+        exampleExtension = new MetadataRouterExtension();
+
+        // deploy and selfdestruct() extension for testing fallback
+        maliciousExtension = new MaliciousExtension();
+        someSelector = MetadataRouterExtension.getAllSelectors.selector;
+        setExtension(someSelector, address(maliciousExtension));
+        maliciousExtension.selfDestruct();
     }
 
     function test_fallbackSelfdestruct() public {
