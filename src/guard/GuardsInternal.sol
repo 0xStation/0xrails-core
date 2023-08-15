@@ -77,22 +77,34 @@ abstract contract GuardsInternal is IGuardsInternal {
         SETTERS
     =============*/
 
-    function _addGuard(bytes8 operation, address implementation) internal {
+    function _setGuard(bytes8 operation, address implementation) internal {
         GuardsStorage.Layout storage layout = GuardsStorage.layout();
         // require implementation is contract unless it is MAX_ADDRESS
         if (implementation != GuardsStorage.MAX_ADDRESS) {
             Contract._requireContract(implementation); // fails on adding address(0) here
         }
+
         GuardsStorage.GuardData memory oldGuard = layout._guards[operation];
-        if (oldGuard.implementation != address(0)) revert GuardAlreadyExists(operation, oldGuard.implementation);
+        if (oldGuard.implementation != address(0)) {
+            // update
 
-        GuardsStorage.GuardData memory guard =
-            GuardsStorage.GuardData(uint24(layout._operations.length), uint40(block.timestamp), implementation); // new length will be `len + 1`, so this guard has index `len`
+            if (implementation == oldGuard.implementation) {
+                revert GuardUnchanged(operation, oldGuard.implementation, implementation);
+            }
+            GuardsStorage.GuardData memory newGuard =
+                GuardsStorage.GuardData(uint24(oldGuard.index), uint40(block.timestamp), implementation);
+            layout._guards[operation] = newGuard;
+        } else {
+            // add
 
-        layout._guards[operation] = guard;
-        layout._operations.push(operation); // set new operation at index and increment length
+            // new length will be `len + 1`, so this guard has index `len`
+            GuardsStorage.GuardData memory guard =
+                GuardsStorage.GuardData(uint24(layout._operations.length), uint40(block.timestamp), implementation);
+            layout._guards[operation] = guard;
+            layout._operations.push(operation); // set new operation at index and increment length
+        }
 
-        emit GuardUpdated(operation, address(0), implementation);
+        emit GuardUpdated(operation, oldGuard.implementation, implementation);
     }
 
     function _removeGuard(bytes8 operation) internal {
@@ -113,21 +125,5 @@ abstract contract GuardsInternal is IGuardsInternal {
         layout._operations.pop(); // delete guard in last index and decrement length
 
         emit GuardUpdated(operation, oldGuard.implementation, address(0));
-    }
-
-    function _updateGuard(bytes8 operation, address implementation) internal {
-        GuardsStorage.Layout storage layout = GuardsStorage.layout();
-        Contract._requireContract(implementation);
-        GuardsStorage.GuardData memory oldGuard = layout._guards[operation];
-        if (oldGuard.implementation == address(0)) revert GuardDoesNotExist(operation);
-        if (implementation == oldGuard.implementation) {
-            revert GuardUnchanged(operation, oldGuard.implementation, implementation);
-        }
-
-        GuardsStorage.GuardData memory newGuard =
-            GuardsStorage.GuardData(uint24(oldGuard.index), uint40(block.timestamp), implementation);
-        layout._guards[operation] = newGuard;
-
-        emit GuardUpdated(operation, oldGuard.implementation, implementation);
     }
 }

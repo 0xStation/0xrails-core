@@ -15,7 +15,7 @@ contract GuardsTest is Test, Guards, IGuards {
 
     TimeRangeGuard public timeRangeGuard;
     address public autoRejectAddr;
-    
+
     // to store expected revert errors
     bytes err;
 
@@ -44,7 +44,7 @@ contract GuardsTest is Test, Guards, IGuards {
         assertEq(getAllGuards().length, 0);
 
         // add guard
-        addGuard(operation, address(timeRangeGuard));
+        setGuard(operation, address(timeRangeGuard));
         Guard[] memory newGuards = getAllGuards();
         assertEq(guardOf(operation), address(timeRangeGuard));
         assertEq(newGuards.length, 1);
@@ -52,35 +52,35 @@ contract GuardsTest is Test, Guards, IGuards {
 
         // add guard2
         TimeRangeGuard secondGuard = new TimeRangeGuard();
-        addGuard(operation2, address(secondGuard));
+        setGuard(operation2, address(secondGuard));
         Guard[] memory nowTwoGuards = getAllGuards();
         assertEq(guardOf(operation2), address(secondGuard));
         assertEq(nowTwoGuards.length, 2);
         assertEq(nowTwoGuards[1].implementation, address(secondGuard));
     }
 
-    // `addGuard()` and `_addGuard()` contain a check of EXTCODESIZE opcode, within `_requireContract()`
+    // `setGuard()` and `_setGuard()` contain a check of EXTCODESIZE opcode, within `_requireContract()`
     // This only causes a revert if those functions are called during the constructor of supplied implementation address
-    // Not an issue since `addGuard()` is behind access control mechanisms. No risk of bricking via `selfdestruct()`
-    function test_addGuardRevertRequireContract(bytes8 operation) public {
+    // Not an issue since `setGuard()` is behind access control mechanisms. No risk of bricking via `selfdestruct()`
+    function test_setGuardRevertRequireContract() public {
         vm.expectRevert();
-        new MaliciousGuard(true);
+        new MaliciousGuard();
     }
-    
+
     function test_removeGuard(uint8 numGuards) public {
         // prevent overflow on last numGuards iter
         vm.assume(numGuards != type(uint8).max && numGuards != 0);
-        
+
         // add existing guard
         bytes8 operation;
-        addGuard(operation, address(timeRangeGuard));
+        setGuard(operation, address(timeRangeGuard));
 
         TimeRangeGuard anotherGuard;
-        for (uint64 i; i < numGuards; ) {
+        for (uint64 i; i < numGuards;) {
             ++i;
             anotherGuard = new TimeRangeGuard();
             // sufficient to differentiate operations
-            addGuard(bytes8(uint64(operation) + i), address(anotherGuard));
+            setGuard(bytes8(uint64(operation) + i), address(anotherGuard));
         }
 
         Guard[] memory allGuards = getAllGuards();
@@ -99,7 +99,7 @@ contract GuardsTest is Test, Guards, IGuards {
         assertEq(guardOf(newOp), address(0x0));
 
         // remove the rest
-        for (uint64 j = uint64(newLength); j > 0; ) {
+        for (uint64 j = uint64(newLength); j > 0;) {
             removeGuard(bytes8(uint64(newOp) - j));
             --j;
         }
@@ -110,77 +110,65 @@ contract GuardsTest is Test, Guards, IGuards {
     function test_updateGuard(uint8 numGuards) public {
         // prevent overflow on last numGuards iter
         vm.assume(numGuards != type(uint8).max && numGuards != 0);
-        
+
         // add existing guard
         bytes8 operation;
-        addGuard(operation, address(timeRangeGuard));
+        setGuard(operation, address(timeRangeGuard));
 
         TimeRangeGuard anotherGuard;
-        for (uint64 i; i < numGuards; ) {
+        for (uint64 i; i < numGuards;) {
             ++i;
             anotherGuard = new TimeRangeGuard();
             // sufficient to differentiate operations
-            addGuard(bytes8(uint64(operation) + i), address(anotherGuard));
+            setGuard(bytes8(uint64(operation) + i), address(anotherGuard));
         }
 
         Guard[] memory allGuards = getAllGuards();
         assertEq(allGuards.length, numGuards + 1);
 
         // update first guard to anotherGuard
-        updateGuard(operation, address(anotherGuard));
+        setGuard(operation, address(anotherGuard));
         assertEq(guardOf(operation), address(anotherGuard));
 
         // update all guards to timeRangeGuard and assert eacha
-        for (uint64 i; i < allGuards.length; ) {
+        for (uint64 i; i < allGuards.length;) {
             bytes8 currentOp = bytes8(uint64(operation) + i);
-            updateGuard(currentOp, address(timeRangeGuard));
+            setGuard(currentOp, address(timeRangeGuard));
             assertEq(guardOf(currentOp), address(timeRangeGuard));
             ++i;
         }
     }
 
-    // `_updateGuard()` and `updateGuard()` contain a check of EXTCODESIZE opcode, within `_requireContract()`
-    // This only causes a revert if those functions are called during the constructor of supplied implementation address
-    // Not an issue since `addGuard()` is behind access control mechanisms. No risk of bricking via `selfdestruct()`
-    function test_updateGuardRevertRequireContract() public {
-        vm.expectRevert();
-        new MaliciousGuard(false);
-    }
-
-    function test_checkGuard(
-        bytes8 operation,
-        bytes8 operation2, 
-        bytes8 operation3
-    ) public {
+    function test_checkGuard(bytes8 operation, bytes8 operation2, bytes8 operation3) public {
         // prevent overlapping operations
         vm.assume(operation != operation2 && operation2 != operation3 && operation != operation3);
-        addGuard(operation, address(timeRangeGuard));
+        setGuard(operation, address(timeRangeGuard));
 
         // assert timeRangeGuard not setUp- reverts at `getValidTimeRange()` call
-        vm.expectRevert('RANGE_UNDEFINED');
-        this.checkGuardBefore(operation, '');
-        vm.expectRevert('RANGE_UNDEFINED');
-        this.checkGuardBefore(operation, '');
+        vm.expectRevert("RANGE_UNDEFINED");
+        this.checkGuardBefore(operation, "");
+        vm.expectRevert("RANGE_UNDEFINED");
+        this.checkGuardBefore(operation, "");
 
         // set up
         timeRangeGuard.setUp(uint40(block.timestamp), type(uint40).max);
 
         timeRangeGuard.getValidTimeRange(address(this));
-        
+
         // move forward any amt of blocks to pass `_checkTimeRange()` check on start
         skip(42);
-        assertEq(this.checkGuardBefore(operation, ''), address(timeRangeGuard));
-        assertEq(this.checkGuardAfter(operation, ''), address(timeRangeGuard));
+        assertEq(this.checkGuardBefore(operation, ""), address(timeRangeGuard));
+        assertEq(this.checkGuardAfter(operation, ""), address(timeRangeGuard));
 
         // autoReject operation3
-        addGuard(operation3, autoRejectAddr);
+        setGuard(operation3, autoRejectAddr);
 
         // operation2 is autoapproved by default
-        assertEq(_checkGuard(operation2, '', GuardsStorage.CheckType.BEFORE), address(0x0));
+        assertEq(_checkGuard(operation2, "", GuardsStorage.CheckType.BEFORE), address(0x0));
         // since operation3 is set to autoReject address, expect GuardRejected error
         err = abi.encodeWithSelector(GuardRejected.selector, operation3, autoRejectAddr);
         vm.expectRevert(err);
-        _checkGuard(operation3, '', GuardsStorage.CheckType.BEFORE);
+        _checkGuard(operation3, "", GuardsStorage.CheckType.BEFORE);
     }
 
     /*==============
@@ -190,17 +178,16 @@ contract GuardsTest is Test, Guards, IGuards {
     function _checkCanUpdateGuards() internal override {}
 }
 
-    /*=========
+/*=========
         POC
     =========*/
 
 // PoC contract to demonstrate revert on EXTCODESIZE check
-// Unrealistic since `addGuard()` should be behind access control mechanisms but good to be aware
+// Unrealistic since `setGuard()` should be behind access control mechanisms but good to be aware
 // Same possibility for Extensions, also protected by access control
 contract MaliciousGuard is IGuard {
-    constructor(bool addGuard) {
-        addGuard ? Guards(msg.sender).addGuard(bytes8('deadbeef'), address(this))
-            : Guards(msg.sender).updateGuard(bytes8('deadbeef'), address(this));
+    constructor() {
+        Guards(msg.sender).setGuard(bytes8("deadbeef"), address(this));
     }
 
     function contractURI() external view returns (string memory) {}

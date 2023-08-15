@@ -13,7 +13,6 @@ interface IGuardsInternal {
 
     // errors
     error GuardDoesNotExist(bytes8 operation);
-    error GuardAlreadyExists(bytes8 operation, address guard);
     error GuardUnchanged(bytes8 operation, address oldImplementation, address newImplementation);
     error GuardRejected(bytes8 operation, address guard);
 
@@ -27,9 +26,8 @@ interface IGuardsInternal {
 
 interface IGuardsExternal {
     // setters
-    function addGuard(bytes8 operation, address implementation) external;
+    function setGuard(bytes8 operation, address implementation) external;
     function removeGuard(bytes8 operation) external;
-    function updateGuard(bytes8 operation, address implementation) external;
 }
 
 interface IGuards is IGuardsInternal, IGuardsExternal {}
