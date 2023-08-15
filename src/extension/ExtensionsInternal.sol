@@ -26,7 +26,7 @@ abstract contract ExtensionsInternal is IExtensionsInternal {
         uint256 len = layout._selectors.length;
         extensions = new Extension[](len);
         for (uint256 i; i < len; i++) {
-            bytes4 selector = layout._selectors[i + 1];
+            bytes4 selector = layout._selectors[i];
             ExtensionsStorage.ExtensionData memory extension = layout._extensions[selector];
             extensions[i] = Extension(
                 selector,
