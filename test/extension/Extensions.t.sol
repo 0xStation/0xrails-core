@@ -21,11 +21,12 @@ contract ExtensionsTest is Test, Extensions {
         exampleExtension = new MetadataRouterExtension();
     }
 
-    function test_setExtension(bytes4 selector) public returns(address) {
+    function test_setExtension(bytes4 selector) public {
         // assert selector has not been extended
         assertFalse(hasExtended(selector));
         assertEq(getAllExtensions().length, 0);
 
+        // add new extension
         vm.expectEmit(true, true, false, true);
         emit ExtensionUpdated(selector, address(0x0), address(exampleExtension));
         setExtension(selector, address(exampleExtension));
@@ -33,17 +34,44 @@ contract ExtensionsTest is Test, Extensions {
         // assert state changes via getters
         assertTrue(hasExtended(selector));
         assertEq(extensionOf(selector), address(exampleExtension));
-        Extension[] memory newExtensions = this.getAllExtensions();
+        Extension[] memory newExtensions = this.getAllExtensions(); // calling externally for better stack traces
         assertEq(newExtensions.length, 1);
+        assertEq(newExtensions[0].selector, selector);
+        assertEq(newExtensions[0].implementation, address(exampleExtension));
+        assertEq(newExtensions[0].updatedAt, uint40(block.timestamp));
+        assertEq(newExtensions[0].signature, exampleExtension.signatureOf(selector));
 
         // check storage directly
         ExtensionsStorage.Layout storage layout = ExtensionsStorage.layout();
         uint256 numSelectors = layout._selectors.length;
         assertEq(numSelectors, 1);
-        ExtensionsStorage.ExtensionData memory setExtension = layout._extensions[selector];
-        assertEq(setExtension.index, 0);
-        assertEq(setExtension.updatedAt, uint40(block.timestamp));
-        assertEq(setExtension.implementation, address(exampleExtension));
+        assertEq(layout._selectors[0], selector);
+        ExtensionsStorage.ExtensionData memory storedExtension = layout._extensions[selector];
+        assertEq(storedExtension.index, 0);
+        assertEq(storedExtension.updatedAt, uint40(block.timestamp));
+        assertEq(storedExtension.implementation, address(exampleExtension));
+
+        // update existing extension to another extension
+        MetadataRouterExtension otherExtension = new MetadataRouterExtension();
+        setExtension(selector, address(otherExtension));
+
+        // assert state changes via getters
+        assertTrue(hasExtended(selector));
+        assertEq(extensionOf(selector), address(otherExtension));
+        Extension[] memory updatedExtensions = this.getAllExtensions();
+        assertEq(updatedExtensions.length, 1);
+        assertEq(updatedExtensions[0].selector, selector);
+        assertEq(updatedExtensions[0].implementation, address(otherExtension));
+        assertEq(updatedExtensions[0].updatedAt, uint40(block.timestamp));
+        assertEq(updatedExtensions[0].signature, otherExtension.signatureOf(selector));
+
+        // check storage directly
+        assertEq(layout._selectors.length, 1);
+        assertEq(layout._selectors[0], selector);
+        ExtensionsStorage.ExtensionData memory newStoredExtension = layout._extensions[selector];
+        assertEq(newStoredExtension.index, 0);
+        assertEq(newStoredExtension.updatedAt, uint40(block.timestamp));
+        assertEq(newStoredExtension.implementation, address(otherExtension));
     }
 
     function test_setExtensionRevertRequireContract(bytes4 selector) public {
@@ -55,13 +83,101 @@ contract ExtensionsTest is Test, Extensions {
         // assert no state changes
         assertFalse(hasExtended(selector));
         assertEq(getAllExtensions().length, 0);
+        ExtensionsStorage.Layout storage layout = ExtensionsStorage.layout();
+        assertEq(layout._selectors.length, 0);
+
+        ExtensionsStorage.ExtensionData memory newStoredExtension = layout._extensions[selector];
+        assertEq(newStoredExtension.index, 0);
+        assertEq(newStoredExtension.updatedAt, 0);
+        assertEq(newStoredExtension.implementation, address(0x0));
     }
 
-    function test_setExtensionRevertExtensionUnchanged() public {}
+    function test_setExtensionRevertExtensionUnchanged(bytes4 selector) public {
+        // add new extension
+        vm.expectEmit(true, true, false, true);
+        emit ExtensionUpdated(selector, address(0x0), address(exampleExtension));
+        setExtension(selector, address(exampleExtension));
 
-    function test_removeExtension() public {}
+        // attempt to update existing extension to same extension
+        err = abi.encodeWithSelector(ExtensionUnchanged.selector, selector, address(exampleExtension), address(exampleExtension));
+        vm.expectRevert(err);
+        setExtension(selector, address(exampleExtension));
 
-    function test_removeExtensionRevertExtensionDoesNotExist() public {}
+        // assert state remains as expected
+        assertTrue(hasExtended(selector));
+        assertEq(extensionOf(selector), address(exampleExtension));
+        Extension[] memory updatedExtensions = this.getAllExtensions();
+        assertEq(updatedExtensions.length, 1);
+        assertEq(updatedExtensions[0].selector, selector);
+        assertEq(updatedExtensions[0].implementation, address(exampleExtension));
+        assertEq(updatedExtensions[0].updatedAt, uint40(block.timestamp));
+        assertEq(updatedExtensions[0].signature, exampleExtension.signatureOf(selector));
+    }
+
+    function test_removeExtension(bytes4 selector, uint8 numExtensions) public {
+        // assert selector has not been extended
+        assertFalse(hasExtended(selector));
+        assertEq(getAllExtensions().length, 0);
+
+        // add new extensions
+        for (uint8 i; i < numExtensions; ++i) {
+            bytes4 currentSelector = bytes4(uint32(selector) + i);
+            setExtension(currentSelector, address(exampleExtension));
+
+            // assert extension was set 
+            assertTrue(hasExtended(currentSelector));
+            assertEq(extensionOf(currentSelector), address(exampleExtension));
+        }
+
+        // check array length
+        Extension[] memory newExtensions = this.getAllExtensions();
+        assertEq(newExtensions.length, numExtensions);
+
+        ExtensionsStorage.Layout storage layout = ExtensionsStorage.layout();
+        for (uint8 j; j < numExtensions; ++j) {
+            // check all added correctly then remove
+            bytes4 jSelector = bytes4(uint32(selector) + j);
+            assertEq(newExtensions[j].selector, jSelector);
+            assertEq(newExtensions[j].implementation, address(exampleExtension));
+            assertEq(newExtensions[j].updatedAt, uint40(block.timestamp));
+            assertEq(newExtensions[j].signature, exampleExtension.signatureOf(jSelector));
+
+            // remove extensions
+            removeExtension(jSelector);
+
+            // check removal of specific selector
+            assertFalse(hasExtended(jSelector));
+            assertEq(extensionOf(jSelector), address(0x0));
+            ExtensionsStorage.ExtensionData memory newStoredExtension = layout._extensions[jSelector];
+            assertEq(newStoredExtension.index, 0);
+            assertEq(newStoredExtension.updatedAt, 0);
+            assertEq(newStoredExtension.implementation, address(0x0));
+        }
+
+        // assert extensions were all removed from arrays
+        Extension[] memory removedExtensions = this.getAllExtensions();
+        assertEq(removedExtensions.length, 0);
+        assertEq(layout._selectors.length, 0);
+    }
+
+    function test_removeExtensionRevertExtensionDoesNotExist(bytes4 selector, uint32 numReverts) public {
+        for (uint32 i; i < numReverts; ++i) {
+            bytes4 currentSelector = bytes4(uint32(selector) + i);
+
+            // assert current selector has not been extended
+            assertFalse(hasExtended(currentSelector));
+            assertEq(getAllExtensions().length, 0);
+
+            // attempt to remove nonexistent extensions
+            err = abi.encodeWithSelector(ExtensionDoesNotExist.selector, currentSelector);
+            vm.expectRevert(err);
+            removeExtension(currentSelector);
+
+            // reassert nothing has changed
+            assertFalse(hasExtended(currentSelector));
+            assertEq(getAllExtensions().length, 0);
+        }
+    }
 
     function test_fallback() public {
         // how does functionDelegateCall() respond to selfdestructed addresses
