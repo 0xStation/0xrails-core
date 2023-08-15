@@ -14,13 +14,6 @@ library PermissionsStorage {
         uint24 index; //              [0..23]
         uint40 updatedAt; //          [24..63]
         bool exists; //              [64-71]
-        OperationVariant variant; // [72-79]
-   } 
-
-    enum OperationVariant {
-        PERMIT,
-        EXECUTE,
-        PERMIT_AND_EXECUTE
     }
 
     function layout() internal pure returns (Layout storage l) {

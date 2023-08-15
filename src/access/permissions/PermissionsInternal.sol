@@ -13,17 +13,9 @@ abstract contract PermissionsInternal is IPermissionsInternal {
         return Storage._hashOperation(name);
     }
 
-    function hasPermission(bytes8 operation, Storage.OperationVariant variant, address account)
-        public
-        view
-        virtual
-        returns (bool)
-    {
+    function hasPermission(bytes8 operation, address account) public view virtual returns (bool) {
         Storage.PermissionData memory permission = Storage.layout()._permissions[Storage._packKey(operation, account)];
-
-        bool operationMatch;
-        if (permission.variant == Storage.OperationVariant.PERMIT_AND_EXECUTE || permission.variant == variant) operationMatch = true;
-        return permission.exists && operationMatch;
+        return permission.exists;
     }
 
     function getAllPermissions() public view returns (Permission[] memory permissions) {
@@ -34,7 +26,7 @@ abstract contract PermissionsInternal is IPermissionsInternal {
             uint256 permissionKey = layout._permissionKeys[i];
             (bytes8 operation, address account) = Storage._unpackKey(permissionKey);
             Storage.PermissionData memory permission = layout._permissions[permissionKey];
-            permissions[i] = Permission(operation, permission.variant, account, permission.updatedAt);
+            permissions[i] = Permission(operation, account, permission.updatedAt);
         }
         return permissions;
     }
@@ -43,26 +35,20 @@ abstract contract PermissionsInternal is IPermissionsInternal {
         SETTERS
     =============*/
 
-    function _setPermission(bytes8 operation, Storage.OperationVariant variant, address account) internal {
+    function _addPermission(bytes8 operation, address account) internal {
         Storage.Layout storage layout = Storage.layout();
         uint256 permissionKey = Storage._packKey(operation, account);
         if (layout._permissions[permissionKey].exists) {
-            // update permission
-
-            layout._permissions[permissionKey].updatedAt = uint40(block.timestamp);
-            layout._permissions[permissionKey].variant = variant;
-        } else {
-            // add new permission
-
-            // new length will be `len + 1`, so this permission has index `len`
-            Storage.PermissionData memory permission =
-                Storage.PermissionData(uint24(layout._permissionKeys.length), uint40(block.timestamp), true, variant);
-
-            layout._permissions[permissionKey] = permission;
-            layout._permissionKeys.push(permissionKey); // set new permissionKey at index and increment length
+            revert PermissionAlreadyExists(operation, account);
         }
+        // new length will be `len + 1`, so this permission has index `len`
+        Storage.PermissionData memory permission =
+            Storage.PermissionData(uint24(layout._permissionKeys.length), uint40(block.timestamp), true);
 
-        emit PermissionUpdated(operation, account, variant);
+        layout._permissions[permissionKey] = permission;
+        layout._permissionKeys.push(permissionKey); // set new permissionKey at index and increment length
+
+        emit PermissionAdded(operation, account);
     }
 
     function _removePermission(bytes8 operation, address account) internal {
@@ -85,19 +71,19 @@ abstract contract PermissionsInternal is IPermissionsInternal {
         delete layout._permissions[permissionKey];
         layout._permissionKeys.pop(); // delete guard in last index and decrement length
 
-        emit PermissionRemoved(operation, account, oldPermissionData.variant);
+        emit PermissionRemoved(operation, account);
     }
 
     /*===================
         AUTHORIZATION
     ===================*/
 
-    modifier onlyPermission(bytes8 operation, Storage.OperationVariant variant) {
-        _checkPermission(operation, variant, msg.sender);
+    modifier onlyPermission(bytes8 operation) {
+        _checkPermission(operation, msg.sender);
         _;
     }
 
-    function _checkPermission(bytes8 operation, Storage.OperationVariant variant, address account) internal view {
-        if (!hasPermission(operation, variant, account)) revert PermissionInvalid(operation, variant, account);
+    function _checkPermission(bytes8 operation, address account) internal view {
+        if (!hasPermission(operation, account)) revert PermissionDoesNotExist(operation, account);
     }
 }
