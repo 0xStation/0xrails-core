@@ -8,6 +8,7 @@ library Operations {
     bytes8 constant TRANSFER = 0x5cc15eb80ba37777; // hashOperation("TRANSFER");
     bytes8 constant METADATA = 0x0e5de49ee56c0bd3; // hashOperation("METADATA");
 
+    // TODO: deprecate and find another way versus anti-pattern
     // permits are enabling the permission, but only through set up modules/extension logic
     // e.g. someone can approve new members to mint, but cannot circumvent the module for taking payment
     bytes8 constant MINT_PERMIT = 0x0b6c53f325d325d3; // hashOperation("MINT_PERMIT");
