@@ -13,12 +13,21 @@ import {Contract} from "src/lib/Contract.sol";
 contract ExtensionsTest is Test, Extensions {
 
     MetadataRouterExtension public exampleExtension;
+    MaliciousExtension public maliciousExtension;
+
+    bytes4 someSelector;
 
     // to store expected revert errors
     bytes err;
 
     function setUp() public {
         exampleExtension = new MetadataRouterExtension();
+
+        // deploy and selfdestruct() extension for testing fallback
+        maliciousExtension = new MaliciousExtension();
+        someSelector = MetadataRouterExtension.getAllSelectors.selector;
+        setExtension(someSelector, address(maliciousExtension));
+        maliciousExtension.selfDestruct();
     }
 
     function test_setExtension(bytes4 selector) public {
@@ -173,21 +182,42 @@ contract ExtensionsTest is Test, Extensions {
             vm.expectRevert(err);
             removeExtension(currentSelector);
 
-            // reassert nothing has changed
+            // reassert no state changes
             assertFalse(hasExtended(currentSelector));
             assertEq(getAllExtensions().length, 0);
         }
     }
 
-    function test_fallback() public {
-        // how does functionDelegateCall() respond to selfdestructed addresses
-        // enough access control?
-    }
+    function test_fallbackSelfdestruct() public {
+        // test functionDelegateCall() with selfdestructed address
+        // assert maliciousExtension has been selfdestructed
+        uint256 a;
+        address addr = address(maliciousExtension);
+        assembly{
+            a := extcodesize(addr)
+        }
+        assertEq(a, 0);
 
+        // all calls to functions with selector pointing to selfdestructed address now revert
+        // not an issue since setting implementation involved access control in the first place
+        // and unrecognized function signatures result in delegation to address(0x0) which revert
+        bytes memory payload = abi.encodeWithSelector(someSelector);
+        address(this).call(payload);
+
+        // can still remove or update to a new implementation
+        removeExtension(someSelector);
+        setExtension(someSelector, address(exampleExtension));
+    }
 
     /*==============
         OVERRIDES
     ==============*/
 
     function _checkCanUpdateExtensions() internal override {}
+}
+
+contract MaliciousExtension is MetadataRouterExtension {
+    function selfDestruct() public {
+        selfdestruct(payable(address(0x0)));
+    }
 }
