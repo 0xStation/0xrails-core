@@ -25,7 +25,7 @@ contract MetadataRouterExtension is
     function signatureOf(bytes4 selector) public pure override returns (string memory) {
         if (selector == this.ext_tokenURI.selector) {
             return "ext_tokenURI(uint256)";
-        } else if (selector == this.contractURI.selector) {
+        } else if (selector == this.ext_contractURI.selector) {
             return "ext_contractURI()";
         } else {
             return "";
