@@ -13,11 +13,11 @@ import {
 import {Operations} from "../../lib/Operations.sol";
 import {PermissionsStorage} from "../../access/permissions/PermissionsStorage.sol";
 import {IERC721Mage} from "./interface/IERC721Mage.sol";
-import {Initializer} from "../../lib/Initializer/Initializer.sol";
+import {Initializable} from "../../lib/initializable/Initializable.sol";
 
 /// @notice apply Mage pattern to ERC721 NFTs
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
-contract ERC721Mage is Mage, Ownable, Initializer, ERC721AUpgradeable, IERC721Mage {
+contract ERC721Mage is Mage, Ownable, Initializable, ERC721AUpgradeable, IERC721Mage {
     // override starting tokenId exposed by 721A
     function _startTokenId() internal pure override returns (uint256) {
         return 1;
