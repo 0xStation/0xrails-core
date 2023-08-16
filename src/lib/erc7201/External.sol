@@ -16,6 +16,6 @@ abstract contract External is Internal, InterfaceExternal {
     function bar() external virtual {}
 
     /*====================
-        AUTHORITZATION
+        AUTHORIZATION
     ====================*/
 }

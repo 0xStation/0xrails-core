@@ -30,6 +30,6 @@ abstract contract SupportsInterfaceInternal is ISupportsInterfaceInternal {
     }
 
     /*====================
-        AUTHORITZATION
+        AUTHORIZATION
     ====================*/
 }

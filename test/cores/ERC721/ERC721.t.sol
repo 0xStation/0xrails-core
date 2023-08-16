@@ -18,6 +18,9 @@ contract ERC721Test is Test {
 
     function test_setUp() public {
         // sanity checks
+        assertEq(erc721.name(), "ERC721");
+        assertEq(erc721.symbol(), "ERC721");
+        assertEq(erc721.tokenURI(0), "uri");
     }
 
     function test_mint(address to, uint8 quantity) public {
@@ -54,6 +57,7 @@ contract ERC721Test is Test {
     }
 
     function test_transfer(address from, address to, uint8 mintQuantity, uint8 transferQuantity) public {
+        vm.assume(to != address(0x0)); // prevent balanceOf() revert on address(0x0)
         vm.assume(mintQuantity > 0);
         vm.assume(transferQuantity < mintQuantity);
 
@@ -72,6 +76,7 @@ contract ERC721Test is Test {
     }
 }
 
+/// @dev Harness contract to publicly expose internal functions for testing purposes
 contract ERC721Harness is ERC721 {
 
     function name() public pure override returns (string memory) {

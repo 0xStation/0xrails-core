@@ -57,6 +57,6 @@ abstract contract ERC721 is ERC721Internal, IERC721External {
     }
 
     /*====================
-        AUTHORITZATION
+        AUTHORIZATION
     ====================*/
 }

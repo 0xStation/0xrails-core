@@ -23,7 +23,7 @@ abstract contract TokenMetadata is TokenMetadataInternal, ITokenMetadataExternal
     }
 
     /*====================
-        AUTHORITZATION
+        AUTHORIZATION
     ====================*/
 
     modifier canUpdateTokenMetadata() {

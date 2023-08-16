@@ -315,7 +315,7 @@ abstract contract ERC721Internal is Initializable, IERC721Internal {
     }
 
     /*====================
-        AUTHORITZATION
+        AUTHORIZATION
     ====================*/
 
     function _checkCanTransfer(address account, uint256 tokenId) internal virtual {
