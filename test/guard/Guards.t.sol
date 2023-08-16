@@ -147,8 +147,6 @@ contract GuardsTest is Test, Guards, IGuards {
         // assert timeRangeGuard not setUp- reverts at `getValidTimeRange()` call
         vm.expectRevert("RANGE_UNDEFINED");
         this.checkGuardBefore(operation, "");
-        vm.expectRevert("RANGE_UNDEFINED");
-        this.checkGuardBefore(operation, "");
 
         // set up
         timeRangeGuard.setUp(uint40(block.timestamp), type(uint40).max);
@@ -157,18 +155,21 @@ contract GuardsTest is Test, Guards, IGuards {
 
         // move forward any amt of blocks to pass `_checkTimeRange()` check on start
         skip(42);
-        assertEq(this.checkGuardBefore(operation, ""), address(timeRangeGuard));
-        assertEq(this.checkGuardAfter(operation, ""), address(timeRangeGuard));
+        (address guard, bytes memory checkBeforeData) = this.checkGuardBefore(operation, "");
+        assertEq(guard, address(timeRangeGuard));
+        this.checkGuardAfter(guard, checkBeforeData, ""); // should not revert
 
         // autoReject operation3
         setGuard(operation3, autoRejectAddr);
 
         // operation2 is autoapproved by default
-        assertEq(_checkGuard(operation2, "", GuardsStorage.CheckType.BEFORE), address(0x0));
+        (guard, checkBeforeData) = this.checkGuardBefore(operation2, "");
+        assertEq(guard, address(0x0));
+        assertEq(checkBeforeData, "");
         // since operation3 is set to autoReject address, expect GuardRejected error
         err = abi.encodeWithSelector(GuardRejected.selector, operation3, autoRejectAddr);
         vm.expectRevert(err);
-        _checkGuard(operation3, "", GuardsStorage.CheckType.BEFORE);
+        this.checkGuardBefore(operation3, "");
     }
 
     /*==============
@@ -191,6 +192,6 @@ contract MaliciousGuard is IGuard {
     }
 
     function contractURI() external view returns (string memory) {}
-    function checkBefore(address operator, bytes calldata data) external view returns (bool) {}
-    function checkAfter(address operator, bytes calldata data) external view returns (bool) {}
+    function checkBefore(address operator, bytes calldata data) external view returns (bytes memory checkBeforeData) {}
+    function checkAfter(bytes calldata checkBeforeData, bytes calldata data) external view {}
 }

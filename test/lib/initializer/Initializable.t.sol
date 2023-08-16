@@ -94,7 +94,7 @@ contract InitializableTest is Test {
             this
         );
         vm.expectRevert("Address: low-level delegate call failed");
-        ERC721Mage newProxy = ERC721Mage(payable(address(new ERC1967Proxy(address(implementation), constructorInitializeData))));
+        ERC721Mage(payable(address(new ERC1967Proxy(address(implementation), constructorInitializeData))));
     }
 
     function test_proxyRevertUnauthorized() public {        
