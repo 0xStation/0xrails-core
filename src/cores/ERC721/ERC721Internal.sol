@@ -19,15 +19,6 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
         VIEWS
     ===========*/
 
-    // metadata
-    /// @dev all need to be overridden
-
-    function name() public view virtual returns (string memory);
-
-    function symbol() public view virtual returns (string memory);
-
-    function tokenURI(uint256 tokenId) public view virtual returns (string memory);
-
     // global token values
 
     function _startTokenId() internal view virtual returns (uint256) {

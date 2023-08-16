@@ -26,7 +26,7 @@ contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC72
     function owner() public view override(Access, OwnableInternal) returns (address) {
         return OwnableInternal.owner();
     }
-    
+
     /// @dev cannot call initialize within a proxy constructor, only post-deployment in a factory
     function initialize(address owner_, string calldata name_, string calldata symbol_, bytes calldata initData)
         external
@@ -52,7 +52,7 @@ contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC72
             _transferOwnership(owner_);
         }
     }
-    
+
     // override starting tokenId exposed by ERC721A
     function _startTokenId() internal pure override returns (uint256) {
         return 1;
@@ -65,12 +65,12 @@ contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC72
     function supportsInterface(bytes4 interfaceId) public view override(Mage, ERC721) returns (bool) {
         return Mage.supportsInterface(interfaceId) || ERC721.supportsInterface(interfaceId);
     }
-    
-    function name() public view override(ERC721Internal, TokenMetadataInternal) returns (string memory) {
+
+    function name() public view override(ERC721, TokenMetadataInternal) returns (string memory) {
         return TokenMetadataInternal.name();
     }
-    
-    function symbol() public view override(ERC721Internal, TokenMetadataInternal) returns (string memory) {
+
+    function symbol() public view override(ERC721, TokenMetadataInternal) returns (string memory) {
         return TokenMetadataInternal.symbol();
     }
 
@@ -114,7 +114,7 @@ contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC72
         view
         override
         returns (address guard, bytes memory beforeCheckData)
-    {   
+    {
         bytes8 operation;
         if (from == address(0)) {
             operation = Operations.MINT;
@@ -128,11 +128,7 @@ contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC72
         return checkGuardBefore(operation, data);
     }
 
-    function _afterTokenTransfers(address guard, bytes memory checkBeforeData)
-        internal
-        view
-        override
-    {
+    function _afterTokenTransfers(address guard, bytes memory checkBeforeData) internal view override {
         checkGuardAfter(guard, checkBeforeData, ""); // no execution data
     }
 }

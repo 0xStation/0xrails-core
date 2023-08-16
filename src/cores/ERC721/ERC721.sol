@@ -10,6 +10,15 @@ abstract contract ERC721 is ERC721Internal, IERC721External {
         VIEWS
     ===========*/
 
+    /// @dev require override
+    function name() public view virtual returns (string memory);
+
+    /// @dev require override
+    function symbol() public view virtual returns (string memory);
+
+    /// @dev require override
+    function tokenURI(uint256 tokenId) public view virtual returns (string memory);
+
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
         // The interface IDs are constants representing the first 4 bytes
         // of the XOR of all function selectors in the interface.
@@ -27,7 +36,7 @@ abstract contract ERC721 is ERC721Internal, IERC721External {
     function approve(address to, uint256 tokenId) public virtual {
         _approve(to, tokenId);
     }
-    
+
     function setApprovalForAll(address operator, bool approved) public virtual {
         _setApprovalForAll(operator, approved);
     }
