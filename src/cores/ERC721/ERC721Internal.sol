@@ -6,26 +6,37 @@ import {IERC721Internal, IERC721Receiver} from "./IERC721.sol";
 import {ERC721Storage} from "./ERC721Storage.sol";
 
 abstract contract ERC721Internal is Initializer, IERC721Internal {
-    
-    /*================
-        INITIALIZE
-    ================*/
+    /*=================
+        INITIALIZER
+    =================*/
 
     function _initialize() internal onlyInitializing {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         layout.currentIndex = uint64(_startTokenId());
     }
-    
+
     /*===========
         VIEWS
     ===========*/
 
+    // metadata
+    /// @dev all need to be overridden
+
     function name() public view virtual returns (string memory);
-    
+
     function symbol() public view virtual returns (string memory);
+
+    function tokenURI(uint256 tokenId) public view virtual returns (string memory);
+
+    // global token values
 
     function _startTokenId() internal view virtual returns (uint256) {
         return 0;
+    }
+
+    function _nextTokenId() internal view virtual returns (uint256) {
+        ERC721Storage.Layout storage layout = ERC721Storage.layout();
+        return layout.currentIndex;
     }
 
     function totalSupply() public view virtual returns (uint256) {
@@ -37,22 +48,48 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
         }
     }
 
+    function _totalMinted() internal view virtual returns (uint256) {
+        ERC721Storage.Layout storage layout = ERC721Storage.layout();
+        // Counter underflow is impossible as `_currentIndex` does not decrement,
+        // and it is initialized to `_startTokenId()`.
+        unchecked {
+            return layout.currentIndex - _startTokenId();
+        }
+    }
+
+    function _totalBurned() internal view virtual returns (uint256) {
+        ERC721Storage.Layout storage layout = ERC721Storage.layout();
+        return layout.burnCounter;
+    }
+
+    // owner values
+
     function balanceOf(address owner) public view virtual returns (uint256) {
         if (owner == address(0)) revert BalanceQueryForZeroAddress();
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         return layout.owners[owner].balance;
     }
 
-    function tokenURI(uint256 tokenId) public view virtual returns (string memory);
+    function _numberMinted(address owner) internal view returns (uint256) {
+        ERC721Storage.Layout storage layout = ERC721Storage.layout();
+        return layout.owners[owner].numMinted;
+    }
+
+    function _numberBurned(address owner) internal view returns (uint256) {
+        ERC721Storage.Layout storage layout = ERC721Storage.layout();
+        return layout.owners[owner].numBurned;
+    }
+
+    // token values
 
     function ownerOf(uint256 tokenId) public view virtual returns (address) {
-        return _dataOf(tokenId).owner;
+        return _batchMarkerDataOf(tokenId).owner; // reverts if token not owned
     }
-    
-    /**
-     * Returns the packed ownership data of `tokenId`.
-     */
-    function _dataOf(uint256 tokenId) private view returns (ERC721Storage.TokenData memory) {
+
+    /// @notice Returns the token data for the token marking this batch mint
+    /// @dev If tokenId was minted in a batch and tokenId is not the first id in the batch,
+    ///      then the returned data will be for a different tokenId.
+    function _batchMarkerDataOf(uint256 tokenId) private view returns (ERC721Storage.TokenData memory) {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         uint256 curr = tokenId;
 
@@ -82,13 +119,31 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
         revert OwnerQueryForNonexistentToken();
     }
 
-    // APPROVALS
-
     function _exists(uint256 tokenId) internal view virtual returns (bool) {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         return _startTokenId() <= tokenId && tokenId < layout.currentIndex // If within bounds,
             && !layout.tokens[tokenId].burned; // and not burned.
     }
+
+    // approvals
+
+    function getApproved(uint256 tokenId) public view virtual returns (address) {
+        ERC721Storage.Layout storage layout = ERC721Storage.layout();
+        if (!_exists(tokenId)) revert ApprovalQueryForNonexistentToken();
+
+        return layout.tokenApprovals[tokenId];
+    }
+
+    function isApprovedForAll(address owner, address operator) public view virtual returns (bool) {
+        ERC721Storage.Layout storage layout = ERC721Storage.layout();
+        return layout.operatorApprovals[owner][operator];
+    }
+
+    /*=============
+        SETTERS
+    =============*/
+
+    // approvals
 
     function _approve(address to, uint256 tokenId) internal {
         if (to == address(0)) {
@@ -101,7 +156,7 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
                 revert ApprovalCallerNotOwnerNorApproved();
             }
         }
-        
+
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         layout.tokenApprovals[tokenId] = to;
         emit Approval(owner, to, tokenId);
@@ -116,133 +171,133 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
         emit ApprovalForAll(msg.sender, operator, approved);
     }
 
-    function getApproved(uint256 tokenId) public view virtual returns (address) {
-        ERC721Storage.Layout storage layout = ERC721Storage.layout();
-        if (!_exists(tokenId)) revert ApprovalQueryForNonexistentToken();
-
-        return layout.tokenApprovals[tokenId];
-    }
-
-    function isApprovedForAll(address owner, address operator) public view virtual returns (bool) {
-        ERC721Storage.Layout storage layout = ERC721Storage.layout();
-        return layout.operatorApprovals[owner][operator];
-    }
-
-    /*===============
-        OWNERSHIP
-    ===============*/
+    // token transfers
 
     function _mint(address to, uint256 quantity) internal {
         if (quantity == 0) revert MintZeroQuantity();
         if (to == address(0)) revert MintToZeroAddress();
 
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
-        
         uint256 startTokenId = layout.currentIndex;
 
+        // check before
         (address guard, bytes memory beforeCheckData) = _beforeTokenTransfers(address(0), to, startTokenId, quantity);
 
+        // update global counters
+        uint256 endTokenIndex = startTokenId + quantity;
+        layout.currentIndex = endTokenIndex;
+
+        // update owner counters
         ERC721Storage.OwnerData storage ownerData = layout.owners[to];
+        /// @dev is there a clean way to combine these two operations into one write while preserving the nice syntax?
         ownerData.balance += uint64(quantity);
         ownerData.numMinted += uint64(quantity);
 
-        ERC721Storage.TokenData memory tokenData = ERC721Storage.TokenData(to, false, quantity == 1);
-        layout.tokens[startTokenId] = tokenData;
+        // update token data
+        layout.tokens[startTokenId] = ERC721Storage.TokenData(to, uint48(block.timestamp), false, quantity == 1);
 
-        uint256 endIndex = startTokenId + quantity;
-        for (uint256 tokenId = startTokenId; tokenId < endIndex; tokenId++) {
+        // emit events
+        for (uint256 tokenId = startTokenId; tokenId < endTokenIndex; tokenId++) {
             emit Transfer(address(0), to, tokenId);
         }
-        layout.currentIndex = uint64(endIndex);
-        
+
+        // check after
         _afterTokenTransfers(guard, beforeCheckData);
     }
 
+    /// @dev approval checks are not made in this internal function, make them when wrapping in a public function
     function _burn(uint256 tokenId) internal {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
-        ERC721Storage.TokenData memory previousTokenData = _dataOf(tokenId); // reverts if tokenId is burned
-        address from = previousTokenData.owner;
-        ERC721Storage.OwnerData storage ownerData = layout.owners[from];
+        ERC721Storage.TokenData memory batchMarkerData = _batchMarkerDataOf(tokenId); // reverts if tokenId is burned
+        address from = batchMarkerData.owner;
 
-        // approvals?
-
+        // check before
         (address guard, bytes memory beforeCheckData) = _beforeTokenTransfers(from, address(0), tokenId, 1);
 
-        // clear approval from previous owner
-        delete layout.tokenApprovals[tokenId];
-
-        ownerData.balance -= 1;
-        ownerData.numBurned += 1;
-
-        // if next token is potentially uninitialized
-        if (!previousTokenData.nextInitialized) {
-            uint256 nextTokenId = tokenId + 1;
-            // if nextTokenId has been minted
-            if (nextTokenId < layout.currentIndex) {
-                ERC721Storage.TokenData storage nextTokenData = layout.tokens[nextTokenId];
-                // if next token is unowned
-                if (nextTokenData.owner == address(0) && !nextTokenData.burned) {
-                    // then implicit owner is previous token owner
-                    nextTokenData.owner = previousTokenData.owner;
-                    // default burned: false
-                    // default nextInitialized: false
-                }
-            }
-        }
-
-        ERC721Storage.TokenData storage tokenData = layout.tokens[tokenId];
-        tokenData.burned = true;
-        tokenData.nextInitialized = true;
-        tokenData.owner = address(0); // not part of official 721A
-
+        // update global counters
         layout.burnCounter++;
 
-        emit Transfer(from, address(0), tokenId);
-        _afterTokenTransfers(guard, beforeCheckData);
-    }
+        // update owner counters
+        ERC721Storage.OwnerData storage ownerData = layout.owners[from];
+        /// @dev is there a clean way to combine these two operations into one write while preserving the nice syntax?
+        --ownerData.balance;
+        ++ownerData.numBurned;
 
-    function _transfer(address from, address to, uint256 tokenId) internal {
-        ERC721Storage.Layout storage layout = ERC721Storage.layout();
-        ERC721Storage.TokenData memory previousTokenData = _dataOf(tokenId); // reverts if tokenId is burned
-        ERC721Storage.OwnerData storage fromOwnerData = layout.owners[from];
-        ERC721Storage.OwnerData storage toOwnerData = layout.owners[to];
-
-        if (previousTokenData.owner != from) revert TransferFromIncorrectOwner();
-        if (to == address(0)) revert TransferToZeroAddress();
-
-        // approvals?
-
-        (address guard, bytes memory beforeCheckData) = _beforeTokenTransfers(from, to, tokenId, 1);
+        // update token data
+        layout.tokens[tokenId] = ERC721Storage.TokenData(from, uint48(block.timestamp), true, true);
 
         // clear approval from previous owner
         delete layout.tokenApprovals[tokenId];
 
-        --fromOwnerData.balance;
-        ++toOwnerData.balance;
-
-        ERC721Storage.TokenData storage tokenData = layout.tokens[tokenId];
-        tokenData.owner = to;
-        tokenData.nextInitialized = true;
-
         // if next token is potentially uninitialized
-        if (!previousTokenData.nextInitialized) {
+        if (!batchMarkerData.nextInitialized) {
             uint256 nextTokenId = tokenId + 1;
             // if nextTokenId has been minted
             if (nextTokenId < layout.currentIndex) {
                 ERC721Storage.TokenData storage nextTokenData = layout.tokens[nextTokenId];
-                // if next token is unowned
+                // if next token is uninitialized
                 if (nextTokenData.owner == address(0) && !nextTokenData.burned) {
                     // then implicit owner is previous token owner
-                    nextTokenData.owner = previousTokenData.owner;
+                    nextTokenData.owner = batchMarkerData.owner;
+                    nextTokenData.ownerUpdatedAt = batchMarkerData.ownerUpdatedAt;
                     // default burned: false
                     // default nextInitialized: false
                 }
             }
         }
 
-        emit Transfer(from, to, tokenId);
+        // emit events
+        emit Transfer(from, address(0), tokenId);
+
+        // check after
         _afterTokenTransfers(guard, beforeCheckData);
     }
+
+    /// @dev approval checks are not made in this internal function, make them when wrapping in a public function
+    function _transfer(address from, address to, uint256 tokenId) internal {
+        ERC721Storage.Layout storage layout = ERC721Storage.layout();
+        ERC721Storage.TokenData memory batchMarkerData = _batchMarkerDataOf(tokenId); // reverts if tokenId is burned
+
+        if (batchMarkerData.owner != from) revert TransferFromIncorrectOwner();
+        if (to == address(0)) revert TransferToZeroAddress();
+
+        // check before
+        (address guard, bytes memory beforeCheckData) = _beforeTokenTransfers(from, to, tokenId, 1);
+
+        // update owner counters
+        --layout.owners[from].balance;
+        ++layout.owners[to].balance;
+
+        // update token data
+        layout.tokens[tokenId] = ERC721Storage.TokenData(to, uint48(block.timestamp), false, true);
+
+        // clear approval from previous owner
+        delete layout.tokenApprovals[tokenId];
+
+        // if next token is potentially uninitialized
+        if (!batchMarkerData.nextInitialized) {
+            uint256 nextTokenId = tokenId + 1;
+            // if nextTokenId has been minted
+            if (nextTokenId < layout.currentIndex) {
+                ERC721Storage.TokenData storage nextTokenData = layout.tokens[nextTokenId];
+                // if next token is uninitialized
+                if (nextTokenData.owner == address(0) && !nextTokenData.burned) {
+                    // then implicit owner is previous token owner
+                    nextTokenData.owner = batchMarkerData.owner;
+                    // default burned: false
+                    // default nextInitialized: false
+                }
+            }
+        }
+
+        // emit events
+        emit Transfer(from, to, tokenId);
+
+        // check after
+        _afterTokenTransfers(guard, beforeCheckData);
+    }
+
+    // safe token transfers
 
     function _safeMint(address to, uint256 quantity) internal virtual {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
@@ -252,6 +307,7 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
             if (to.code.length != 0) {
                 uint256 end = layout.currentIndex;
                 uint256 index = end - quantity;
+                /// @dev why does this need to be checked in a loop versus once?
                 do {
                     _checkOnERC721Received(address(0), to, index++, "");
                 } while (index < end);
@@ -299,7 +355,11 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
         }
     }
 
-    function _beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity) internal virtual returns (address guard, bytes memory beforeCheckData) {}
+    function _beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity)
+        internal
+        virtual
+        returns (address guard, bytes memory beforeCheckData)
+    {}
 
     function _afterTokenTransfers(address guard, bytes memory beforeCheckData) internal virtual {}
 }
