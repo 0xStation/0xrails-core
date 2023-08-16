@@ -8,7 +8,6 @@ abstract contract Extension is IExtension {
         getAllSignatures(); // verify selectors properly synced
     }
 
-    function contractURI() external view virtual returns (string memory uri) {}
     function signatureOf(bytes4 selector) public pure virtual returns (string memory signature) {}
     function getAllSelectors() public pure virtual returns (bytes4[] memory selectors) {}
 
