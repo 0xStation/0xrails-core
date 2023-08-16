@@ -140,7 +140,7 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
         
         uint256 startTokenId = layout.currentIndex;
 
-        bytes memory beforeCheckData = _beforeTokenTransfers(address(0), to, startTokenId, quantity);
+        (address guard, bytes memory beforeCheckData) = _beforeTokenTransfers(address(0), to, startTokenId, quantity);
 
         ERC721Storage.OwnerData storage ownerData = layout.owners[to];
         ownerData.balance += uint64(quantity);
@@ -155,7 +155,7 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
         }
         layout.currentIndex = uint64(endIndex);
         
-        _afterTokenTransfers(beforeCheckData);
+        _afterTokenTransfers(guard, beforeCheckData);
     }
 
     function _burn(uint256 tokenId) internal {
@@ -166,7 +166,7 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
 
         // approvals?
 
-        bytes memory beforeCheckData = _beforeTokenTransfers(from, address(0), tokenId, 1);
+        (address guard, bytes memory beforeCheckData) = _beforeTokenTransfers(from, address(0), tokenId, 1);
 
         // clear approval from previous owner
         delete layout.tokenApprovals[tokenId];
@@ -198,7 +198,7 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
         layout.burnCounter++;
 
         emit Transfer(from, address(0), tokenId);
-        _afterTokenTransfers(beforeCheckData);
+        _afterTokenTransfers(guard, beforeCheckData);
     }
 
     function _transfer(address from, address to, uint256 tokenId) internal {
@@ -212,7 +212,7 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
 
         // approvals?
 
-        bytes memory beforeCheckData = _beforeTokenTransfers(from, to, tokenId, 1);
+        (address guard, bytes memory beforeCheckData) = _beforeTokenTransfers(from, to, tokenId, 1);
 
         // clear approval from previous owner
         delete layout.tokenApprovals[tokenId];
@@ -241,7 +241,7 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
         }
 
         emit Transfer(from, to, tokenId);
-        _afterTokenTransfers(beforeCheckData);
+        _afterTokenTransfers(guard, beforeCheckData);
     }
 
     function _safeMint(address to, uint256 quantity) internal virtual {
@@ -299,7 +299,7 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
         }
     }
 
-    function _beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity) internal virtual returns (bytes memory) {}
+    function _beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity) internal virtual returns (address guard, bytes memory beforeCheckData) {}
 
-    function _afterTokenTransfers(bytes memory beforeCheckData) internal virtual {}
+    function _afterTokenTransfers(address guard, bytes memory beforeCheckData) internal virtual {}
 }

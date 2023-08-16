@@ -113,7 +113,7 @@ contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC72
         internal
         view
         override
-        returns (bytes memory beforeCheckData)
+        returns (address guard, bytes memory beforeCheckData)
     {   
         bytes8 operation;
         if (from == address(0)) {
@@ -125,17 +125,14 @@ contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC72
         }
         bytes memory data = abi.encode(msg.sender, from, to, startTokenId, quantity);
 
-        (address guard, bytes memory checkBeforeData) = checkGuardBefore(operation, data);
-
-        return abi.encode(guard, checkBeforeData);
+        return checkGuardBefore(operation, data);
     }
 
-    function _afterTokenTransfers(bytes memory wrappedCheckBeforeData)
+    function _afterTokenTransfers(address guard, bytes memory checkBeforeData)
         internal
         view
         override
     {
-        (address guard, bytes memory checkBeforeData) = abi.decode(wrappedCheckBeforeData, (address, bytes));
-        checkGuardAfter(guard, checkBeforeData, "");
+        checkGuardAfter(guard, checkBeforeData, ""); // no execution data
     }
 }
