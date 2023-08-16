@@ -8,12 +8,13 @@ abstract contract TokenMetadataInternal is ITokenMetadataInternal {
     /*===========
         VIEWS
     ===========*/
-    function name() external view returns (string memory) {
+    
+    function name() public view virtual returns (string memory) {
         TokenMetadataStorage.Layout storage layout = TokenMetadataStorage.layout();
         return layout.name;
     }
     
-    function symbol() external view returns (string memory) {
+    function symbol() public view virtual returns (string memory) {
         TokenMetadataStorage.Layout storage layout = TokenMetadataStorage.layout();
         return layout.symbol;
     }

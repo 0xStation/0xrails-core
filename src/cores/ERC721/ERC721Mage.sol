@@ -8,7 +8,9 @@ import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
 import {ERC721AUpgradeable} from "./ERC721AUpgradeable.sol";
 import {ERC721} from "./ERC721.sol";
+import {ERC721Internal} from "./ERC721Internal.sol";
 import {TokenMetadata} from "../TokenMetadata/TokenMetadata.sol";
+import {TokenMetadataInternal} from "../TokenMetadata/TokenMetadataInternal.sol";
 import {
     ITokenURIExtension, IContractURIExtension
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
@@ -25,12 +27,12 @@ contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC72
         return OwnableInternal.owner();
     }
     
-
     /// @dev cannot call initialize within a proxy constructor, only post-deployment in a factory
     function initialize(address owner_, string calldata name_, string calldata symbol_, bytes calldata initData)
         external
         initializer
     {
+        ERC721Internal._initialize();
         _setName(name_);
         _setSymbol(symbol_);
         if (initData.length > 0) {
@@ -63,6 +65,14 @@ contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC72
     function supportsInterface(bytes4 interfaceId) public view override(Mage, ERC721) returns (bool) {
         return Mage.supportsInterface(interfaceId) || ERC721.supportsInterface(interfaceId);
     }
+    
+    function name() public view override(ERC721Internal, TokenMetadataInternal) returns (string memory) {
+        return TokenMetadataInternal.name();
+    }
+    
+    function symbol() public view override(ERC721Internal, TokenMetadataInternal) returns (string memory) {
+        return TokenMetadataInternal.symbol();
+    }
 
     // must override ERC721A implementation
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
@@ -76,7 +86,7 @@ contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC72
         return IContractURIExtension(address(this)).ext_contractURI();
     }
 
-    function _checkCanUpdateTokenMetadata() internal override {
+    function _checkCanUpdateTokenMetadata() internal view override {
         _checkPermission(Operations.METADATA, msg.sender);
     }
 
@@ -103,25 +113,9 @@ contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC72
         internal
         view
         override
-    {
-        (bytes8 operation, bytes memory data) = _getGuardParams(from, to, startTokenId, quantity);
-        checkGuardBefore(operation, data);
-    }
-
-    function _afterTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity)
-        internal
-        view
-        override
-    {
-        (bytes8 operation, bytes memory data) = _getGuardParams(from, to, startTokenId, quantity);
-        checkGuardAfter(operation, data);
-    }
-
-    function _getGuardParams(address from, address to, uint256 startTokenId, uint256 quantity)
-        internal
-        view
-        returns (bytes8 operation, bytes memory data)
-    {
+        returns (bytes memory beforeCheckData)
+    {   
+        bytes8 operation;
         if (from == address(0)) {
             operation = Operations.MINT;
         } else if (to == address(0)) {
@@ -129,8 +123,18 @@ contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC72
         } else {
             operation = Operations.TRANSFER;
         }
-        data = abi.encode(msg.sender, from, to, startTokenId, quantity);
+        bytes memory data = abi.encode(msg.sender, from, to, startTokenId, quantity);
 
-        return (operation, data);
+        checkGuardBefore(operation, data);
+
+        return ""; // return checkGuardBefore
+    }
+
+    function _afterTokenTransfers(bytes memory checkBeforeData)
+        internal
+        view
+        override
+    {
+        // checkAfter(checkBeforeData, "")
     }
 }

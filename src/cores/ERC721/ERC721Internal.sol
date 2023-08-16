@@ -1,17 +1,28 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import {Initializer} from "../../lib/Initializer/Initializer.sol";
 import {IERC721Internal, IERC721Receiver} from "./IERC721.sol";
 import {ERC721Storage} from "./ERC721Storage.sol";
 
-abstract contract ERC721Internal is IERC721Internal {
+abstract contract ERC721Internal is Initializer, IERC721Internal {
+    
+    /*================
+        INITIALIZE
+    ================*/
+
+    function _initialize() internal onlyInitializing {
+        ERC721Storage.Layout storage layout = ERC721Storage.layout();
+        layout.currentIndex = uint64(_startTokenId());
+    }
+    
     /*===========
         VIEWS
     ===========*/
 
-    function name() external virtual returns (string memory);
+    function name() public view virtual returns (string memory);
     
-    function symbol() external virtual returns (string memory);
+    function symbol() public view virtual returns (string memory);
 
     function _startTokenId() internal view virtual returns (uint256) {
         return 0;
