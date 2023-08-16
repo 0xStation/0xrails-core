@@ -17,8 +17,8 @@ interface IGuardsInternal {
     error GuardRejected(bytes8 operation, address guard);
 
     // hooks
-    function checkGuardBefore(bytes8 operation, bytes calldata data) external view returns (address guard);
-    function checkGuardAfter(bytes8 operation, bytes calldata data) external view returns (address guard);
+    function checkGuardBefore(bytes8 operation, bytes calldata data) external view returns (address guard, bytes memory checkBeforeData);
+    function checkGuardAfter(address guard, bytes calldata checkBeforeData, bytes calldata executionData) external view;
     // views
     function guardOf(bytes8 operation) external view returns (address implementation);
     function getAllGuards() external view returns (Guard[] memory Guards);

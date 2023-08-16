@@ -125,16 +125,17 @@ contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC72
         }
         bytes memory data = abi.encode(msg.sender, from, to, startTokenId, quantity);
 
-        checkGuardBefore(operation, data);
+        (address guard, bytes memory checkBeforeData) = checkGuardBefore(operation, data);
 
-        return ""; // return checkGuardBefore
+        return abi.encode(guard, checkBeforeData);
     }
 
-    function _afterTokenTransfers(bytes memory checkBeforeData)
+    function _afterTokenTransfers(bytes memory wrappedCheckBeforeData)
         internal
         view
         override
     {
-        // checkAfter(checkBeforeData, "")
+        (address guard, bytes memory checkBeforeData) = abi.decode(wrappedCheckBeforeData, (address, bytes));
+        checkGuardAfter(guard, checkBeforeData, "");
     }
 }
