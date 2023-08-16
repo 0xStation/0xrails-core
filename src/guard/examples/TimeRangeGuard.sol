@@ -29,14 +29,13 @@ contract TimeRangeGuard is IGuard {
         return (range.start, range.end);
     }
 
-    function checkBefore(address, bytes calldata) external view returns (bool) {
+    function checkBefore(address, bytes calldata) external view returns (bytes memory) {
         _checkTimeRange();
-        return true;
+        return bytes("");
     }
 
-    function checkAfter(address, bytes calldata) external view returns (bool) {
+    function checkAfter(bytes calldata, bytes calldata) external view {
         _checkTimeRange();
-        return true;
     }
 
     function _checkTimeRange() internal view {

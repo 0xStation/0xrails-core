@@ -96,7 +96,16 @@ contract ERC721Mage is Mage, Ownable, Initializer, ERC721AUpgradeable, IERC721Ma
         view
         override
     {
-        (bytes8 operation, bytes memory data) = _getGuardParams(from, to, startTokenId, quantity);
+        bytes8 operation;
+        if (from == address(0)) {
+            operation = Operations.MINT;
+        } else if (to == address(0)) {
+            operation = Operations.BURN;
+        } else {
+            operation = Operations.TRANSFER;
+        }
+        bytes memory data = abi.encode(msg.sender, from, to, startTokenId, quantity);
+        
         checkGuardBefore(operation, data);
     }
 

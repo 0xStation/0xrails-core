@@ -12,25 +12,7 @@ abstract contract GuardsInternal is IGuardsInternal {
         HOOKS
     ===========*/
 
-    modifier checkGuardBeforeAndAfter(bytes8 operation, bytes calldata data) {
-        _checkGuard(operation, data, GuardsStorage.CheckType.BEFORE);
-        _;
-        _checkGuard(operation, data, GuardsStorage.CheckType.AFTER);
-    }
-
-    function checkGuardBefore(bytes8 operation, bytes memory data) public view returns (address guard) {
-        return _checkGuard(operation, data, GuardsStorage.CheckType.BEFORE);
-    }
-
-    function checkGuardAfter(bytes8 operation, bytes memory data) public view returns (address guard) {
-        return _checkGuard(operation, data, GuardsStorage.CheckType.AFTER);
-    }
-
-    function _checkGuard(bytes8 operation, bytes memory data, GuardsStorage.CheckType check)
-        internal
-        view
-        returns (address guard)
-    {
+    function checkGuardBefore(bytes8 operation, bytes memory data) public view returns (address guard, bytes memory checkBeforeData) {
         guard = guardOf(operation);
         if (guard.autoReject()) {
             revert GuardRejected(operation, guard);
@@ -38,18 +20,13 @@ abstract contract GuardsInternal is IGuardsInternal {
             return guard;
         }
 
-        bool guardApproves;
-        if (check == GuardsStorage.CheckType.BEFORE) {
-            guardApproves = IGuard(guard).checkBefore(msg.sender, data);
-        } else {
-            guardApproves = IGuard(guard).checkAfter(msg.sender, data);
-        }
+        checkBeforeData = IGuard(guard).checkBefore(msg.sender, data); // revert will cascade
 
-        if (!guardApproves) {
-            revert GuardRejected(operation, guard);
-        } else {
-            return guard;
-        }
+        return (guard, checkBeforeData);
+    }
+
+    function checkGuardAfter(address guard, bytes memory checkBeforeData, bytes memory executionData) public view {
+        IGuard(guard).checkAfter(checkBeforeData, executionData); // revert will cascade
     }
 
     /*===========
