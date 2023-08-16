@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC721} from "src/cores/ERC721/ERC721.sol";
-import {IERC721, IERC721Internal} from "src/cores/ERC721/IERC721.sol";
+import {IERC721, IERC721Internal} from "src/cores/ERC721/interface/IERC721.sol";
 import {ERC721Storage} from "src/cores/ERC721/ERC721Storage.sol";
 
 contract ERC721Test is Test {
