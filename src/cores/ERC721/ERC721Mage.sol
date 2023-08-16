@@ -7,6 +7,8 @@ import {Mage} from "../../Mage.sol";
 import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
 import {ERC721AUpgradeable} from "./ERC721AUpgradeable.sol";
+import {ERC721} from "./ERC721.sol";
+import {TokenMetadata} from "../TokenMetadata/TokenMetadata.sol";
 import {
     ITokenURIExtension, IContractURIExtension
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
@@ -17,23 +19,20 @@ import {Initializer} from "../../lib/Initializer/Initializer.sol";
 
 /// @notice apply Mage pattern to ERC721 NFTs
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
-contract ERC721Mage is Mage, Ownable, Initializer, ERC721AUpgradeable, IERC721Mage {
-    // override starting tokenId exposed by 721A
-    function _startTokenId() internal pure override returns (uint256) {
-        return 1;
-    }
-
+contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC721Mage {
     // owner stored explicitly
     function owner() public view override(Access, OwnableInternal) returns (address) {
         return OwnableInternal.owner();
     }
+    
 
     /// @dev cannot call initialize within a proxy constructor, only post-deployment in a factory
     function initialize(address owner_, string calldata name_, string calldata symbol_, bytes calldata initData)
         external
         initializer
     {
-        ERC721AUpgradeable._initialize(name_, symbol_);
+        _setName(name_);
+        _setSymbol(symbol_);
         if (initData.length > 0) {
             /// @dev if called within a constructor, self-delegatecall will not work because this address does not yet have
             /// bytecode implementing the init functions -> revert here with nicer error message
@@ -51,13 +50,18 @@ contract ERC721Mage is Mage, Ownable, Initializer, ERC721AUpgradeable, IERC721Ma
             _transferOwnership(owner_);
         }
     }
+    
+    // override starting tokenId exposed by ERC721A
+    function _startTokenId() internal pure override returns (uint256) {
+        return 1;
+    }
 
     /*==============
         METADATA
     ==============*/
 
-    function supportsInterface(bytes4 interfaceId) public view override(Mage, ERC721AUpgradeable) returns (bool) {
-        return Mage.supportsInterface(interfaceId) || ERC721AUpgradeable.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view override(Mage, ERC721) returns (bool) {
+        return Mage.supportsInterface(interfaceId) || ERC721.supportsInterface(interfaceId);
     }
 
     // must override ERC721A implementation
@@ -70,6 +74,10 @@ contract ERC721Mage is Mage, Ownable, Initializer, ERC721AUpgradeable, IERC721Ma
     function contractURI() public view override returns (string memory) {
         // to avoid clashing selectors, use standardized `ext_` prefix
         return IContractURIExtension(address(this)).ext_contractURI();
+    }
+
+    function _checkCanUpdateTokenMetadata() internal override {
+        _checkPermission(Operations.METADATA, msg.sender);
     }
 
     /*=============

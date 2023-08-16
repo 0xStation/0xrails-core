@@ -5,10 +5,8 @@ library ERC721Storage {
     bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("mage.ERC721")) - 1));
 
     struct Layout {
-        string name;
-        string symbol;
-        uint256 currentIndex;
-        uint256 burnCounter;
+        uint64 currentIndex; // max supply is 18e18
+        uint64 burnCounter;
         mapping(uint256 => TokenData) tokens;
         mapping(address => OwnerData) owners;
         mapping(uint256 => address) tokenApprovals;
@@ -16,19 +14,17 @@ library ERC721Storage {
     }
 
     struct TokenData {
-        // ERC721
+        // ERC-721
         address owner;
-        // ERC721A
+        // ERC-721A
         bool burned;
         bool nextInitialized;
-        // ERC_
-        bool locked;
     }
 
     struct OwnerData {
-        // ERC721
+        // ERC-721
         uint64 balance;
-        // ERC721A
+        // ERC-721A
         uint64 numMinted;
         uint64 numBurned;
     }
