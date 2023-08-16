@@ -32,7 +32,7 @@ contract MetadataRouterExtension is
         }
     }
 
-    function contractURI() external pure override returns (string memory uri) {
+    function contractURI() external pure returns (string memory uri) {
         return "";
     }
 
