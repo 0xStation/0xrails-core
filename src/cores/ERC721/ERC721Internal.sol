@@ -12,7 +12,7 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
 
     function _initialize() internal onlyInitializing {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
-        layout.currentIndex = uint64(_startTokenId());
+        layout.currentIndex = _startTokenId();
     }
 
     /*===========
@@ -41,23 +41,15 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
 
     function totalSupply() public view virtual returns (uint256) {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
-        // Counter underflow is impossible as _burnCounter cannot be incremented
-        // more than `_currentIndex - _startTokenId()` times.
-        unchecked {
-            return layout.currentIndex - layout.burnCounter - _startTokenId();
-        }
+        return layout.currentIndex - layout.burnCounter - _startTokenId();
     }
 
-    function _totalMinted() internal view virtual returns (uint256) {
+    function totalMinted() public view virtual returns (uint256) {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
-        // Counter underflow is impossible as `_currentIndex` does not decrement,
-        // and it is initialized to `_startTokenId()`.
-        unchecked {
-            return layout.currentIndex - _startTokenId();
-        }
+        return layout.currentIndex - _startTokenId();
     }
 
-    function _totalBurned() internal view virtual returns (uint256) {
+    function totalBurned() public view virtual returns (uint256) {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         return layout.burnCounter;
     }
@@ -70,12 +62,12 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
         return layout.owners[owner].balance;
     }
 
-    function _numberMinted(address owner) internal view returns (uint256) {
+    function numberMinted(address owner) public view returns (uint256) {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         return layout.owners[owner].numMinted;
     }
 
-    function _numberBurned(address owner) internal view returns (uint256) {
+    function numberBurned(address owner) public view returns (uint256) {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         return layout.owners[owner].numBurned;
     }
@@ -145,8 +137,8 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
 
     // approvals
 
-    function _approve(address to, uint256 tokenId) internal {
-        if (to == address(0)) {
+    function _approve(address operator, uint256 tokenId) internal {
+        if (operator == address(0)) {
             revert ApprovalInvalidOperator();
         }
         address owner = ownerOf(tokenId);
@@ -158,8 +150,8 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
         }
 
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
-        layout.tokenApprovals[tokenId] = to;
-        emit Approval(owner, to, tokenId);
+        layout.tokenApprovals[tokenId] = operator;
+        emit Approval(owner, operator, tokenId);
     }
 
     function _setApprovalForAll(address operator, bool approved) internal {
@@ -229,19 +221,23 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
         // clear approval from previous owner
         delete layout.tokenApprovals[tokenId];
 
-        // if next token is potentially uninitialized
+        // set next token as new batch marker if it is in the same batch
         if (!batchMarkerData.nextInitialized) {
+            // next token is potentially uninitialized
             uint256 nextTokenId = tokenId + 1;
-            // if nextTokenId has been minted
             if (nextTokenId < layout.currentIndex) {
+                // nextTokenId has been minted
                 ERC721Storage.TokenData storage nextTokenData = layout.tokens[nextTokenId];
-                // if next token is uninitialized
                 if (nextTokenData.owner == address(0) && !nextTokenData.burned) {
-                    // then implicit owner is previous token owner
-                    nextTokenData.owner = batchMarkerData.owner;
-                    nextTokenData.ownerUpdatedAt = batchMarkerData.ownerUpdatedAt;
-                    // default burned: false
-                    // default nextInitialized: false
+                    /**
+                     * next token is uninitialized so set:
+                     * - owner = batch marker owner
+                     * - ownerUpdatedAt = batch marker ownerUpdatedAt
+                     * - burned = false
+                     * - nextInitialized = false
+                     */
+                    layout.tokens[nextTokenId] =
+                        ERC721Storage.TokenData(batchMarkerData.owner, batchMarkerData.ownerUpdatedAt, false, false);
                 }
             }
         }
@@ -274,18 +270,23 @@ abstract contract ERC721Internal is Initializer, IERC721Internal {
         // clear approval from previous owner
         delete layout.tokenApprovals[tokenId];
 
-        // if next token is potentially uninitialized
+        // set next token as new batch marker if it is in the same batch
         if (!batchMarkerData.nextInitialized) {
+            // next token is potentially uninitialized
             uint256 nextTokenId = tokenId + 1;
-            // if nextTokenId has been minted
             if (nextTokenId < layout.currentIndex) {
+                // nextTokenId has been minted
                 ERC721Storage.TokenData storage nextTokenData = layout.tokens[nextTokenId];
-                // if next token is uninitialized
                 if (nextTokenData.owner == address(0) && !nextTokenData.burned) {
-                    // then implicit owner is previous token owner
-                    nextTokenData.owner = batchMarkerData.owner;
-                    // default burned: false
-                    // default nextInitialized: false
+                    /**
+                     * next token is uninitialized so set:
+                     * - owner = batch marker owner
+                     * - ownerUpdatedAt = batch marker ownerUpdatedAt
+                     * - burned = false
+                     * - nextInitialized = false
+                     */
+                    layout.tokens[nextTokenId] =
+                        ERC721Storage.TokenData(batchMarkerData.owner, batchMarkerData.ownerUpdatedAt, false, false);
                 }
             }
         }
