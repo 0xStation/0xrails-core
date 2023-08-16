@@ -26,7 +26,10 @@ abstract contract GuardsInternal is IGuardsInternal {
     }
 
     function checkGuardAfter(address guard, bytes memory checkBeforeData, bytes memory executionData) public view {
-        IGuard(guard).checkAfter(checkBeforeData, executionData); // revert will cascade
+        // only check guard if not autoApprove, autoReject will have already reverted
+        if (!guard.autoApprove()) {
+            IGuard(guard).checkAfter(checkBeforeData, executionData); // revert will cascade
+        }
     }
 
     /*===========
