@@ -17,11 +17,11 @@ import {
 import {Operations} from "../../lib/Operations.sol";
 import {PermissionsStorage} from "../../access/permissions/PermissionsStorage.sol";
 import {IERC721Mage} from "./interface/IERC721Mage.sol";
-import {Initializer} from "../../lib/Initializer/Initializer.sol";
+import {Initializable} from "../../lib/initializable/Initializable.sol";
 
 /// @notice apply Mage pattern to ERC721 NFTs
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
-contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC721Mage {
+contract ERC721Mage is Mage, Ownable, Initializable, TokenMetadata, ERC721, IERC721Mage {
     // owner stored explicitly
     function owner() public view override(Access, OwnableInternal) returns (address) {
         return OwnableInternal.owner();
@@ -51,6 +51,12 @@ contract ERC721Mage is Mage, Ownable, Initializer, TokenMetadata, ERC721, IERC72
         } else {
             _transferOwnership(owner_);
         }
+    }
+
+    /// @dev Logic implementation contract disables `initialize()` from being called 
+    /// to prevent privilege escalation and 'exploding kitten' attacks  
+    constructor() {
+        _disableInitializers();
     }
 
     // override starting tokenId exposed by ERC721A

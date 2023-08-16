@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Initializer} from "../../lib/Initializer/Initializer.sol";
+import {Initializable} from "../../lib/initializable/Initializable.sol";
 import {IERC721Internal, IERC721Receiver} from "./IERC721.sol";
 import {ERC721Storage} from "./ERC721Storage.sol";
 
-abstract contract ERC721Internal is Initializer, IERC721Internal {
+abstract contract ERC721Internal is Initializable, IERC721Internal {
     /*=================
         INITIALIZER
     =================*/

@@ -5,7 +5,7 @@
 pragma solidity ^0.8.4;
 
 import {IERC721A} from "lib/ERC721A/contracts/interfaces/IERC721A.sol";
-import {Initializer} from "../../lib/Initializer/Initializer.sol";
+import {Initializable} from "../../lib/initializable/Initializable.sol";
 
 /**
  * @dev Interface of ERC721 token receiver.
@@ -19,7 +19,7 @@ interface ERC721A__IERC721Receiver {
 /**
  * @dev Forked from source ERC721A implementation, but altered constructor into an initializer
  */
-contract ERC721AUpgradeable is Initializer, IERC721A {
+contract ERC721AUpgradeable is Initializable, IERC721A {
     // Bypass for a `--via-ir` bug (https://github.com/chiru-labs/ERC721A/pull/364).
     struct TokenApprovalRef {
         address value;

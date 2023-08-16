@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-interface IInitializerInternal {
+interface IInitializableInternal {
     // events
     event Initialized();
 
@@ -13,4 +13,4 @@ interface IInitializerInternal {
     function initialized() external view returns (bool);
 }
 
-interface IInitializer is IInitializerInternal {}
+interface IInitializable is IInitializableInternal {}

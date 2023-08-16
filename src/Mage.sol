@@ -7,7 +7,7 @@ import {Multicall} from "openzeppelin-contracts/utils/Multicall.sol";
 import {Access} from "./access/Access.sol";
 import {Guards} from "./guard/Guards.sol";
 import {Extensions} from "./extension/Extensions.sol";
-import {SupportsInterface} from "./lib/SupportsInterface/SupportsInterface.sol";
+import {SupportsInterface} from "./lib/ERC165/SupportsInterface.sol";
 import {Execute} from "./lib/Execute.sol";
 
 /**
