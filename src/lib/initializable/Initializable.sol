@@ -5,6 +5,23 @@ import {IInitializableInternal} from "./IInitializable.sol";
 import {InitializableStorage} from "./InitializableStorage.sol";
 
 abstract contract Initializable is IInitializableInternal {
+    /*===========
+        LOCK
+    ===========*/
+
+    function _disableInitializers() internal virtual {
+        InitializableStorage.Layout storage layout = InitializableStorage.layout();
+
+        if (layout._initializing) {
+            revert AlreadyInitialized();
+        }
+        if (layout._initialized == false) {
+            layout._initialized = true;
+            emit Initialized();
+        }
+    }
+  
+    
     /*===============
         MODIFIERS
     ===============*/

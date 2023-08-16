@@ -52,6 +52,12 @@ contract ERC721Mage is Mage, Ownable, Initializable, ERC721AUpgradeable, IERC721
         }
     }
 
+    /// @dev Logic implementation contract disables `initialize()` from being called 
+    /// to prevent privilege escalation and 'exploding kitten' attacks  
+    constructor() {
+        _disableInitializers();
+    }
+
     /*==============
         METADATA
     ==============*/
