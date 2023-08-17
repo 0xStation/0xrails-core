@@ -11,9 +11,11 @@ contract ERC721Test is Test {
     bytes err;
 
     ERC721Harness erc721;
+    Erc721ReceiverImplementer erc721Receiver;
 
     function setUp() public {
         erc721 = new ERC721Harness();
+        erc721Receiver = new Erc721ReceiverImplementer();
     }
 
     function test_setUp() public {
@@ -24,6 +26,7 @@ contract ERC721Test is Test {
     }
 
     function test_mint(address to, uint8 quantity) public {
+        vm.assume(to != address(0x0));
         vm.assume(quantity > 0);
         erc721.mint(to, quantity);
 
@@ -37,6 +40,12 @@ contract ERC721Test is Test {
     function test_mintRevertZeroQuantity(address to) public {
         vm.expectRevert(IERC721Internal.MintZeroQuantity.selector);
         erc721.mint(to, 0);
+    }
+
+    function test_mintRevertZeroAddress(uint8 quantity) public {
+        vm.assume(quantity != 0);
+        vm.expectRevert(IERC721Internal.MintToZeroAddress.selector);
+        erc721.mint(address(0x0), quantity);
     }
 
     function test_burn(address to, uint8 mintQuantity, uint8 burnQuantity) public {
@@ -57,6 +66,7 @@ contract ERC721Test is Test {
     }
 
     function test_transfer(address from, address to, uint8 mintQuantity, uint8 transferQuantity) public {
+        vm.assume(from != address(0x0)); // prevent mint to address(0x0)
         vm.assume(to != address(0x0)); // prevent balanceOf() revert on address(0x0)
         vm.assume(mintQuantity > 0);
         vm.assume(transferQuantity < mintQuantity);
@@ -74,9 +84,56 @@ contract ERC721Test is Test {
         }
         assertEq(erc721.totalSupply(), preTransferBalanceFrom);
     }
+
+    function test_safeTransfer(address from, uint8 mintQuantity, uint8 transferQuantity) public {
+        vm.assume(from != address(0x0)); // prevent balanceOf() revert on address(0x0)
+        vm.assume(mintQuantity > 0);
+        vm.assume(transferQuantity < mintQuantity);
+
+        address to = address(erc721Receiver);
+
+        erc721.mint(from, mintQuantity);
+
+        uint256 preTransferBalanceFrom = erc721.balanceOf(from);
+        uint256 preTransferBalanceTo = erc721.balanceOf(to);
+        for (uint i; i < transferQuantity; i++) {
+            uint256 tokenId = i;
+            erc721.safeTransfer(from, to, tokenId, '');
+            assertEq(erc721.balanceOf(from), preTransferBalanceFrom - (i + 1));
+            assertEq(erc721.balanceOf(to), preTransferBalanceTo + (i + 1));
+            assertEq(erc721.ownerOf(tokenId), to);
+        }
+        assertEq(erc721.totalSupply(), preTransferBalanceFrom);
+    }
+
+    function test_safeTransferRevertTransferToNonERC721ReceiverImplementer(
+        address from, 
+        address to,
+        uint8 mintQuantity, 
+        uint8 transferQuantity
+    ) public {
+        vm.assume(from != address(0x0));
+        vm.assume(to != address(0x0));
+        vm.assume(to != 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D); // exclude cheatcode VM addresss
+        vm.assume(transferQuantity < mintQuantity);
+
+        erc721.mint(from, mintQuantity);
+
+        uint256 preTransferBalanceFrom = erc721.balanceOf(from);
+        uint256 preTransferBalanceTo = erc721.balanceOf(to);
+        for (uint i; i < transferQuantity; i++) {
+            uint256 tokenId = i;
+            // vm.expectRevert(IERC721Internal.TransferToNonERC721ReceiverImplementer.selector);
+            erc721.safeTransfer(from, to, tokenId, '');
+            assertEq(erc721.balanceOf(from), preTransferBalanceFrom - (i + 1));
+            assertEq(erc721.balanceOf(to), preTransferBalanceTo + (i + 1));
+            assertEq(erc721.ownerOf(tokenId), to);
+        }
+        assertEq(erc721.totalSupply(), preTransferBalanceFrom);        
+    }
 }
 
-/// @dev Harness contract to publicly expose internal functions for testing purposes
+/// @dev Harness contract wrapping ERC721 to publicly expose internal functions for testing purposes
 contract ERC721Harness is ERC721 {
 
     function name() public pure override returns (string memory) {
@@ -121,5 +178,18 @@ contract ERC721Harness is ERC721 {
 
     function checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory data) public {
         _checkOnERC721Received(from, to, tokenId, data);
+    }
+}
+
+/// @dev Harness contract implementing `_checkOnERC721Received()` to accept `ERC721::safeTransfer()`
+/// for testing purposes
+contract Erc721ReceiverImplementer {
+    function onERC721Received(
+        address, 
+        address, 
+        uint256, 
+        bytes memory
+    ) public pure returns (bytes4 retvalue) {
+        return this.onERC721Received.selector;
     }
 }
