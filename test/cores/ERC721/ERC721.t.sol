@@ -5,17 +5,19 @@ import {Test} from "forge-std/Test.sol";
 import {ERC721} from "src/cores/ERC721/ERC721.sol";
 import {IERC721, IERC721Internal} from "src/cores/ERC721/interface/IERC721.sol";
 import {ERC721Storage} from "src/cores/ERC721/ERC721Storage.sol";
+import {ERC721Harness} from "test/cores/ERC721/helpers/ERC721Harness.sol";
+import {ERC721ReceiverImplementer} from "test/cores/ERC721/helpers/ERC721ReceiverImplementer.sol";
 
 contract ERC721Test is Test {
     // to store expected revert errors
     bytes err;
 
     ERC721Harness erc721;
-    Erc721ReceiverImplementer erc721Receiver;
+    ERC721ReceiverImplementer erc721Receiver;
 
     function setUp() public {
         erc721 = new ERC721Harness();
-        erc721Receiver = new Erc721ReceiverImplementer();
+        erc721Receiver = new ERC721ReceiverImplementer();
     }
 
     function test_setUp() public {
@@ -357,9 +359,10 @@ contract ERC721Test is Test {
             assertEq(erc721.balanceOf(from), mintQuantity - transferQuantity - j);
             assertEq(erc721.balanceOf(to), transferQuantity + j);
 
-            vm.prank(from);
             tokenId = transferQuantity + j;
             assertEq(erc721.ownerOf(tokenId), from);
+            
+            vm.prank(from);
             erc721.approve(operator, tokenId);
             assertEq(erc721.getApproved(tokenId), operator);
 
@@ -371,75 +374,62 @@ contract ERC721Test is Test {
             assertEq(erc721.balanceOf(to), transferQuantity + j + 1);
         }
 
-        // w/ approvalForAll
+        // w/ setApprovalForAll
         assertFalse(erc721.isApprovedForAll(from, operator));
         vm.prank(from);
         erc721.setApprovalForAll(operator, true);
 
+        for (uint256 k; k < transferQuantity; ++k) {
+            assertEq(erc721.balanceOf(from), mintQuantity - transferQuantity * 2 - k);
+            assertEq(erc721.balanceOf(to), transferQuantity * 2 + k);
+            
+            tokenId = transferQuantity * 2 + k;
+            assertEq(erc721.ownerOf(tokenId), from);
+            assertTrue(erc721.isApprovedForAll(from, operator));
+
+            vm.prank(operator);
+            erc721.transferFrom(from, to, tokenId);
+
+            assertEq(erc721.ownerOf(tokenId), to);
+            assertEq(erc721.balanceOf(from), mintQuantity - transferQuantity * 2 - (k + 1));
+            assertEq(erc721.balanceOf(to), transferQuantity * 2 + k + 1);
+        }
 
         assertEq(erc721.totalSupply(), mintQuantity);
         assertEq(erc721.totalMinted(), mintQuantity);
     }
-    function test_transferFromRevertTransferCallerNotOwnerNorApproved() public {}
-}
+    function test_transferFromRevertTransferCallerNotOwnerNorApproved(
+        address from,
+        address to,
+        address badOperator,
+        uint8 mintQuantity
+    ) public {
+        // prevent transfers, approvals to/from address(0x0)
+        vm.assume(from != address(0x0) && to != address(0x0)); 
+        vm.assume(from != badOperator && from != to);
+        vm.assume(mintQuantity > 0);
 
-/// @dev Harness contract wrapping ERC721 to publicly expose internal functions for testing purposes
-contract ERC721Harness is ERC721 {
+        erc721.mint(from, mintQuantity);
 
-    function name() public pure override returns (string memory) {
-        return "ERC721";
-    }
+        vm.startPrank(badOperator);
+        uint256 tokenId;
+        for (uint256 i; i < mintQuantity; ++i) {
+            assertEq(erc721.balanceOf(from), mintQuantity);
+            assertEq(erc721.balanceOf(to), 0);
+            
+            tokenId = i;
+            assertEq(erc721.ownerOf(tokenId), from);
 
-    function symbol() public pure override returns (string memory) {
-        return "ERC721";
-    }
-    
-    function tokenURI(uint256) public pure override returns (string memory) {
-        return "uri";
-    }
-
-    function exists(uint256 tokenId) public view returns (bool) {
-        return _exists(tokenId);
-    }
-
-    function mint(address to, uint256 quantity) public {
-        _mint(to, quantity);
-    }
-    
-    function burn(uint256 tokenId) public {
-        _burn(tokenId);
-    }
-
-    function transfer(address from, address to, uint256 tokenId) public {
-        _transfer(from, to, tokenId);
-    }
-
-    function safeMint(address to, uint256 quantity) public {
-        _safeMint(to, quantity);
-    }
-
-    function safeTransfer(address from, address to, uint256 tokenId, bytes memory data) public {
-        _safeTransfer(from, to, tokenId, data);
-    }
-
-    function checkCanTransfer(address account, uint256 tokenId) public {
-        _checkCanTransfer(account, tokenId);
-    }
-
-    function checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory data) public {
-        _checkOnERC721Received(from, to, tokenId, data);
-    }
-}
-
-/// @dev Harness contract implementing `_checkOnERC721Received()` to accept `ERC721::safeTransfer()`
-/// for testing purposes
-contract Erc721ReceiverImplementer {
-    function onERC721Received(
-        address, 
-        address, 
-        uint256, 
-        bytes memory
-    ) public pure returns (bytes4 retvalue) {
-        return this.onERC721Received.selector;
+            // attempt transferFrom without approval
+            err = abi.encodeWithSelector(IERC721Internal.TransferCallerNotOwnerNorApproved.selector);
+            vm.expectRevert(err);
+            erc721.transferFrom(from, to, tokenId);
+            
+            // assert no state changes made
+            assertEq(erc721.ownerOf(tokenId), from);
+            assertEq(erc721.balanceOf(from), mintQuantity);
+            assertEq(erc721.balanceOf(to), 0);
+        }
+        vm.stopPrank();
     }
 }
