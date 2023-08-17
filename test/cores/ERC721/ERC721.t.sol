@@ -127,26 +127,39 @@ contract ERC721Test is Test {
 
     function test_safeTransferRevertTransferToNonERC721ReceiverImplementer(
         address from, 
-        address to,
         uint8 mintQuantity, 
         uint8 transferQuantity
     ) public {
         vm.assume(from != address(0x0));
-        vm.assume(to != address(0x0));
-        vm.assume(to != 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D); // exclude cheatcode VM addresss
         vm.assume(transferQuantity < mintQuantity);
 
+        address to = address(this); // test contract doesn't implement onERC721Received()
         erc721.mint(from, mintQuantity);
 
         uint256 preTransferBalanceFrom = erc721.balanceOf(from);
         uint256 preTransferBalanceTo = erc721.balanceOf(to);
+        // attempt safeTransfers to this address
         for (uint i; i < transferQuantity; i++) {
             uint256 tokenId = i;
-            // vm.expectRevert(IERC721Internal.TransferToNonERC721ReceiverImplementer.selector);
+            vm.expectRevert(IERC721Internal.TransferToNonERC721ReceiverImplementer.selector);
             erc721.safeTransfer(from, to, tokenId, '');
-            assertEq(erc721.balanceOf(from), preTransferBalanceFrom - (i + 1));
-            assertEq(erc721.balanceOf(to), preTransferBalanceTo + (i + 1));
-            assertEq(erc721.ownerOf(tokenId), to);
+            // assert transfers not completed
+            assertEq(erc721.balanceOf(from), preTransferBalanceFrom);
+            assertEq(erc721.balanceOf(to), preTransferBalanceTo);
+            assertEq(erc721.ownerOf(tokenId), from);
+        }
+
+        // attempt safeTransfers to another non onERC721Received() implementer
+        address to2 = address(new ERC721Harness());
+        uint256 preTransferBalanceTo2 = erc721.balanceOf(to2);
+        for (uint i; i < transferQuantity; i++) {
+            uint256 tokenId = i;
+            vm.expectRevert(IERC721Internal.TransferToNonERC721ReceiverImplementer.selector);
+            erc721.safeTransfer(from, to2, tokenId, '');
+            // assert transfers not completed
+            assertEq(erc721.balanceOf(from), preTransferBalanceFrom);
+            assertEq(erc721.balanceOf(to2), preTransferBalanceTo2);
+            assertEq(erc721.ownerOf(tokenId), from);
         }
         assertEq(erc721.totalSupply(), preTransferBalanceFrom);        
     }
