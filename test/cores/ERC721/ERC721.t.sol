@@ -87,6 +87,7 @@ contract ERC721Test is Test {
     }
 
     function test_burn(address to, uint8 mintQuantity, uint8 burnQuantity) public {
+        vm.assume(to != address(0x0)); // prevent mint to address(0x0)
         vm.assume(mintQuantity > 0);
         vm.assume(burnQuantity < mintQuantity);
 
@@ -144,7 +145,8 @@ contract ERC721Test is Test {
     }
 
     function test_safeTransfer(address from, uint8 mintQuantity, uint8 transferQuantity) public {
-        vm.assume(from != address(0x0)); // prevent balanceOf() revert on address(0x0)
+        // prevent balanceOf() revert on address(0x0) and self-safeTransfer
+        vm.assume(from != address(0x0) && from != address(erc721Receiver)); 
         vm.assume(mintQuantity > 0);
         vm.assume(transferQuantity < mintQuantity);
 
@@ -258,6 +260,7 @@ contract ERC721Test is Test {
         uint8 mintQuantity
     ) public {
         vm.assume(from != address(0x0) && from != someAddress); // prevent address(0x0) & self-approve
+        vm.assume(operator != address(0x0));
         vm.assume(mintQuantity > 0);
 
         erc721.mint(from, mintQuantity);
@@ -316,6 +319,68 @@ contract ERC721Test is Test {
         // assert setApprovalForAll failed
         assertFalse(erc721.isApprovedForAll(from, badOperator));
     }
+
+    function test_transferFrom(
+        address from, 
+        address to, 
+        address operator,
+        uint8 mintQuantity, 
+        uint8 transferQuantity
+    ) public {
+        // prevent transfers, approvals to/from address(0x0)
+        vm.assume(from != address(0x0) && to != address(0x0) && operator != address(0x0)); 
+        vm.assume(from != operator && from != to);
+        vm.assume(mintQuantity > 0);
+        vm.assume(transferQuantity < mintQuantity / 3);
+
+        erc721.mint(from, mintQuantity);
+
+        // transferFrom as owner
+        vm.startPrank(from);
+        uint256 tokenId;
+        for (uint256 i; i < transferQuantity; ++i) {
+            assertEq(erc721.balanceOf(from), mintQuantity - i);
+            assertEq(erc721.balanceOf(to), 0 + i);
+            
+            tokenId = i;
+            assertEq(erc721.ownerOf(tokenId), from);
+            erc721.transferFrom(from, to, tokenId);
+            
+            assertEq(erc721.ownerOf(tokenId), to);
+            assertEq(erc721.balanceOf(from), mintQuantity - (i + 1));
+            assertEq(erc721.balanceOf(to), i + 1);
+        }
+        vm.stopPrank();
+        
+        // w/ explicit approve
+        for (uint256 j; j < transferQuantity; ++j) {
+            assertEq(erc721.balanceOf(from), mintQuantity - transferQuantity - j);
+            assertEq(erc721.balanceOf(to), transferQuantity + j);
+
+            vm.prank(from);
+            tokenId = transferQuantity + j;
+            assertEq(erc721.ownerOf(tokenId), from);
+            erc721.approve(operator, tokenId);
+            assertEq(erc721.getApproved(tokenId), operator);
+
+            vm.prank(operator);
+            erc721.transferFrom(from, to, tokenId);
+
+            assertEq(erc721.ownerOf(tokenId), to);
+            assertEq(erc721.balanceOf(from), mintQuantity - transferQuantity - (j + 1));
+            assertEq(erc721.balanceOf(to), transferQuantity + j + 1);
+        }
+
+        // w/ approvalForAll
+        assertFalse(erc721.isApprovedForAll(from, operator));
+        vm.prank(from);
+        erc721.setApprovalForAll(operator, true);
+
+
+        assertEq(erc721.totalSupply(), mintQuantity);
+        assertEq(erc721.totalMinted(), mintQuantity);
+    }
+    function test_transferFromRevertTransferCallerNotOwnerNorApproved() public {}
 }
 
 /// @dev Harness contract wrapping ERC721 to publicly expose internal functions for testing purposes
