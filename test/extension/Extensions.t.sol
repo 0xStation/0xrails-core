@@ -218,7 +218,8 @@ contract MaliciousExtensionsTest is Test, Extensions {
         // not an issue since setting implementation involved access control in the first place
         // and unrecognized function signatures result in delegation to address(0x0) which revert
         bytes memory payload = abi.encodeWithSelector(someSelector);
-        address(this).call(payload);
+        (bool r,) = address(this).call(payload);
+        require(r);
 
         // can still remove or update to a new implementation
         removeExtension(someSelector);

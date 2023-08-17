@@ -66,7 +66,7 @@ contract ERC721Test is Test {
     }
 
     function test_transfer(address from, address to, uint8 mintQuantity, uint8 transferQuantity) public {
-        vm.assume(from != address(0x0)); // prevent mint to address(0x0)
+        vm.assume(from != address(0x0) && from != to); // prevent mint to address(0x0) and self transfer
         vm.assume(to != address(0x0)); // prevent balanceOf() revert on address(0x0)
         vm.assume(mintQuantity > 0);
         vm.assume(transferQuantity < mintQuantity);
@@ -80,6 +80,25 @@ contract ERC721Test is Test {
             erc721.transfer(from, to, tokenId);
             assertEq(erc721.balanceOf(from), preTransferBalanceFrom - (i + 1));
             assertEq(erc721.balanceOf(to), preTransferBalanceTo + (i + 1));
+            assertEq(erc721.ownerOf(tokenId), to);
+        }
+        assertEq(erc721.totalSupply(), preTransferBalanceFrom);
+    }
+
+    function test_transferSelf(address from, uint8 mintQuantity, uint8 transferQuantity) public {
+        vm.assume(from != address(0x0)); // prevent mint to address(0x0) 
+        vm.assume(mintQuantity > 0);
+        vm.assume(transferQuantity < mintQuantity);
+
+        erc721.mint(from, mintQuantity);
+
+        address to = from;
+        uint256 preTransferBalanceFrom = erc721.balanceOf(from);
+        uint256 preTransferBalanceTo = erc721.balanceOf(to);
+        for (uint i; i < transferQuantity; i++) {
+            uint256 tokenId = i;
+            erc721.transfer(from, to, tokenId);
+            assertEq(erc721.balanceOf(to), preTransferBalanceTo);
             assertEq(erc721.ownerOf(tokenId), to);
         }
         assertEq(erc721.totalSupply(), preTransferBalanceFrom);
