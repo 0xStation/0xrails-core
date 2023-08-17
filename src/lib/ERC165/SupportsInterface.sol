@@ -26,7 +26,7 @@ abstract contract SupportsInterface is SupportsInterfaceInternal, ISupportsInter
     }
 
     /*====================
-        AUTHORITZATION
+        AUTHORIZATION
     ====================*/
 
     modifier canUpdateInterfaces() {

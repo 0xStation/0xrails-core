@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Initializable} from "../../lib/initializable/Initializable.sol";
-import {IERC721Internal, IERC721Receiver} from "./IERC721.sol";
+import {IERC721Internal, IERC721Receiver} from "./interface/IERC721.sol";
 import {ERC721Storage} from "./ERC721Storage.sol";
 
 abstract contract ERC721Internal is Initializable, IERC721Internal {
@@ -315,7 +315,7 @@ abstract contract ERC721Internal is Initializable, IERC721Internal {
     }
 
     /*====================
-        AUTHORITZATION
+        AUTHORIZATION
     ====================*/
 
     function _checkCanTransfer(address account, uint256 tokenId) internal virtual {

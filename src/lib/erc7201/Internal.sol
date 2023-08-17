@@ -15,6 +15,6 @@ abstract contract Internal is InterfaceInternal {
     =============*/
 
     /*====================
-        AUTHORITZATION
+        AUTHORIZATION
     ====================*/
 }

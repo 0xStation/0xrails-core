@@ -32,6 +32,6 @@ abstract contract TokenMetadataInternal is ITokenMetadataInternal {
     }
 
     /*====================
-        AUTHORITZATION
+        AUTHORIZATION
     ====================*/
 }

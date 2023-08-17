@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {IERC721External} from "./IERC721.sol";
+import {IERC721External} from "./interface/IERC721.sol";
 import {ERC721Internal} from "./ERC721Internal.sol";
 import {ERC721Storage} from "./ERC721Storage.sol";
 
@@ -57,6 +57,6 @@ abstract contract ERC721 is ERC721Internal, IERC721External {
     }
 
     /*====================
-        AUTHORITZATION
+        AUTHORIZATION
     ====================*/
 }
