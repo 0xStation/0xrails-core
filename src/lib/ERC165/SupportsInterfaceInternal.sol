@@ -14,6 +14,9 @@ abstract contract SupportsInterfaceInternal is ISupportsInterfaceInternal {
     /*===========
         VIEWS
     ===========*/
+
+    /// @dev To remain EIP165 compliant, this function must not be called with `bytes4(type(uint32).max)`
+    /// Setting `0xffffffff` as true by providing it as `interfaceId` will disable support of EIP165 in child contracts 
     function _supportsInterface(bytes4 interfaceId) internal view returns (bool) {
         SupportsInterfaceStorage.Layout storage layout = SupportsInterfaceStorage.layout();
         return interfaceId == erc165Id || layout._supportsInterface[interfaceId];
