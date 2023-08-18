@@ -25,6 +25,9 @@ contract SupportsInterfaceTest is Test, SupportsInterface {
         interfaceExternalId = type(InterfaceExternal).interfaceId;
     }
 
+    /// @dev since `erc165Id` is stored as a constant and checked separately from storage, 
+    /// it can still be added and removed to the ERC7201 namespace mapping, tested here via fuzzing.
+    /// This has no effect on the high-level expected behavior of `supportsInterface(erc165Id)`
     function test_setUp() public {
         // check storage of `erc165Id` constant on deployment
         bytes4 derivedERC165Id = bytes4(keccak256('supportsInterface(bytes4)'));
@@ -59,6 +62,40 @@ contract SupportsInterfaceTest is Test, SupportsInterface {
         assertTrue(supportsInterface(someInterfaceId));
     }
 
+    function test_addInterfaceRevertInterfaceAlreadyAdded(bytes4 someInterfaceId) public {
+        vm.assume(someInterfaceId != ierc721ReceiverId);
+        vm.assume(someInterfaceId != interfaceInternalId);
+        vm.assume(someInterfaceId != interfaceExternalId);
+
+        // setup interfaceIds
+        _addInterface(ierc721ReceiverId);
+        _addInterface(interfaceInternalId);
+        _addInterface(interfaceExternalId);
+        _addInterface(someInterfaceId);
+
+        // revert adding example interfaceIds
+        err = abi.encodeWithSelector(InterfaceAlreadyAdded.selector, ierc721ReceiverId);
+        vm.expectRevert(err);
+        _addInterface(ierc721ReceiverId);
+        assertTrue(supportsInterface(ierc721ReceiverId));
+        
+        err = abi.encodeWithSelector(InterfaceAlreadyAdded.selector, interfaceInternalId);
+        vm.expectRevert(err);
+        _addInterface(interfaceInternalId);
+        assertTrue(supportsInterface(interfaceInternalId));
+        
+        err = abi.encodeWithSelector(InterfaceAlreadyAdded.selector, interfaceExternalId);
+        vm.expectRevert(err);
+        _addInterface(interfaceExternalId);
+        assertTrue(supportsInterface(interfaceExternalId));
+
+        // revert adding random interfaceIds
+        err = abi.encodeWithSelector(InterfaceAlreadyAdded.selector, someInterfaceId);
+        vm.expectRevert(err);
+        _addInterface(someInterfaceId);
+        assertTrue(supportsInterface(someInterfaceId));
+    }
+
     function test_removeInterface(bytes4 someInterfaceId) public  {
         vm.assume(someInterfaceId != erc165Id);
         vm.assume(someInterfaceId != ierc721ReceiverId);
@@ -87,6 +124,34 @@ contract SupportsInterfaceTest is Test, SupportsInterface {
 
         // test removing random interfaceIds
         assertTrue(supportsInterface(someInterfaceId));
+        _removeInterface(someInterfaceId);
+        assertFalse(supportsInterface(someInterfaceId));
+    }
+
+    function test_removeInterfaceRevertInterfaceNotAdded(bytes4 someInterfaceId) public  {
+        vm.assume(someInterfaceId != ierc721ReceiverId);
+        vm.assume(someInterfaceId != interfaceInternalId);
+        vm.assume(someInterfaceId != interfaceExternalId);
+
+        // revert removing example interfaceIds
+        err = abi.encodeWithSelector(InterfaceNotAdded.selector, ierc721ReceiverId);
+        vm.expectRevert(err);
+        _removeInterface(ierc721ReceiverId);
+        assertFalse(supportsInterface(ierc721ReceiverId));
+        
+        err = abi.encodeWithSelector(InterfaceNotAdded.selector, interfaceInternalId);
+        vm.expectRevert(err);
+        _removeInterface(interfaceInternalId);
+        assertFalse(supportsInterface(interfaceInternalId));
+        
+        err = abi.encodeWithSelector(InterfaceNotAdded.selector, interfaceExternalId);
+        vm.expectRevert(err);
+        _removeInterface(interfaceExternalId);
+        assertFalse(supportsInterface(interfaceExternalId));
+
+        // revert removing random interfaceIds
+        err = abi.encodeWithSelector(InterfaceNotAdded.selector, someInterfaceId);
+        vm.expectRevert(err);
         _removeInterface(someInterfaceId);
         assertFalse(supportsInterface(someInterfaceId));
     }

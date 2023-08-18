@@ -17,6 +17,7 @@ abstract contract SupportsInterface is SupportsInterfaceInternal, ISupportsInter
     /*=============
         SETTERS
     =============*/
+    
     function addInterface(bytes4 interfaceId) external virtual canUpdateInterfaces {
         _addInterface(interfaceId);
     }
