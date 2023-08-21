@@ -20,10 +20,6 @@ abstract contract Access is Permissions {
         return account == owner();
     }
 
-    function _checkSenderIsAdmin() internal view {
-        _checkPermission(Operations.ADMIN, msg.sender);
-    }
-
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return super.supportsInterface(interfaceId);
     }

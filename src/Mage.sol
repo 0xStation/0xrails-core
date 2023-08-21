@@ -9,6 +9,7 @@ import {Guards} from "./guard/Guards.sol";
 import {Extensions} from "./extension/Extensions.sol";
 import {SupportsInterface} from "./lib/ERC165/SupportsInterface.sol";
 import {Execute} from "./lib/Execute.sol";
+import {Operations} from "./lib/Operations.sol";
 
 /**
  * A Solidity framework for creating complex and evolving onchain structures.
@@ -29,27 +30,11 @@ abstract contract Mage is Access, Guards, Extensions, SupportsInterface, Execute
             || Extensions.supportsInterface(interfaceId) || SupportsInterface.supportsInterface(interfaceId);
     }
 
-    function _checkCanUpdatePermissions() internal view override {
-        _checkSenderIsAdmin();
+    function _beforeExecute(address to, uint256 value, bytes calldata data) internal view override returns (address guard, bytes memory checkBeforeData) {
+        return checkGuardBefore(Operations.EXECUTE, abi.encode(to, value, data));
     }
 
-    function _checkCanUpdateGuards() internal view override {
-        _checkSenderIsAdmin();
-    }
-
-    function _checkCanUpdateExtensions() internal view override {
-        _checkSenderIsAdmin();
-    }
-
-    function _checkCanUpdateInterfaces() internal view override {
-        _checkSenderIsAdmin();
-    }
-
-    function _checkCanExecute() internal view override {
-        _checkSenderIsAdmin();
-    }
-
-    function _authorizeUpgrade(address) internal view override {
-        _checkSenderIsAdmin();
+    function _afterExecute(address guard, bytes memory checkBeforeData, bytes memory executeData) internal view override {
+        checkGuardAfter(guard, checkBeforeData, executeData);
     }
 }

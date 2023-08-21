@@ -4,10 +4,19 @@ pragma solidity ^0.8.13;
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 
 abstract contract Execute {
-    function execute(address target, uint256 value, bytes calldata data) public {
+    event Executed(address indexed executor, address indexed to, uint256 value, bytes data);
+
+    function execute(address to, uint256 value, bytes calldata data) public {
         _checkCanExecute();
-        Address.functionCallWithValue(target, data, value); // library checks for target contract existence
+        (address guard, bytes memory checkBeforeData) = _beforeExecute(to, value, data);
+        bytes memory executeData = Address.functionCallWithValue(to, data, value); // library checks for contract existence
+        _afterExecute(guard, checkBeforeData, executeData);
+        emit Executed(msg.sender, to, value, data);
     }
 
     function _checkCanExecute() internal view virtual;
+
+    function _beforeExecute(address to, uint256 value, bytes calldata data) internal virtual returns (address guard, bytes memory checkBeforeData);
+
+    function _afterExecute(address guard, bytes memory checkBeforeData, bytes memory executeData) internal virtual;
 }
