@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {IExtensionsExternal, IExtensions} from "./interface/IExtensions.sol";
+import {IExtensions} from "./interface/IExtensions.sol";
 import {ExtensionsInternal} from "./ExtensionsInternal.sol";
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 
-abstract contract Extensions is ExtensionsInternal, IExtensionsExternal {
+abstract contract Extensions is ExtensionsInternal {
     /*==================
         CALL ROUTING
     ==================*/

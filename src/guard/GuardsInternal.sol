@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {IGuardsInternal} from "./interface/IGuards.sol";
+import {IGuards} from "./interface/IGuards.sol";
 import {IGuard} from "./interface/IGuard.sol";
 import {GuardsStorage} from "./GuardsStorage.sol";
 import {Contract} from "../lib/Contract.sol";
 
-abstract contract GuardsInternal is IGuardsInternal {
+abstract contract GuardsInternal is IGuards {
     using GuardsStorage for address;
     /*===========
         HOOKS
     ===========*/
 
     function checkGuardBefore(bytes8 operation, bytes memory data) public view returns (address guard, bytes memory checkBeforeData) {
-        guard = guardOf(operation);
+        guard = guardOf(operation); 
         if (guard.autoReject()) {
             revert GuardRejected(operation, guard);
         } else if (guard.autoApprove()) {

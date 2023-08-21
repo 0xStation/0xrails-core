@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {IExtensionsInternal} from "./interface/IExtensions.sol";
+import {IExtensions} from "./interface/IExtensions.sol";
 import {IExtension} from "./interface/IExtension.sol";
 import {ExtensionsStorage} from "./ExtensionsStorage.sol";
 import {Contract} from "../lib/Contract.sol";
 
-abstract contract ExtensionsInternal is IExtensionsInternal {
+abstract contract ExtensionsInternal is IExtensions {
     /*===========
         VIEWS
     ===========*/
