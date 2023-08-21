@@ -6,6 +6,7 @@ import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.so
 import {ERC721Mage} from "src/cores/ERC721/ERC721Mage.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {Permissions} from "src/access/permissions/Permissions.sol";
+import {IPermissions, IPermissionsInternal} from "src/access/permissions/interface/IPermissions.sol";
 import {Guards} from "src/guard/Guards.sol";
 import {MetadataRouterExtension} from "src/extension/examples/metadataRouter/MetadataRouterExtension.sol";
 import {Extensions} from "src/extension/Extensions.sol";
@@ -126,5 +127,33 @@ contract ERC721MageTest is Test {
         assertEq(guards[0].operation, Operations.MINT);
         assertEq(guards[0].implementation, address(timeRangeGuard));
         assertEq(guards[0].updatedAt, block.timestamp);
+    }
+    
+    function test_supportsInterface(bytes4 someInterfaceId) public {
+        // check storage of `erc165Id` constant on deployment
+        bytes4 derivedERC165Id = bytes4(keccak256('supportsInterface(bytes4)'));
+        vm.assume(someInterfaceId != derivedERC165Id);
+
+        assertEq(derivedERC165Id, bytes4(0x01ffc9a7));
+        assertEq(derivedERC165Id, erc721MageProxy.erc165Id());
+        assertTrue(erc721MageProxy.supportsInterface(derivedERC165Id));
+        assertTrue(erc721MageProxy.supportsInterface(erc721MageProxy.erc165Id()));
+
+        // test adding random interfaceIds
+        assertFalse(erc721MageProxy.supportsInterface(someInterfaceId));
+        vm.prank(owner);
+        erc721MageProxy.addInterface(someInterfaceId);
+        assertTrue(erc721MageProxy.supportsInterface(someInterfaceId));
+    }
+
+    function test_addInterfaceRevertPermissionDoesNotExist(bytes4 someInterfaceId) public {
+        vm.assume(someInterfaceId != erc721MageProxy.erc165Id());
+        // attempt to addInterface without permission
+        assertFalse(erc721MageProxy.supportsInterface(someInterfaceId));
+        
+        err = abi.encodeWithSelector(IPermissionsInternal.PermissionDoesNotExist.selector, Operations.INTERFACE, address(this));
+        vm.expectRevert(err);
+        erc721MageProxy.addInterface(someInterfaceId);
+        assertFalse(erc721MageProxy.supportsInterface(someInterfaceId));        
     }
 }

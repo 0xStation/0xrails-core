@@ -10,7 +10,7 @@ import {IGuard} from "src/guard/interface/IGuard.sol";
 
 // This test contract inherits Guards to use this contract as a guards manager
 // and test raw functionality. It therefore overrides an abstract unimplemented function
-contract GuardsTest is Test, Guards, IGuards {
+contract GuardsTest is Test, Guards {
     using GuardsStorage for address;
 
     TimeRangeGuard public timeRangeGuard;
