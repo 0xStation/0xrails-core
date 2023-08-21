@@ -17,17 +17,16 @@ interface IPermissionsInternal {
     // errors
     error PermissionAlreadyExists(bytes8 operation, address account);
     error PermissionDoesNotExist(bytes8 operation, address account);
+}
 
-    // views
+/// @notice Since the Solidity compiler ignores inherited functions, function declarations are made
+/// at the top level so their selectors are properly XORed into a nonzero `interfaceId`
+interface IPermissions is IPermissionsInternal {
+    // IPermissionsInternal views
     function hashOperation(string memory name) external view returns (bytes8);
     function hasPermission(bytes8 operation, address account) external view returns (bool);
     function getAllPermissions() external view returns (Permission[] memory permissions);
-}
-
-interface IPermissionsExternal {
-    // setters
+    // external setters
     function addPermission(bytes8 operation, address account) external;
     function removePermission(bytes8 operation, address account) external;
 }
-
-interface IPermissions is IPermissionsInternal, IPermissionsExternal {}

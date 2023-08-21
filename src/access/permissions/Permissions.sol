@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {IPermissionsExternal, IPermissions} from "./interface/IPermissions.sol";
+import {IPermissions} from "./interface/IPermissions.sol";
 import {PermissionsInternal} from "./PermissionsInternal.sol";
 import {PermissionsStorage as Storage} from "./PermissionsStorage.sol";
 
-abstract contract Permissions is PermissionsInternal, IPermissionsExternal {
+abstract contract Permissions is PermissionsInternal {
     /*===========
         VIEWS
     ===========*/

@@ -16,16 +16,15 @@ interface IExtensionsInternal {
     error ExtensionDoesNotExist(bytes4 selector);
     error ExtensionAlreadyExists(bytes4 selector);
     error ExtensionUnchanged(bytes4 selector, address oldImplementation, address newImplementation);
-
-    // views
-    function extensionOf(bytes4 selector) external view returns (address implementation);
-    function getAllExtensions() external view returns (Extension[] memory extensions);
 }
 
-interface IExtensionsExternal {
-    // setters
+/// @notice Since the Solidity compiler ignores inherited functions, function declarations are made
+/// at the top level so their selectors are properly XORed into a nonzero `interfaceId`
+interface IExtensions is IExtensionsInternal {
+    // IExtensionsInternal views
+    function extensionOf(bytes4 selector) external view returns (address implementation);
+    function getAllExtensions() external view returns (Extension[] memory extensions);
+    // external setters
     function setExtension(bytes4 selector, address implementation) external;
     function removeExtension(bytes4 selector) external;
 }
-
-interface IExtensions is IExtensionsInternal, IExtensionsExternal {}

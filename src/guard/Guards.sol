@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {IGuardsExternal, IGuards} from "./interface/IGuards.sol";
+import {IGuards} from "./interface/IGuards.sol";
 import {GuardsInternal} from "./GuardsInternal.sol";
 
-abstract contract Guards is GuardsInternal, IGuardsExternal {
+abstract contract Guards is GuardsInternal {
     /*===========
         VIEWS
     ===========*/
