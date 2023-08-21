@@ -92,10 +92,6 @@ contract ERC721Mage is Mage, Ownable, Initializable, TokenMetadata, ERC721, IERC
         return IContractURIExtension(address(this)).ext_contractURI();
     }
 
-    function _checkCanUpdateTokenMetadata() internal view override {
-        _checkPermission(Operations.METADATA, msg.sender);
-    }
-
     /*=============
         SETTERS
     =============*/
@@ -136,5 +132,38 @@ contract ERC721Mage is Mage, Ownable, Initializable, TokenMetadata, ERC721, IERC
 
     function _afterTokenTransfers(address guard, bytes memory checkBeforeData) internal view override {
         checkGuardAfter(guard, checkBeforeData, ""); // no execution data
+    }
+
+    /*===================
+        AUTHORIZATION
+    ===================*/
+
+    function _checkCanUpdatePermissions() internal view override {
+        _checkPermission(Operations.PERMISSIONS, msg.sender);
+    }
+
+    function _checkCanUpdateGuards() internal view override {
+        _checkPermission(Operations.GUARDS, msg.sender);
+    }
+
+    function _checkCanExecute() internal view override {
+        _checkPermission(Operations.EXECUTE, msg.sender);
+    }
+
+    function _checkCanUpdateInterfaces() internal view override {
+        _checkPermission(Operations.INTERFACE, msg.sender);
+    }
+
+    function _checkCanUpdateTokenMetadata() internal view override {
+        _checkPermission(Operations.METADATA, msg.sender);
+    }
+
+    // changes to core functionality must be restricted to owners to protect admins overthrowing
+    function _checkCanUpdateExtensions() internal view override {
+        _checkOwner();
+    }
+
+    function _authorizeUpgrade(address) internal view override {
+        _checkOwner();
     }
 }

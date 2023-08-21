@@ -28,28 +28,4 @@ abstract contract Mage is Access, Guards, Extensions, SupportsInterface, Execute
         return Access.supportsInterface(interfaceId) || Guards.supportsInterface(interfaceId)
             || Extensions.supportsInterface(interfaceId) || SupportsInterface.supportsInterface(interfaceId);
     }
-
-    function _checkCanUpdatePermissions() internal view override {
-        _checkSenderIsAdmin();
-    }
-
-    function _checkCanUpdateGuards() internal view override {
-        _checkSenderIsAdmin();
-    }
-
-    function _checkCanUpdateExtensions() internal view override {
-        _checkSenderIsAdmin();
-    }
-
-    function _checkCanUpdateInterfaces() internal view override {
-        _checkSenderIsAdmin();
-    }
-
-    function _checkCanExecute() internal view override {
-        _checkSenderIsAdmin();
-    }
-
-    function _authorizeUpgrade(address) internal view override {
-        _checkSenderIsAdmin();
-    }
 }
