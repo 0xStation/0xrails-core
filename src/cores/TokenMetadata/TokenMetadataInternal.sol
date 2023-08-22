@@ -25,10 +25,12 @@ abstract contract TokenMetadataInternal is ITokenMetadataInternal {
     
     function _setName(string calldata name_) internal {
         TokenMetadataStorage.layout().name = name_;
+        emit NameUpdated(name_);
     }
     
     function _setSymbol(string calldata symbol_) internal {
         TokenMetadataStorage.layout().symbol = symbol_;
+        emit SymbolUpdated(symbol_);
     }
 
     /*====================
