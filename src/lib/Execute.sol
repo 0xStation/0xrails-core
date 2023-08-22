@@ -6,12 +6,13 @@ import {Address} from "openzeppelin-contracts/utils/Address.sol";
 abstract contract Execute {
     event Executed(address indexed executor, address indexed to, uint256 value, bytes data);
 
-    function execute(address to, uint256 value, bytes calldata data) public {
+    function execute(address to, uint256 value, bytes calldata data) public returns (bytes memory executeData) {
         _checkCanExecute();
         (address guard, bytes memory checkBeforeData) = _beforeExecute(to, value, data);
-        bytes memory executeData = Address.functionCallWithValue(to, data, value); // library checks for contract existence
+        executeData = Address.functionCallWithValue(to, data, value); // library checks for contract existence
         _afterExecute(guard, checkBeforeData, executeData);
         emit Executed(msg.sender, to, value, data);
+        return executeData;
     }
 
     function _checkCanExecute() internal view virtual;
