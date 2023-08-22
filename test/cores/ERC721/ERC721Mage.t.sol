@@ -317,14 +317,14 @@ contract ERC721MageTest is Test {
     }
 
     function test_approveRevertApprovalCallerNotOwnerNorApproved(
-        address from, 
         address someAddress, 
         address operator,
         uint8 mintQuantity
     ) public {
-        vm.assume(from != address(0x0) && from != someAddress); // prevent address(0x0) & self-approve
         vm.assume(operator != address(0x0));
         vm.assume(mintQuantity > 0);
+
+        address from = address(0xdeadbeef);
 
         vm.prank(owner);
         erc721MageProxy.mintTo(from, mintQuantity);
@@ -347,10 +347,11 @@ contract ERC721MageTest is Test {
         }
     }
 
-    function test_setApprovalForAll(address from, address operator, uint8 mintQuantity) public {
-        vm.assume(from != address(0x0) && from != 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D); // prevent address(0x0) & vm contract approvals
+    function test_setApprovalForAll(address operator, uint8 mintQuantity) public {
         vm.assume(operator != address(0x0)); 
         vm.assume(mintQuantity > 0);
+
+        address from = address(0xdeadbeef);
   
         vm.prank(owner);
         erc721MageProxy.mintTo(from, mintQuantity);
@@ -365,14 +366,10 @@ contract ERC721MageTest is Test {
         assertTrue(erc721MageProxy.isApprovedForAll(from, operator));
     }
 
-    function test_setApprovalForAllRevertApprovalInvalidOperator(
-        address from, 
-        uint8 mintQuantity
-    ) public {
-        // prevent mint & delegatecalls to address(0x0) & vm address 
-        vm.assume(from != address(0x0) && from != address(erc721MageProxy) && from != 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D); 
+    function test_setApprovalForAllRevertApprovalInvalidOperator(uint8 mintQuantity) public {
         vm.assume(mintQuantity > 0);
   
+        address from = address(0xdeadbeef);
         address badOperator = address(0x0);
         
         vm.prank(owner);
@@ -470,5 +467,42 @@ contract ERC721MageTest is Test {
 
         assertEq(erc721MageProxy.totalSupply(), mintQuantity);
         assertEq(erc721MageProxy.totalMinted(), mintQuantity);
+    }
+
+    function test_transferFromRevertTransferCallerNotOwnerNorApproved(
+        address from,
+        address to,
+        address badOperator,
+        uint8 mintQuantity
+    ) public {
+        // prevent transfers, approvals to/from address(0x0)
+        vm.assume(from != address(0x0) && to != address(0x0)); 
+        vm.assume(from != badOperator && from != to);
+        vm.assume(mintQuantity > 0);
+
+        vm.prank(owner);
+        erc721MageProxy.mintTo(from, mintQuantity);
+
+        vm.startPrank(badOperator);
+        uint256 tokenId;
+        for (uint256 i; i < mintQuantity; ) {
+            ++i;
+            assertEq(erc721MageProxy.balanceOf(from), mintQuantity);
+            assertEq(erc721MageProxy.balanceOf(to), 0);
+            
+            tokenId = i;
+            assertEq(erc721MageProxy.ownerOf(tokenId), from);
+
+            // attempt transferFrom without approval
+            err = abi.encodeWithSelector(IERC721Internal.TransferCallerNotOwnerNorApproved.selector);
+            vm.expectRevert(err);
+            erc721MageProxy.transferFrom(from, to, tokenId);
+            
+            // assert no state changes made
+            assertEq(erc721MageProxy.ownerOf(tokenId), from);
+            assertEq(erc721MageProxy.balanceOf(from), mintQuantity);
+            assertEq(erc721MageProxy.balanceOf(to), 0);
+        }
+        vm.stopPrank();
     }
 }
