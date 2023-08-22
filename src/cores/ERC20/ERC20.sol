@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {IERC20} from "./interface/IERC20.sol";
 import {ERC20Storage} from "./ERC20Storage.sol";
 
-// rewrite of OpenZeppelin's ERC20, but with ERC7201 namespaced storage layout
+// rewrite of OpenZeppelin's ERC20, but with ERC7201 namespaced storage layout and guard hooks
 abstract contract ERC20 is IERC20 {
     function decimals() public view virtual returns (uint8) {
         return 18;
