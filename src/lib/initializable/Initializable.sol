@@ -5,9 +5,16 @@ import {IInitializableInternal} from "./IInitializable.sol";
 import {InitializableStorage} from "./InitializableStorage.sol";
 
 abstract contract Initializable is IInitializableInternal {
+
     /*===========
         LOCK
     ===========*/
+    
+    /// @dev Logic implementation contract disables `initialize()` from being called 
+    /// to prevent privilege escalation and 'exploding kitten' attacks  
+    constructor() {
+        _disableInitializers();
+    }
 
     function _disableInitializers() internal virtual {
         InitializableStorage.Layout storage layout = InitializableStorage.layout();
@@ -20,7 +27,6 @@ abstract contract Initializable is IInitializableInternal {
             emit Initialized();
         }
     }
-  
     
     /*===============
         MODIFIERS

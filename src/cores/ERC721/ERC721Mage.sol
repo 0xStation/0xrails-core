@@ -22,6 +22,9 @@ import {Initializable} from "../../lib/initializable/Initializable.sol";
 /// @notice apply Mage pattern to ERC721 NFTs
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
 contract ERC721Mage is Mage, Ownable, Initializable, TokenMetadata, ERC721, IERC721Mage {
+
+    constructor() Initializable() {}
+    
     // owner stored explicitly
     function owner() public view override(Access, OwnableInternal) returns (address) {
         return OwnableInternal.owner();
@@ -53,11 +56,6 @@ contract ERC721Mage is Mage, Ownable, Initializable, TokenMetadata, ERC721, IERC
         }
     }
 
-    /// @dev Logic implementation contract disables `initialize()` from being called 
-    /// to prevent privilege escalation and 'exploding kitten' attacks  
-    constructor() {
-        _disableInitializers();
-    }
 
     // override starting tokenId exposed by ERC721A
     function _startTokenId() internal pure override returns (uint256) {
