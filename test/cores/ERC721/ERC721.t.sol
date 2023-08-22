@@ -232,6 +232,7 @@ contract ERC721Test is Test {
             assertFalse(erc721.isApprovedForAll(from, operator));
         }
     }
+
     function test_approveRevertApprovalInvalidOperator(address from, uint8 mintQuantity) public {
         vm.assume(from != address(0x0)); // prevent mint/approve to address(0x0)
         vm.assume(mintQuantity > 0);
@@ -398,6 +399,7 @@ contract ERC721Test is Test {
         assertEq(erc721.totalSupply(), mintQuantity);
         assertEq(erc721.totalMinted(), mintQuantity);
     }
+    
     function test_transferFromRevertTransferCallerNotOwnerNorApproved(
         address from,
         address to,
