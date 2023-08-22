@@ -13,8 +13,8 @@ Currently, Mage is being developed and applied in production for [GroupOS](https
 
 | EVM Network | ERC721Mage Address                                                                                                           |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Goerli      | [0x97b45f3ce999ac79607f11b47da761da8c8450b4](https://goerli.etherscan.io/address/0x97b45f3ce999ac79607f11b47da761da8c8450b4) |
-| Polygon | [0x72B7817075AC3263783296f33c8F053e848594a3](https://polygonscan.com/address/0x72b7817075ac3263783296f33c8f053e848594a3#code)
+| Goerli      | [0x1fc83981028ca43ed0a95d166b7d201abe6e8195](https://goerli.etherscan.io/address/0x1fc83981028ca43ed0a95d166b7d201abe6e8195) |
+| Polygon | [0x1fc83981028ca43ed0a95d166b7d201abe6e8195](https://polygonscan.com/address/0x1fc83981028ca43ed0a95d166b7d201abe6e8195#code)
 
 To deploy and verify [ERC721Mage](./src/cores/ERC721/ERC721Mage.sol), run:
 
