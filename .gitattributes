@@ -1,0 +1,3 @@
+lib/** export-ignore
+lib/** linguist-vendored
+test/** export-ignore
