@@ -28,7 +28,7 @@ contract BotAccounts is Accounts, Ownable {
 
         unchecked {
             for (uint256 i; i < _turnkeys.length; ++i) {
-                addPermission(Operations.EXECUTE_PERMIT, _turnkeys[i]);
+                _addPermission(Operations.EXECUTE_PERMIT, _turnkeys[i]);
             }
         }
     }
