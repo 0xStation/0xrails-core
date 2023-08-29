@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {BotAccounts} from "src/lib/accounts/BotAccounts.sol";
+import {BotAccounts} from "src/lib/ERC4337/accounts/BotAccounts.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 import {IOwnableInternal} from "src/access/ownable/interface/IOwnable.sol";
