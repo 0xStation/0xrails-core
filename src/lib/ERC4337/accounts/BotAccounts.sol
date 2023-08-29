@@ -23,7 +23,11 @@ contract BotAccounts is Accounts, Ownable {
 
     /// @param _owner The owner address of this contract which retains Turnkey management rights
     /// @param _turnkeys The initial turnkey addresses to support as recognized signers
-    constructor(address _entryPointAddress, address _owner, address[] memory _turnkeys) {
+    constructor(
+        address _entryPointAddress, 
+        address _owner, 
+        address[] memory _turnkeys
+    ) Accounts(_entryPointAddress) {
         _transferOwnership(_owner);
 
         unchecked {

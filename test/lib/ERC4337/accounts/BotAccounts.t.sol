@@ -14,6 +14,7 @@ contract AccountsTest is Test {
 
     BotAccounts public botAccounts;
 
+    address public entryPointAddress;
     address public owner;
     address public testTurnkey;
     bytes32 public digest;
@@ -22,13 +23,15 @@ contract AccountsTest is Test {
     bytes public err;
 
     function setUp() public {
+        // use actual EntryPoint deployment address
+        entryPointAddress = 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789;
         owner = vm.addr(0xbeefEEbabe);
         testTurnkey = vm.addr(0xc0ffEEbabe);
         digest = bytes32(hex'beefEEbabe');
         address[] memory initArray = new address[](1);
         initArray[0] = testTurnkey;
 
-        botAccounts = new BotAccounts(owner, initArray);
+        botAccounts = new BotAccounts(entryPointAddress, owner, initArray);
     }
 
     function test_setUp() public {

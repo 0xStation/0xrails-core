@@ -58,8 +58,8 @@ interface IEntryPoint {
 /// This interface is required only for compiling the spec
 interface IAggregator {
 
-  function validateUserOpSignature(IAccount.UserOperation calldata userOp)
-  external view returns (bytes memory sigForUserOp);
+    function validateUserOpSignature(IAccount.UserOperation calldata userOp)
+        external view returns (bytes memory sigForUserOp);
 
   function aggregateSignatures(IAccount.UserOperation[] calldata userOps) external view returns (bytes memory aggregatesSignature);
 

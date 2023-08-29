@@ -54,12 +54,31 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
         UserOperation calldata userOp, 
         bytes32 userOpHash, 
         uint256 missingAccountFunds
-    ) public view returns (uint256 validationData) {
-        // ensure msg.sender == entrypoint (|| self ?)
-        // check signature- return false on mismatch. should be signed over chainId + entryPointAddress
-        // check nonce maybe not entryPoint.getNonce(address(this), uint192 key)
+    ) public view virtual returns (uint256 validationData) {
+        // only EntryPoint should call this address so valid signatures can't be frontrun
+        _checkSender();
+
+        /// @notice BLS sig aggregator and timestamp expiry not used in this version so `bytes20(0x0)` and `bytes6(0x0)` suffice
+        // todo enable support for following params
+        bytes20 authorizer;
+        bytes6 validUntil;
+        bytes6 validAfter;
+
+        bool validSig = isValidSignature(userOpHash, userOp.signature) == this.isValidSignature.selector;
+        if (!validSig) {
+            // exit with status code 1: `SIG_VALIDATION_FAILED`
+            return SIG_VALIDATION_FAILED;
+       }
+
+        validationData = abi.encodePacked(authorizer, validUntil, validAfter);
+
+        // nonce collision is managed entirely by the EntryPoint, but validation hook optionality for child contracts is provided here
+        _checkNonce();
+
         // check fee payment
-        // return abi.encodePacked(authorizer, validUntil, validAfter) // authorizer == 0 for valid sig, 1 for invalid sig; not using signature aggregator
+        if (missingAccountFunds != 0) {
+            _preFund(missingAccountFunds);
+        }
     }
 
     /// @dev Function to recover a signer address from the provided digest and signature
@@ -85,11 +104,33 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
 
     /// @dev View function to get the ERC-4337 EntryPoint contract address for this chain
     function entryPoint() public view returns (address) {
-        return entryPoint;
+        return _entryPoint;
     }
 
     function getNonce() public view virtual returns (uint256) {
-        return IEntryPoint(entryPoint).getNonce(address(this), 0);
+        return IEntryPoint(_entryPoint).getNonce(address(this), 0);
+    }
+
+    /*===============
+        INTERNALS
+    ===============*/
+
+    //todo NatSpec
+    function _checkSender() internal view virtual {
+        if (msg.sender != _entryPoint) revert InvalidCaller();
+    }
+
+    /// @dev Since nonce management and collision checks are handled entirely by the EntryPoint,
+    /// this function is left empty for contracts inheriting from this one to use EntryPoint's defaults
+    /// If sequential `UserOperation` nonce ordering is desired, override this, eg: `require(nonce < type(uint64).max)`
+    function _checkNonce() internal view virtual {}
+
+    /// @dev Function to pre-fund the EntryPoint contract with delta of native currency funds required for a UserOperation
+    /// By default, this function only sends enough funds to complete the current context's UserOperation
+    /// Override if sending custom amounts > `_missingAccountFunds` (or < if reverts are preferrable)
+    function _preFund(uint256 _missingAccountFunds) internal virtual {
+        (bool r, ) = payable(msg.sender).call{ value: missingAccountFunds }('');
+        require(r);
     }
 
     /*===============
