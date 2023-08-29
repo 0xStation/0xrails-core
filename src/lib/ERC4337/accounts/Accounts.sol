@@ -13,6 +13,9 @@ import {SupportsInterface} from "src/lib/ERC165/SupportsInterface.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 
+// todo move into a new IAccounts interface
+error InvalidCaller(address badCaller);
+
 /// @title Station Network Accounts Manager Abstract Contract
 /// @author 👦🏻👦🏻.eth
 
@@ -54,12 +57,13 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
         UserOperation calldata userOp, 
         bytes32 userOpHash, 
         uint256 missingAccountFunds
-    ) public view virtual returns (uint256 validationData) {
+    ) public virtual returns (uint256 validationData) {
         // only EntryPoint should call this address so valid signatures can't be frontrun
         _checkSender();
 
-        /// @notice BLS sig aggregator and timestamp expiry not used in this version so `bytes20(0x0)` and `bytes6(0x0)` suffice
-        // todo enable support for following params
+        /// @notice BLS sig aggregator and timestamp expiry are not supported by this contract 
+        /// so `bytes20(0x0)` and `bytes6(0x0)` suffice. To enable support for aggregator and timestamp expiry,
+        /// override the following params
         bytes20 authorizer;
         bytes6 validUntil;
         bytes6 validAfter;
@@ -70,7 +74,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
             return SIG_VALIDATION_FAILED;
        }
 
-        validationData = abi.encodePacked(authorizer, validUntil, validAfter);
+        validationData = uint256(bytes32(abi.encodePacked(authorizer, validUntil, validAfter)));
 
         // nonce collision is managed entirely by the EntryPoint, but validation hook optionality for child contracts is provided here
         _checkNonce();
@@ -107,6 +111,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
         return _entryPoint;
     }
 
+    ///todo NatSpec
     function getNonce() public view virtual returns (uint256) {
         return IEntryPoint(_entryPoint).getNonce(address(this), 0);
     }
@@ -117,7 +122,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
 
     //todo NatSpec
     function _checkSender() internal view virtual {
-        if (msg.sender != _entryPoint) revert InvalidCaller();
+        if (msg.sender != _entryPoint) revert InvalidCaller(msg.sender);
     }
 
     /// @dev Since nonce management and collision checks are handled entirely by the EntryPoint,
@@ -129,7 +134,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
     /// By default, this function only sends enough funds to complete the current context's UserOperation
     /// Override if sending custom amounts > `_missingAccountFunds` (or < if reverts are preferrable)
     function _preFund(uint256 _missingAccountFunds) internal virtual {
-        (bool r, ) = payable(msg.sender).call{ value: missingAccountFunds }('');
+        (bool r, ) = payable(msg.sender).call{ value: _missingAccountFunds }('');
         require(r);
     }
 
@@ -140,7 +145,11 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
     /// @dev Declare explicit support for ERC1271 interface in addition to existing interfaces
     /// @param interfaceId The interfaceId to check for support
     function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
-        return (interfaceId == type(IERC1271).interfaceId || super.supportsInterface(interfaceId));
+        return (
+            interfaceId == type(IERC1271).interfaceId
+                || interfaceId == type(IAccount).interfaceId
+                || super.supportsInterface(interfaceId)
+        );
     }
 
     function _checkCanUpdatePermissions() internal view override {
@@ -159,4 +168,9 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
     function _checkCanUpdateInterfaces() internal view override {
         _checkPermission(Operations.INTERFACE, msg.sender);
     }
+
+    /// @notice Functions to be overridden by child contracts inheriting from this one
+    /// These ensure that funds do not get locked by deployed contracts inheriting from `Mage`
+    function preFundEntryPoint() external payable virtual;
+    function withdrawFromEntryPoint(address payable recipient, uint256 amount) external virtual;
 }

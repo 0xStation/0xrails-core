@@ -3,6 +3,7 @@
 pragma solidity ^0.8.13;
 
 import {Accounts} from "src/lib/ERC4337/accounts/Accounts.sol";
+import {IEntryPoint} from "src/lib/ERC4337/accounts/interface/IEntryPoint.sol";
 import {Ownable} from "src/access/ownable/Ownable.sol";
 import {OwnableInternal} from "src/access/ownable/OwnableInternal.sol";
 import {Access} from "src/access/Access.sol";
@@ -35,6 +36,29 @@ contract BotAccounts is Accounts, Ownable {
                 _addPermission(Operations.EXECUTE_PERMIT, _turnkeys[i]);
             }
         }
+    }
+
+    /// @dev Function to pre-fund the EntryPoint contract's `depositTo()` function
+    /// using payable call context + this contract's native currency balance
+    function preFundEntryPoint() public payable override {
+        uint256 totalFunds = msg.value + address(this).balance;
+        IEntryPoint(_entryPoint).depositTo{ value : totalFunds }(address(this));
+    }
+
+    /// @dev Function to withdraw funds using the EntryPoint's `withdrawTo()` function
+    /// @param recipient The address to receive from the EntryPoint balance
+    /// @param amount The amount of funds to withdraw from the EntryPoint
+    function withdrawFromEntryPoint(address payable recipient, uint256 amount) public override onlyOwner {
+        IEntryPoint(_entryPoint).withdrawTo(recipient, amount);
+    }
+
+    /*===========
+        VIEWS
+    ===========*/
+
+    /// @dev Function to view the EntryPoint's deposit balance for this BotAccount contract address
+    function getEntryPointBalance() public view returns (uint256) {
+        return IEntryPoint(_entryPoint).balanceOf(address(this));
     }
 
     /// @notice This function must be overridden by contracts inheriting `Account` to delineate 

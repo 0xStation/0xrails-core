@@ -3,13 +3,14 @@
 pragma solidity ^0.8.13;
 
 import {IAccount} from "src/lib/ERC4337/accounts/interface/IAccount.sol";
+import {IStakeManager} from "src/lib/ERC4337/accounts/interface/IStakeManager.sol";
 
 /// @title ERC-4337 IEntryPoint Interface
 /// @author Original EIP-4337 Spec Authors: https://eips.ethereum.org/EIPS/eip-4337
 
 /// @dev Interface contract taken from the EIP-4337 spec,
 /// used to interface with each chain's ERC-4337 singleton EntryPoint contract
-interface IEntryPoint {
+interface IEntryPoint is IStakeManager {
     function handleOps(IAccount.UserOperation[] calldata ops, address payable beneficiary) external;
 
     function handleAggregatedOps(
