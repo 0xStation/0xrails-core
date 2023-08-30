@@ -14,7 +14,7 @@ import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 
 // todo move into a new IAccounts interface
-error InvalidCaller(address badCaller);
+error InvalidCaller(address notEntryPoint);
 
 /// @title Station Network Accounts Manager Abstract Contract
 /// @author 👦🏻👦🏻.eth
@@ -44,6 +44,9 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
     /// Official address for the most recent EntryPoint version is `0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789`
     constructor(address _entryPointAddress) {
         _entryPoint = _entryPointAddress;
+        
+        // permit the EntryPoint to call `execute()` on this contract via valid UserOp.signature only
+        _addPermission(Operations.EXECUTE_PERMIT, _entryPointAddress);
     }
 
     /// @dev Function enabling EIP-4337 compliance as a smart contract wallet account
@@ -95,14 +98,18 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
 
     /// @dev Function to recover a signer address from the provided digest and signature
     /// and then verify whether the recovered signer address is a recognized Turnkey 
-    /// @param hash The 32 byte digest derived by hashing signed message data
+    /// @param hash The 32 byte digest derived by hashing signed message data. Name is canonical in ERC1271.
     /// @param signature The signature to be verified via recovery. Must be 65 bytes in length.
     /// @notice OZ's ECDSA library prevents the zero address from being returned as a result
     /// of `recover()`, even when `ecrecover()` does as part of assessing an invalid signature
     /// For this reason, checks preventing a call to `hasPermission[address(0x0)]` are not necessary
     function isValidSignature(bytes32 hash, bytes memory signature) public view returns (bytes4 magicValue) {
+        // note: This assumes `UserOperation.signature` is created using EIP-191: `eth_sign`
+        // convert userOpHash to an Ethereum Signed Message digest.
+        bytes32 digest = ECDSA.toEthSignedMessageHash(hash); 
+        
         // This contract inherit's Access.sol's `hasPermission()` so the owner and `ADMIN` permissions also return true
-        if (hasPermission(Operations.EXECUTE_PERMIT, ECDSA.recover(hash, signature))) {
+        if (hasPermission(Operations.EXECUTE_PERMIT, ECDSA.recover(digest, signature))) {
             magicValue = this.isValidSignature.selector;
         } else {
             // nonzero return value provides more explicit denial of invalid signatures than `0x00000000`
@@ -160,6 +167,10 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
         );
     }
 
+    /// @dev Provides control over Turnkey addresses to the owner only
+    /// @notice Permission to `addPermission(Operations.EXECUTE_PERMIT)`, which is the intended
+    /// function call to be called by the owner for adding valid signer accounts such as Turnkeys,
+    /// is restricted to only the owner
     function _checkCanUpdatePermissions() internal view override {
         _checkPermission(Operations.PERMISSIONS, msg.sender);
     }
@@ -168,17 +179,21 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
         _checkPermission(Operations.GUARDS, msg.sender);
     }
 
+    /// @dev Provides control over `EXECUTE` permission to the owner only
+    /// @notice Permission to `execute()` via signature validation is restricted to only the Entrypoint
+    /// as well as explicitly added entities such as Turnkeys, via the `EXECUTE_PERMIT` permission
     function _checkCanExecute() internal view override {
         _checkPermission(Operations.EXECUTE, msg.sender);
     }
 
-    /// @dev Provide control over ERC165 layout to addresses with INTERFACE permission
+    /// @dev Provides control over ERC165 layout to addresses with `INTERFACE` permission
     function _checkCanUpdateInterfaces() internal view override {
         _checkPermission(Operations.INTERFACE, msg.sender);
     }
 
     /// @notice Functions to be overridden by child contracts inheriting from this one
     /// These ensure that funds do not get locked by deployed contracts inheriting from `Mage`
+    /// which possesses a payable `receive()` fallback
     function preFundEntryPoint() external payable virtual;
     function withdrawFromEntryPoint(address payable recipient, uint256 amount) external virtual;
 }
