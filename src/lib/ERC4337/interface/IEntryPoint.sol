@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.13;
 
-import {IAccount} from "src/lib/ERC4337/accounts/interface/IAccount.sol";
-import {IStakeManager} from "src/lib/ERC4337/accounts/interface/IStakeManager.sol";
+import {IAccount} from "src/lib/ERC4337/interface/IAccount.sol";
+import {IStakeManager} from "src/lib/ERC4337/interface/IStakeManager.sol";
 
 /// @title ERC-4337 IEntryPoint Interface
 /// @author Original EIP-4337 Spec Authors: https://eips.ethereum.org/EIPS/eip-4337

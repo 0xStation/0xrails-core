@@ -3,8 +3,8 @@
 pragma solidity ^0.8.13;
 
 import {Mage} from "src/Mage.sol";
-import {IAccount} from "src/lib/ERC4337/accounts/interface/IAccount.sol";
-import {IEntryPoint} from "src/lib/ERC4337/accounts/interface/IEntryPoint.sol";
+import {IAccount} from "src/lib/ERC4337/interface/IAccount.sol";
+import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {IOwnable} from "src/access/ownable/interface/IOwnable.sol";
 import {OwnableInternal} from "src/access/ownable/OwnableInternal.sol";
