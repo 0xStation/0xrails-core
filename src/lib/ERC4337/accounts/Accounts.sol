@@ -71,18 +71,18 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
         // only EntryPoint should call this function to prevent frontrunning of valid signatures
         _checkSender();
 
+        bool validSig = isValidSignature(userOpHash, userOp.signature) == this.isValidSignature.selector;
+        if (!validSig) {
+            // terminate with status code 1: `SIG_VALIDATION_FAILED`
+            return SIG_VALIDATION_FAILED;
+        }
+
         /// @notice BLS sig aggregator and timestamp expiry are not currently supported by this contract 
         /// so `bytes20(0x0)` and `bytes6(0x0)` suffice. To enable support for aggregator and timestamp expiry,
         /// override the following params
         bytes20 authorizer;
         bytes6 validUntil;
         bytes6 validAfter;
-
-        bool validSig = isValidSignature(userOpHash, userOp.signature) == this.isValidSignature.selector;
-        if (!validSig) {
-            // terminate with status code 1: `SIG_VALIDATION_FAILED`
-            return SIG_VALIDATION_FAILED;
-       }
 
         validationData = uint256(bytes32(abi.encodePacked(authorizer, validUntil, validAfter)));
 

@@ -7,6 +7,7 @@ import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 
 contract PaymasterInternal is ERC4337Internal {
     //TODO move internals from Paymaster into this file
+    //TODO add native currency decimal length to storage as immutable var 
 
     // function _validatePaymasterUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 maxCost)
     //     internal virtual returns (bytes memory context, uint256 validationData)
