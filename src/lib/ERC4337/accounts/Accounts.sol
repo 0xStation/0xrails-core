@@ -5,6 +5,7 @@ pragma solidity ^0.8.13;
 import {Mage} from "src/Mage.sol";
 import {IAccount} from "src/lib/ERC4337/interface/IAccount.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
+import {ERC4337Internal} from "src/lib/ERC4337/utils/ERC4337Internal.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {IOwnable} from "src/access/ownable/interface/IOwnable.sol";
 import {OwnableInternal} from "src/access/ownable/OwnableInternal.sol";
@@ -13,16 +14,13 @@ import {SupportsInterface} from "src/lib/ERC165/SupportsInterface.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 
-// todo replace this error with NotEntryPoint(addr) by inheriting from ERC4337Internal
-error InvalidCaller(address notEntryPoint);
-
 /// @title Station Network Accounts Manager Abstract Contract
 /// @author 👦🏻👦🏻.eth
 
 /// @dev This abstract contract provides scaffolding Station's Accounts signature validation
 /// ERC1271-compliance in combination with Mage's Permissions::EXECUTE_PERMIT system
 /// provides convenient and modular private key management on an infrastructural level
-abstract contract Accounts is Mage, IAccount, IERC1271 {
+abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal {
 
     /*=============
         STORAGE
@@ -69,13 +67,15 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
         uint256 missingAccountFunds
     ) public virtual returns (uint256 validationData) {
         // only EntryPoint should call this function to prevent frontrunning of valid signatures
-        _checkSender();
+        _checkSenderIsEntryPoint();
 
         bool validSig = isValidSignature(userOpHash, userOp.signature) == this.isValidSignature.selector;
         if (!validSig) {
             // terminate with status code 1: `SIG_VALIDATION_FAILED`
             return SIG_VALIDATION_FAILED;
         }
+
+        //TODO ADD SUPPORTSINTERFACE(EXECUTE)
 
         /// @notice BLS sig aggregator and timestamp expiry are not currently supported by this contract 
         /// so `bytes20(0x0)` and `bytes6(0x0)` suffice. To enable support for aggregator and timestamp expiry,
@@ -106,7 +106,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
     function isValidSignature(bytes32 hash, bytes memory signature) public view returns (bytes4 magicValue) {
         // note: This assumes `UserOperation.signature` is created using EIP-191: `eth_sign`
         // convert userOpHash to an Ethereum Signed Message digest.
-        bytes32 digest = ECDSA.toEthSignedMessageHash(hash); //todo toTypedDataHash 
+        bytes32 digest = ECDSA.toEthSignedMessageHash(hash); //todo toTypedDataHash
 
         // This contract inherit's Access.sol's `hasPermission()` so the owner and `ADMIN` permissions also return true
         if (hasPermission(Operations.EXECUTE_PERMIT, ECDSA.recover(digest, signature))) {
@@ -117,30 +117,9 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
         }
     }
 
-    /*===========
-        VIEWS
-    ============*/
-
-    /// @dev View function to get the ERC-4337 EntryPoint contract address for this chain
-    //todo this function will be replaced by EntryPointInternal inheritance
-    function entryPoint() public view returns (address) {
-        return _entryPoint;
-    }
-
-    /// @dev View function to get a unique nonce for this contract, provided and managed by the EntryPoint
-    function getNonce() public view virtual returns (uint256) {
-        return IEntryPoint(_entryPoint).getNonce(address(this), 0);
-    }
-
     /*===============
         INTERNALS
     ===============*/
-
-    /// @dev Limits callers to only the EntryPoint contract of this chain
-    //todo this function will be replaced by EntryPointInternal inheritance
-    function _checkSender() internal view virtual {
-        if (msg.sender != _entryPoint) revert InvalidCaller(msg.sender);
-    }
 
     /// @dev Since nonce management and collision checks are handled entirely by the EntryPoint,
     /// this function is left empty for contracts inheriting from this one to use EntryPoint's defaults
