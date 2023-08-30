@@ -52,16 +52,23 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
     /// @param missingAccountFunds Delta representing this account's missing funds in the EntryPoint contract
     /// Corresponds to minimum native currency that must be transferred to the EntryPoint to complete execution
     /// Can be 0 if this account has already deposited enough funds or if a paymaster is used
-    // @return validationData //todo NatSpec: concatenated (authorizor, validUntil, validAfter)
+    /** 
+    *   @return validationData A packed uint256 of three concatenated variables
+    *   ie: `uint256(abi.encodePacked(address authorizor, uint48 validUntil, uint48 validAfter))`
+    *   where `authorizer` can be one of the following:
+    *       1. A signature aggregator contract, inheriting IAggregator.sol, to use for validation
+    *       2. An exit status code `bytes20(0x01)` representing signature validation failure 
+    *       3. An empty `bytes20(0x0)` representing successful signature validation
+    */
     function validateUserOp(
         UserOperation calldata userOp, 
         bytes32 userOpHash, 
         uint256 missingAccountFunds
     ) public virtual returns (uint256 validationData) {
-        // only EntryPoint should call this address so valid signatures can't be frontrun
+        // only EntryPoint should call this function to prevent frontrunning of valid signatures
         _checkSender();
 
-        /// @notice BLS sig aggregator and timestamp expiry are not supported by this contract 
+        /// @notice BLS sig aggregator and timestamp expiry are not currently supported by this contract 
         /// so `bytes20(0x0)` and `bytes6(0x0)` suffice. To enable support for aggregator and timestamp expiry,
         /// override the following params
         bytes20 authorizer;
@@ -70,13 +77,14 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
 
         bool validSig = isValidSignature(userOpHash, userOp.signature) == this.isValidSignature.selector;
         if (!validSig) {
-            // exit with status code 1: `SIG_VALIDATION_FAILED`
+            // terminate with status code 1: `SIG_VALIDATION_FAILED`
             return SIG_VALIDATION_FAILED;
        }
 
         validationData = uint256(bytes32(abi.encodePacked(authorizer, validUntil, validAfter)));
 
-        // nonce collision is managed entirely by the EntryPoint, but validation hook optionality for child contracts is provided here
+        /// @notice nonce collision is managed entirely by the EntryPoint, but validation hook optionality
+        /// for child contracts is provided here as `_checkNonce()` may be overridden
         _checkNonce();
 
         // check fee payment
@@ -111,7 +119,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
         return _entryPoint;
     }
 
-    ///todo NatSpec
+    /// @dev View function to get a unique nonce for this contract, provided and managed by the EntryPoint
     function getNonce() public view virtual returns (uint256) {
         return IEntryPoint(_entryPoint).getNonce(address(this), 0);
     }
@@ -120,7 +128,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
         INTERNALS
     ===============*/
 
-    //todo NatSpec
+    /// @dev Limits callers to only the EntryPoint contract of this chain
     function _checkSender() internal view virtual {
         if (msg.sender != _entryPoint) revert InvalidCaller(msg.sender);
     }
