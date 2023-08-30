@@ -44,7 +44,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal {
         _entryPoint = _entryPointAddress;
         
         // permit the EntryPoint to call `execute()` on this contract via valid UserOp.signature only
-        _addPermission(Operations.EXECUTE_PERMIT, _entryPointAddress);
+        _addPermission(Operations.CALL_PERMIT, _entryPointAddress);
     }
 
     /// @dev Function enabling EIP-4337 compliance as a smart contract wallet account
@@ -75,7 +75,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal {
             return SIG_VALIDATION_FAILED;
         }
 
-        //TODO ADD SUPPORTSINTERFACE(EXECUTE)
+        //TODO ADD SUPPORTSINTERFACE(EXECUTE) TODO make entrypoint permission permanent
 
         /// @notice BLS sig aggregator and timestamp expiry are not currently supported by this contract 
         /// so `bytes20(0x0)` and `bytes6(0x0)` suffice. To enable support for aggregator and timestamp expiry,
@@ -109,7 +109,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal {
         bytes32 digest = ECDSA.toEthSignedMessageHash(hash); //todo toTypedDataHash
 
         // This contract inherit's Access.sol's `hasPermission()` so the owner and `ADMIN` permissions also return true
-        if (hasPermission(Operations.EXECUTE_PERMIT, ECDSA.recover(digest, signature))) {
+        if (hasPermission(Operations.CALL_PERMIT, ECDSA.recover(digest, signature))) {
             magicValue = this.isValidSignature.selector;
         } else {
             // nonzero return value provides more explicit denial of invalid signatures than `0x00000000`
@@ -149,7 +149,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal {
     }
 
     /// @dev Provides control over Turnkey addresses to the owner only
-    /// @notice Permission to `addPermission(Operations.EXECUTE_PERMIT)`, which is the intended
+    /// @notice Permission to `addPermission(Operations.CALL_PERMIT)`, which is the intended
     /// function call to be called by the owner for adding valid signer accounts such as Turnkeys,
     /// is restricted to only the owner
     function _checkCanUpdatePermissions() internal view override {
@@ -164,7 +164,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal {
     /// @notice Permission to `execute()` via signature validation is restricted to only the Entrypoint
     /// as well as explicitly added entities such as Turnkeys, via the `EXECUTE_PERMIT` permission
     function _checkCanExecute() internal view override {
-        _checkPermission(Operations.EXECUTE, msg.sender);
+        _checkPermission(Operations.CALL, msg.sender);
     }
 
     /// @dev Provides control over ERC165 layout to addresses with `INTERFACE` permission

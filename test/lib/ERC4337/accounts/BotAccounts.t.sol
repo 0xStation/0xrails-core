@@ -43,7 +43,7 @@ contract AccountsTest is Test {
         assertTrue(botAccounts.supportsInterface(type(IGuards).interfaceId));
         assertTrue(botAccounts.supportsInterface(type(IExtensions).interfaceId));
  
-        assertTrue(botAccounts.hasPermission(Operations.EXECUTE_PERMIT, testTurnkey));
+        assertTrue(botAccounts.hasPermission(Operations.CALL_PERMIT, testTurnkey));
     }
 
     function test_isValidSignature(uint256 startingPrivateKey, uint8 numPrivateKeys) public {
@@ -61,7 +61,7 @@ contract AccountsTest is Test {
             newTurnkeys[i] = currentAddr;
             
             vm.prank(owner);
-            botAccounts.addPermission(Operations.EXECUTE_PERMIT, currentAddr);
+            botAccounts.addPermission(Operations.CALL_PERMIT, currentAddr);
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(currentPrivateKey, digest);
             bytes memory currentRSV = abi.encodePacked(r, s, v);
             
@@ -79,7 +79,7 @@ contract AccountsTest is Test {
 
     function test_addTurnkey(uint256 startingPrivateKey, uint8 numPrivateKeys) public {
         address[] memory newTurnkeys = new address[](numPrivateKeys);
-        bytes8 op = Operations.EXECUTE_PERMIT;
+        bytes8 op = Operations.CALL_PERMIT;
 
         address currentAddr;
         for (uint8 i; i < numPrivateKeys; ++i) {
@@ -105,12 +105,12 @@ contract AccountsTest is Test {
     function test_addTurnkeyRevertPermissionDoesNotExist(address someAddress) public {
         err = abi.encodeWithSelector(IPermissionsInternal.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this));
         vm.expectRevert(err);
-        botAccounts.addPermission(Operations.EXECUTE_PERMIT, someAddress);
+        botAccounts.addPermission(Operations.CALL_PERMIT, someAddress);
     }
 
     function test_removeTurnkey(uint256 startingPrivateKey, uint8 numPrivateKeys) public {
         address[] memory newTurnkeys = new address[](numPrivateKeys);
-        bytes8 op = Operations.EXECUTE_PERMIT;
+        bytes8 op = Operations.CALL_PERMIT;
 
         address currentAddr;
         for (uint8 i; i < numPrivateKeys; ++i) {
@@ -143,7 +143,7 @@ contract AccountsTest is Test {
     }
 
     function test_removeTurnkeyRevertPermissionDoesNotExist(address someAddress) public {
-        bytes8 op = Operations.EXECUTE_PERMIT;
+        bytes8 op = Operations.CALL_PERMIT;
         vm.prank(owner);
         botAccounts.addPermission(op, someAddress);
 

@@ -36,7 +36,7 @@ contract BotAccounts is Accounts, Ownable {
         // permit Turnkeys to call `execute()` on this contract via valid UserOp.signature only
         unchecked {
             for (uint256 i; i < _turnkeys.length; ++i) {
-                _addPermission(Operations.EXECUTE_PERMIT, _turnkeys[i]);
+                _addPermission(Operations.CALL_PERMIT, _turnkeys[i]);
             }
         }
     }

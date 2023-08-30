@@ -9,7 +9,7 @@ library Operations {
     bytes8 constant METADATA = 0x0e5de49ee56c0bd3; // hashOperation("METADATA");
     bytes8 constant PERMISSIONS = 0x96bbcfa480f6f1a8; // hashOperation("PERMISSIONS");
     bytes8 constant GUARDS = 0x53cbed5bdabf52cc; // hashOperation("GUARDS");
-    bytes8 constant EXECUTE = 0xf01aff3887dcbbc6; // hashOperation("EXECUTE");
+    bytes8 constant CALL = 0x706a455ca44ffc9f; // hashOperation("CALL");
     bytes8 constant INTERFACE = 0x4a9bf2931aa5eae4; // hashOperation("INTERFACE");
 
     // TODO: deprecate and find another way versus anti-pattern
@@ -18,7 +18,7 @@ library Operations {
     bytes8 constant MINT_PERMIT = 0x0b6c53f325d325d3; // hashOperation("MINT_PERMIT");
     bytes8 constant BURN_PERMIT = 0x6801400fea7cd7c7; // hashOperation("BURN_PERMIT");
     bytes8 constant TRANSFER_PERMIT = 0xa994951607abf93b; // hashOperation("TRANSFER_PERMIT");
-    bytes8 constant EXECUTE_PERMIT = 0x6c9e9b56de5e9f1c; // hashOperation("EXECUTE_PERMIT");
+    bytes8 constant CALL_PERMIT = 0xc8d1733b0840734c; // hashOperation("CALL_PERMIT");
 
     function nameOperation(bytes8 operation) public pure returns (string memory name) {
         if (operation == ADMIN) {
@@ -35,8 +35,8 @@ library Operations {
             return "PERMISSIONS";
         } else if (operation == GUARDS) {
             return "GUARDS";
-        } else if (operation == EXECUTE) {
-            return "EXECUTE";
+        } else if (operation == CALL) {
+            return "CALL";
         } else if (operation == INTERFACE) {
             return "INTERFACE";
         } else if (operation == MINT_PERMIT) {
@@ -45,8 +45,8 @@ library Operations {
             return "BURN_PERMIT";
         } else if (operation == TRANSFER_PERMIT) {
             return "TRANSFER_PERMIT";
-        } else if (operation == EXECUTE_PERMIT) {
-            return "EXECUTE_PERMIT";
+        } else if (operation == CALL_PERMIT) {
+            return "CALL_PERMIT";
         }
     }
 }
