@@ -13,7 +13,7 @@ import {SupportsInterface} from "src/lib/ERC165/SupportsInterface.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 
-// todo move into a new IAccounts interface
+// todo replace this error with NotEntryPoint(addr) by inheriting from ERC4337Internal
 error InvalidCaller(address notEntryPoint);
 
 /// @title Station Network Accounts Manager Abstract Contract
@@ -106,8 +106,8 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
     function isValidSignature(bytes32 hash, bytes memory signature) public view returns (bytes4 magicValue) {
         // note: This assumes `UserOperation.signature` is created using EIP-191: `eth_sign`
         // convert userOpHash to an Ethereum Signed Message digest.
-        bytes32 digest = ECDSA.toEthSignedMessageHash(hash); 
-        
+        bytes32 digest = ECDSA.toEthSignedMessageHash(hash); //todo toTypedDataHash 
+
         // This contract inherit's Access.sol's `hasPermission()` so the owner and `ADMIN` permissions also return true
         if (hasPermission(Operations.EXECUTE_PERMIT, ECDSA.recover(digest, signature))) {
             magicValue = this.isValidSignature.selector;
@@ -122,6 +122,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
     ============*/
 
     /// @dev View function to get the ERC-4337 EntryPoint contract address for this chain
+    //todo this function will be replaced by EntryPointInternal inheritance
     function entryPoint() public view returns (address) {
         return _entryPoint;
     }
@@ -136,6 +137,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271 {
     ===============*/
 
     /// @dev Limits callers to only the EntryPoint contract of this chain
+    //todo this function will be replaced by EntryPointInternal inheritance
     function _checkSender() internal view virtual {
         if (msg.sender != _entryPoint) revert InvalidCaller(msg.sender);
     }

@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.13;
 
-import {IAccount} from "src/lib/ERC4337/interface/IAccount.sol";
 import {IStakeManager} from "src/lib/ERC4337/interface/IStakeManager.sol";
+import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 
 /// @title ERC-4337 IEntryPoint Interface
 /// @author Original EIP-4337 Spec Authors: https://eips.ethereum.org/EIPS/eip-4337
@@ -11,19 +11,19 @@ import {IStakeManager} from "src/lib/ERC4337/interface/IStakeManager.sol";
 /// @dev Interface contract taken from the EIP-4337 spec,
 /// used to interface with each chain's ERC-4337 singleton EntryPoint contract
 interface IEntryPoint is IStakeManager {
-    function handleOps(IAccount.UserOperation[] calldata ops, address payable beneficiary) external;
+    function handleOps(UserOperation[] calldata ops, address payable beneficiary) external;
 
     function handleAggregatedOps(
         UserOpsPerAggregator[] calldata opsPerAggregator,
         address payable beneficiary
     ) external;
 
-    function simulateValidation(IAccount.UserOperation calldata userOp) external;
+    function simulateValidation(UserOperation calldata userOp) external;
 
     function getNonce(address sender, uint192 key) external view returns (uint256 nonce);
         
     struct UserOpsPerAggregator {
-        IAccount.UserOperation[] userOps;
+        UserOperation[] userOps;
         IAggregator aggregator;
         bytes signature;
     }
@@ -59,10 +59,10 @@ interface IEntryPoint is IStakeManager {
 /// This interface is required only for compiling the spec
 interface IAggregator {
 
-    function validateUserOpSignature(IAccount.UserOperation calldata userOp)
+    function validateUserOpSignature(UserOperation calldata userOp)
         external view returns (bytes memory sigForUserOp);
 
-  function aggregateSignatures(IAccount.UserOperation[] calldata userOps) external view returns (bytes memory aggregatesSignature);
+  function aggregateSignatures(UserOperation[] calldata userOps) external view returns (bytes memory aggregatesSignature);
 
-  function validateSignatures(IAccount.UserOperation[] calldata userOps, bytes calldata signature) view external;
+  function validateSignatures(UserOperation[] calldata userOps, bytes calldata signature) view external;
 }
