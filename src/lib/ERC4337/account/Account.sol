@@ -19,13 +19,13 @@ import {SupportsInterface} from "src/lib/ERC165/SupportsInterface.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 
-/// @title Station Network Accounts Manager Abstract Contract
+/// @title Station Network Account Abstract Contract
 /// @author 👦🏻👦🏻.eth
 
-/// @dev This abstract contract provides scaffolding Station's Accounts signature validation
+/// @dev This abstract contract provides scaffolding Station's Account signature validation
 /// ERC1271-compliance in combination with Mage's Permissions::EXECUTE_PERMIT system
 /// provides convenient and modular private key management on an infrastructural level
-abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal, ModularValidationInternal {
+abstract contract Account is Mage, IAccount, IERC1271, ERC4337Internal, ModularValidationInternal {
 
     /*=============
         ACCOUNTS

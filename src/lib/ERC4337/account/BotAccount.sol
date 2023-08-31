@@ -2,21 +2,21 @@
 
 pragma solidity ^0.8.13;
 
-import {Account} from "src/lib/ERC4337/accounts/Account.sol";
+import {Account} from "src/lib/ERC4337/account/Account.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {Ownable} from "src/access/ownable/Ownable.sol";
 import {OwnableInternal} from "src/access/ownable/OwnableInternal.sol";
 import {Access} from "src/access/Access.sol";
 import {Operations} from "src/lib/Operations.sol";
 
-/// @title Station Network Bot Accounts Contract
+/// @title Station Network Bot Account Contract
 /// @author 👦🏻👦🏻.eth
 
 /// @dev This contract provides a single hub for managing and verifying signatures
 /// created by addresses with private keys generated via Turnkey's API, abstracting them away.
 /// ERC1271-compliance in combination with enabling and disabling individual Turnkey addresses 
 /// provides convenient and modular private key management on an infrastructural level
-contract BotAccounts is Accounts, Ownable {
+contract BotAccount is Account, Ownable {
 
     /*==================
         BOT ACCOUNTS
@@ -30,7 +30,7 @@ contract BotAccounts is Accounts, Ownable {
         address _entryPointAddress, 
         address _owner, 
         address[] memory _turnkeys
-    ) Accounts(_entryPointAddress) {
+    ) Account(_entryPointAddress) {
         _transferOwnership(_owner);
 
         // permit Turnkeys to call `execute()` on this contract via valid UserOp.signature only

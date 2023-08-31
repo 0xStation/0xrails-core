@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {BotAccounts} from "src/lib/ERC4337/accounts/BotAccounts.sol";
+import {BotAccount} from "src/lib/ERC4337/account/BotAccount.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 import {IOwnableInternal} from "src/access/ownable/interface/IOwnable.sol";
@@ -10,9 +10,9 @@ import {IPermissions, IPermissionsInternal} from "src/access/permissions/interfa
 import {IGuards} from "src/guard/interface/IGuards.sol";
 import {IExtensions} from "src/extension/interface/IExtensions.sol";
 
-contract AccountsTest is Test {
+contract AccountTest is Test {
 
-    BotAccounts public botAccounts;
+    BotAccount public botAccounts;
 
     address public entryPointAddress;
     address public owner;
@@ -31,7 +31,7 @@ contract AccountsTest is Test {
         address[] memory initArray = new address[](1);
         initArray[0] = testTurnkey;
 
-        botAccounts = new BotAccounts(entryPointAddress, owner, initArray);
+        botAccounts = new BotAccount(entryPointAddress, owner, initArray);
     }
 
     function test_setUp() public {
