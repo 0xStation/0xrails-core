@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.13;
 
-import {Accounts} from "src/lib/ERC4337/accounts/Accounts.sol";
+import {Account} from "src/lib/ERC4337/accounts/Account.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {Ownable} from "src/access/ownable/Ownable.sol";
 import {OwnableInternal} from "src/access/ownable/OwnableInternal.sol";
