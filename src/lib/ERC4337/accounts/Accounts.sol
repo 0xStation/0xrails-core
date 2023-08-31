@@ -35,10 +35,9 @@ abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal, Modular
     /// Official address for the most recent EntryPoint version is `0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789`
     constructor(address _entryPointAddress) {
         ERC4337Storage.layout().entryPoint = _entryPointAddress;
+        // error codes
         ERC4337Storage.layout().SIG_VALIDATION_FAILED = 1;
-        
-        // permit the EntryPoint to call `execute()` on this contract via valid UserOp.signature only
-        _addPermission(Operations.CALL_PERMIT, _entryPointAddress);
+        ERC4337Storage.layout().INVALID_SIGNER = hex'ffffffff';
     }
 
     /// @dev Function enabling EIP-4337 compliance as a smart contract wallet account
@@ -63,24 +62,20 @@ abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal, Modular
         // only EntryPoint should call this function to prevent frontrunning of valid signatures
         _checkSenderIsEntryPoint();
 
-        // attempt to deconstruct signature into `(validator, nestedSignature)`
-        (address validator, bytes memory nestedSignature) = abi.decode(userOp.signature, (address, bytes));
+        // extract validator address
+        address validator = address(bytes20(userOp.signature[:20]));
         if (isValidator(validator)) {
             // copy userOp into memory and format for Validator module
-            UserOperation memory userOpCopy = userOp;
-            userOpCopy.signature = nestedSignature;
+            UserOperation memory formattedUserOp = userOp;
+            formattedUserOp.signature = userOp.signature[20:];
 
-            uint256 ret = IValidator(validator).validateUserOp(userOpCopy, userOpHash, missingAccountFunds);
+            uint256 ret = IValidator(validator).validateUserOp(formattedUserOp, userOpHash, missingAccountFunds);
             // if validator rejects sig, terminate with status code 1
             if (ret != 0) return uint256(ERC4337Storage.layout().SIG_VALIDATION_FAILED);
-        } else {}
-        // support standard EOA signatures
-
-        // bool validSig = isValidSignature(userOpHash, userOp.signature) == this.isValidSignature.selector;
-        // if (!validSig) {
-        //     // terminate with status code 1: `SIG_VALIDATION_FAILED`
-        //     return SIG_VALIDATION_FAILED;
-        // }
+        } else {
+            // terminate with status code 1
+            return uint256(ERC4337Storage.layout().SIG_VALIDATION_FAILED);
+        }
 
         //TODO ADD SUPPORTSINTERFACE(EXECUTE) TODO make entrypoint permission permanent TODO add IAccounts parent
 
@@ -105,22 +100,24 @@ abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal, Modular
 
     /// @dev Function to recover a signer address from the provided digest and signature
     /// and then verify whether the recovered signer address is a recognized Turnkey 
-    /// @param hash The 32 byte digest derived by hashing signed message data. Name is canonical in ERC1271.
-    /// @param signature The signature to be verified via recovery. Must be 65 bytes in length.
-    /// @notice OZ's ECDSA library prevents the zero address from being returned as a result
-    /// of `recover()`, even when `ecrecover()` does as part of assessing an invalid signature
-    /// For this reason, checks preventing a call to `hasPermission[address(0x0)]` are not necessary
+    /// @param hash The 32 byte digest derived by hashing signed message data. Sadly, name is canonical in ERC1271.
+    /// @param signature The signature to be verified via recovery. Must be prepended with validator address
     function isValidSignature(bytes32 hash, bytes memory signature) public view returns (bytes4 magicValue) {
-        // note: This assumes `UserOperation.signature` is created using EIP-191: `eth_sign`
-        // convert userOpHash to an Ethereum Signed Message digest.
-        bytes32 digest = ECDSA.toEthSignedMessageHash(hash); //todo toTypedDataHash
+        // note: This impl assumes the nested sig within `UserOperation.signature` is created using EIP-712
 
-        // This contract inherit's Access.sol's `hasPermission()` so the owner and `ADMIN` permissions also return true
-        if (hasPermission(Operations.CALL_PERMIT, ECDSA.recover(digest, signature))) {
-            magicValue = this.isValidSignature.selector;
+        // extract validator address and sig formatted for validator
+        (address validator, bytes memory formattedSig) = abi.decode(signature, (address, bytes));
+        if (isValidator(validator)) {
+            // format call for Validator module
+            bytes4 ret = IValidator(validator).isValidSignature(hash, formattedSig);
+
+            // if validator returns wrong `magicValue`, return error code
+            if (ret != this.isValidSignature.selector) return ERC4337Storage.layout().INVALID_SIGNER;
+            
+            magicValue = ret;
         } else {
-            // nonzero return value provides more explicit denial of invalid signatures than `0x00000000`
-            return 0xffffffff;
+            // terminate with empty `magicValue`, indicating unrecognized validator
+            return bytes4(0);
         }
     }
 

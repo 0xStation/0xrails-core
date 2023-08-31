@@ -36,8 +36,7 @@ abstract contract Validator is IValidator {
                 "string name,"
                 "string version,"
                 "uint256 chainId,"
-                "address verifyingContract,"
-                "address entryPoint"
+                "address verifyingContract"
             ")"
         );
 
@@ -51,43 +50,23 @@ abstract contract Validator is IValidator {
     /// Validator module's own address, and EntryPoint address to prevent replay attacks across networks
     bytes32 public immutable INITIAL_DOMAIN_SEPARATOR;
 
-    address public immutable entryPoint;
+    /// @dev The chain id at construction time, to protect against forks
+    uint256 public immutable INITIAL_CHAIN_ID;
 
-    constructor(address _entryPointAddress) {
-        entryPoint = _entryPointAddress;
+    constructor() {
         INITIAL_DOMAIN_SEPARATOR = _domainSeparator();
+        INITIAL_CHAIN_ID = block.chainid;
     }
 
     /*===============
         INTERNALS
     ===============*/
 
-    /// @dev Function to compute hash of an ERC4337 UserOperation
-    /// @param userOp The UserOperation struct to be hashed
-    function _hashUserOp(UserOperation memory userOp) internal pure returns (bytes32) {
-        return keccak256(
-            abi.encode(
-                USEROPERATION_TYPE_HASH,
-                userOp.sender,
-                userOp.nonce,
-                keccak256(userOp.initCode),
-                keccak256(userOp.callData),
-                userOp.callGasLimit,
-                userOp.verificationGasLimit,
-                userOp.preVerificationGas,
-                userOp.maxFeePerGas,
-                userOp.maxPriorityFeePerGas,
-                keccak256(userOp.paymasterAndData)
-            )
-        );
-    }
-
     /// @dev Function to compute DOMAIN_SEPARATOR at construction, 
-    /// @dev Per ERC-4337 recommendation, includes EntryPoint address
     function _domainSeparator() internal view returns (bytes32) {
         return keccak256(
             abi.encode(
-                DOMAIN_TYPE_HASH, NAME_HASH, VERSION_HASH, block.chainid, address(this), entryPoint
+                DOMAIN_TYPE_HASH, NAME_HASH, VERSION_HASH, block.chainid, address(this)
             )
         );
     }

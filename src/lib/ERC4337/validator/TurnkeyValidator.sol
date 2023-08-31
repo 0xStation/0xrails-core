@@ -3,13 +3,14 @@ pragma solidity ^0.8.13;
 
 import {Validator} from "src/lib/ERC4337/validator/Validator.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
-import {Ownable} from "src/access/ownable/Ownable.sol";
+import {Operations} from "src/lib/Operations.sol";
+import {Access} from "src/access/Access.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 import {SignatureChecker} from "openzeppelin-contracts/utils/cryptography/SignatureChecker.sol";
 
-/// @dev Example Validator module that restricts valid signatures to only come from the owner
-/// of the calling Accounts contract 
-contract OnlyOwnerValidator is Validator {
+/// @dev Validator module that restricts valid signatures to only come from recognized Turnkeys
+/// for the calling Accounts contract 
+contract TurnkeyValidator is Validator {
 
     /// @dev This example contract would only be forwarded signatures formatted as follows:
     /// `abi.encodePacked(address signer, bytes memory eoaSig)`
@@ -28,6 +29,9 @@ contract OnlyOwnerValidator is Validator {
         validationData = validSig ? 0 : invalidSig;
     }
 
+    /// @notice OZ's ECDSA library prevents the zero address from being returned as a result
+    /// of `recover()`, even when `ecrecover()` does as part of assessing an invalid signature
+    /// For this reason, checks preventing a call to `hasPermission[address(0x0)]` are not necessary
     function isValidSignature(bytes32 userOpHash, bytes calldata signature) 
         external view virtual returns (bytes4 magicValue) 
     {
@@ -48,6 +52,6 @@ contract OnlyOwnerValidator is Validator {
         // checks both EOA and smart contract signatures
         if (!SignatureChecker.isValidSignatureNow(signer, digest, nestedSignature)) return false;
 
-        return signer == Ownable(msg.sender).owner();
+        return Access(msg.sender).hasPermission(Operations.CALL_PERMIT, signer);
     }
 }
