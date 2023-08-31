@@ -6,6 +6,8 @@ import {Mage} from "src/Mage.sol";
 import {IAccount} from "src/lib/ERC4337/interface/IAccount.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {ERC4337Internal} from "src/lib/ERC4337/utils/ERC4337Internal.sol";
+import {ModularValidationInternal} from "src/lib/ERC4337/validator/ModularValidationInternal.sol";
+import {ModularValidationStorage} from "src/lib/ERC4337/validator/ModularValidationStorage.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {IOwnable} from "src/access/ownable/interface/IOwnable.sol";
 import {OwnableInternal} from "src/access/ownable/OwnableInternal.sol";
@@ -20,7 +22,7 @@ import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 /// @dev This abstract contract provides scaffolding Station's Accounts signature validation
 /// ERC1271-compliance in combination with Mage's Permissions::EXECUTE_PERMIT system
 /// provides convenient and modular private key management on an infrastructural level
-abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal {
+abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal, ModularValidationInternal {
 
     /*=============
         STORAGE
@@ -75,7 +77,7 @@ abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal {
             return SIG_VALIDATION_FAILED;
         }
 
-        //TODO ADD SUPPORTSINTERFACE(EXECUTE) TODO make entrypoint permission permanent
+        //TODO ADD SUPPORTSINTERFACE(CALL) TODO make entrypoint permission permanent TODO add IAccounts parent
 
         /// @notice BLS sig aggregator and timestamp expiry are not currently supported by this contract 
         /// so `bytes20(0x0)` and `bytes6(0x0)` suffice. To enable support for aggregator and timestamp expiry,
@@ -137,6 +139,18 @@ abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal {
     /*===============
         OVERRIDES
     ===============*/
+
+    /// @dev Function to add the address of a Validator module to storage
+    function addValidator(address validator) public override {
+        ModularValidationStorage.Layout storage layout = ModularValidationStorage.layout();
+        layout._validators[validator] = true;
+    }
+
+    /// @dev Function to remove the address of a Validator module to storage
+    function removeValidator(address validator) public override {
+        ModularValidationStorage.Layout storage layout = ModularValidationStorage.layout();
+        layout._validators[validator] = false;
+    }
 
     /// @dev Declare explicit support for ERC1271 interface in addition to existing interfaces
     /// @param interfaceId The interfaceId to check for support
