@@ -6,8 +6,11 @@ import {Mage} from "src/Mage.sol";
 import {IAccount} from "src/lib/ERC4337/interface/IAccount.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {ERC4337Internal} from "src/lib/ERC4337/utils/ERC4337Internal.sol";
+import {ERC4337Storage} from "src/lib/ERC4337/utils/ERC4337Storage.sol";
+import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {ModularValidationInternal} from "src/lib/ERC4337/validator/ModularValidationInternal.sol";
 import {ModularValidationStorage} from "src/lib/ERC4337/validator/ModularValidationStorage.sol";
+import {IValidator} from "src/lib/ERC4337/validator/interface/IValidator.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {IOwnable} from "src/access/ownable/interface/IOwnable.sol";
 import {OwnableInternal} from "src/access/ownable/OwnableInternal.sol";
@@ -25,25 +28,14 @@ import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal, ModularValidationInternal {
 
     /*=============
-        STORAGE
-    ==============*/
-    
-    /// @dev This chain's EntryPoint contract address
-    /// @notice Since this address is consistent across chains, `chainId` is included
-    /// in the signature digest to prevent replay attacks
-    address internal immutable _entryPoint;
-    
-    /// @dev In case of signature validation failure, return value need not include time range
-    uint256 internal constant SIG_VALIDATION_FAILED = 1;
-
-    /*=============
         ACCOUNTS
     ==============*/
 
     /// @param _entryPointAddress The contract address for this chain's ERC-4337 EntryPoint contract
     /// Official address for the most recent EntryPoint version is `0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789`
     constructor(address _entryPointAddress) {
-        _entryPoint = _entryPointAddress;
+        ERC4337Storage.layout().entryPoint = _entryPointAddress;
+        ERC4337Storage.layout().SIG_VALIDATION_FAILED = 1;
         
         // permit the EntryPoint to call `execute()` on this contract via valid UserOp.signature only
         _addPermission(Operations.CALL_PERMIT, _entryPointAddress);
@@ -71,13 +63,26 @@ abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal, Modular
         // only EntryPoint should call this function to prevent frontrunning of valid signatures
         _checkSenderIsEntryPoint();
 
-        bool validSig = isValidSignature(userOpHash, userOp.signature) == this.isValidSignature.selector;
-        if (!validSig) {
-            // terminate with status code 1: `SIG_VALIDATION_FAILED`
-            return SIG_VALIDATION_FAILED;
-        }
+        // attempt to deconstruct signature into `(validator, nestedSignature)`
+        (address validator, bytes memory nestedSignature) = abi.decode(userOp.signature, (address, bytes));
+        if (isValidator(validator)) {
+            // copy userOp into memory and format for Validator module
+            UserOperation memory userOpCopy = userOp;
+            userOpCopy.signature = nestedSignature;
 
-        //TODO ADD SUPPORTSINTERFACE(CALL) TODO make entrypoint permission permanent TODO add IAccounts parent
+            uint256 ret = IValidator(validator).validateUserOp(userOpCopy, userOpHash, missingAccountFunds);
+            // if validator rejects sig, terminate with status code 1
+            if (ret != 0) return uint256(ERC4337Storage.layout().SIG_VALIDATION_FAILED);
+        } else {}
+        // support standard EOA signatures
+
+        // bool validSig = isValidSignature(userOpHash, userOp.signature) == this.isValidSignature.selector;
+        // if (!validSig) {
+        //     // terminate with status code 1: `SIG_VALIDATION_FAILED`
+        //     return SIG_VALIDATION_FAILED;
+        // }
+
+        //TODO ADD SUPPORTSINTERFACE(EXECUTE) TODO make entrypoint permission permanent TODO add IAccounts parent
 
         /// @notice BLS sig aggregator and timestamp expiry are not currently supported by this contract 
         /// so `bytes20(0x0)` and `bytes6(0x0)` suffice. To enable support for aggregator and timestamp expiry,
