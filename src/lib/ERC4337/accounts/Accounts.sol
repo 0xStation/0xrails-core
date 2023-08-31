@@ -177,10 +177,11 @@ abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal, Modular
     }
 
     /// @dev Provides control over `EXECUTE` permission to the owner only
-    /// @notice Permission to `execute()` via signature validation is restricted to only the Entrypoint
-    /// as well as explicitly added entities such as Turnkeys, via the `EXECUTE_PERMIT` permission
+    /// @notice Permission to `execute()` via signature validation is restricted to either the Entrypoint,
+    /// the owner, or entities possessing the `EXECUTE_PERMIT`or `ADMIN` permissions
     function _checkCanExecute() internal view override {
-        _checkPermission(Operations.CALL, msg.sender);
+        bool auth = (msg.sender == entryPoint() || hasPermission(Operations.CALL, msg.sender));
+        if (!auth) revert PermissionDoesNotExist(Operations.CALL, msg.sender);
     }
 
     /// @dev Provides control over ERC165 layout to addresses with `INTERFACE` permission
