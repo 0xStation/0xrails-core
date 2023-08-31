@@ -77,8 +77,6 @@ abstract contract Accounts is Mage, IAccount, IERC1271, ERC4337Internal, Modular
             return uint256(ERC4337Storage.layout().SIG_VALIDATION_FAILED);
         }
 
-        //TODO ADD SUPPORTSINTERFACE(EXECUTE) TODO make entrypoint permission permanent TODO add IAccounts parent
-
         /// @notice BLS sig aggregator and timestamp expiry are not currently supported by this contract 
         /// so `bytes20(0x0)` and `bytes6(0x0)` suffice. To enable support for aggregator and timestamp expiry,
         /// override the following params
