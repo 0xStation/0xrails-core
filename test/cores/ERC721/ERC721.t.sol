@@ -410,6 +410,7 @@ contract ERC721Test is Test {
         vm.assume(from != address(0x0) && to != address(0x0)); 
         vm.assume(from != badOperator && from != to);
         vm.assume(mintQuantity > 0);
+        vm.assume(badOperator != address(0));
 
         erc721.mint(from, mintQuantity);
 

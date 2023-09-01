@@ -99,8 +99,8 @@ contract ERC721Mage is Mage, Ownable, Initializable, TokenMetadata, ERC721, IERC
     }
 
     function burn(uint256 tokenId) external {
-        if (msg.sender != ownerOf(tokenId)) {
-            _checkPermission(Operations.BURN, msg.sender);
+        if (!hasPermission(Operations.BURN, msg.sender)) {
+            _checkCanTransfer(ownerOf(tokenId), tokenId); /// @todo resolve gas inefficiency of reading ownerOf twice
         }
         _burn(tokenId);
     }
