@@ -69,9 +69,8 @@ BBBQ .:. QBB                                       .BBB .:. BBB
         address _turnkeyValidator,
         address[] memory _turnkeys
     ) Account(_entryPointAddress) {
-        _transferOwnership(_owner);
-
         addValidator(_turnkeyValidator);
+        _transferOwnership(_owner);
 
         // permit Turnkeys to call `execute()` on this contract via valid UserOp.signature only
         unchecked {
