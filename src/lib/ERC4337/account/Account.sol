@@ -59,12 +59,14 @@ abstract contract Account is Mage, IAccount, IERC1271, ModularValidationInternal
         // only EntryPoint should call this function to prevent frontrunning of valid signatures
         _checkSenderIsEntryPoint();
 
-        // extract validator address
-        address validator = address(bytes20(userOp.signature));
+        // extract validator address using cheap calldata slicing before decoding 
+        address validator = address(bytes20(userOp.signature[12:32]));
+
         if (isValidator(validator)) {
+            ( , address signer, bytes memory nestedSig) = abi.decode(userOp.signature, (address, address, bytes));
             // copy userOp into memory and format for Validator module
             UserOperation memory formattedUserOp = userOp;
-            formattedUserOp.signature = userOp.signature[20:];
+            formattedUserOp.signature = abi.encode(signer, nestedSig);
 
             uint256 ret = IValidator(validator).validateUserOp(formattedUserOp, userOpHash, missingAccountFunds);
             // if validator rejects sig, terminate with status code 1
@@ -101,11 +103,11 @@ abstract contract Account is Mage, IAccount, IERC1271, ModularValidationInternal
         // note: This impl assumes the nested sig within `UserOperation.signature` is created using EIP-712
 
         // extract validator address and sig formatted for validator
-        (address validator, address signer, bytes memory formattedSig) = abi.decode(signature, (address, address, bytes));
+        (address validator, address signer, bytes memory nestedSig) = abi.decode(signature, (address, address, bytes));
 
         if (isValidator(validator)) {
             // format call for Validator module
-            bytes4 ret = IValidator(validator).isValidSignature(hash, abi.encode(signer, formattedSig));
+            bytes4 ret = IValidator(validator).isValidSignature(hash, abi.encode(signer, nestedSig));
             // validator will return either correct `magicValue` or error code `INVALID_SIGNER`
             magicValue = ret;
         } else {

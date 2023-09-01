@@ -25,7 +25,6 @@ contract TurnkeyValidator is Validator {
 
         // deconstruct signature into `(validator, nestedSignature)`
         (address signer, bytes memory nestedSignature) = abi.decode(userOp.signature, (address, bytes));
-        // uint256 invalidSig = 1;
 
         bool validSig = _verifySignature(signer, userOpHash, nestedSignature);
         validationData = validSig ? 0 : SIG_VALIDATION_FAILED;
@@ -45,10 +44,7 @@ contract TurnkeyValidator is Validator {
     function _verifySignature(address signer, bytes32 userOpHash, bytes memory nestedSignature) 
         internal view override returns (bool)
     {
-        // generate EIP712 digest from `userOpHash`
-        bytes32 digest = getTypedDataHash(userOpHash);
-        // checks both EOA and smart contract signatures
-        if (!SignatureChecker.isValidSignatureNow(signer, digest, nestedSignature)) return false;
+        if (!SignatureChecker.isValidSignatureNow(signer, userOpHash, nestedSignature)) return false;
 
         // check for turnkey or superior permission
         return Access(msg.sender).hasPermission(Operations.CALL_PERMIT, signer);

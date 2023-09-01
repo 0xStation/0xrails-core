@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
+import "forge-std/console2.sol";
 import {TurnkeyValidator} from "src/lib/ERC4337/validator/TurnkeyValidator.sol";
 import {BotAccount} from "src/lib/ERC4337/account/BotAccount.sol";
 import {Operations} from "src/lib/Operations.sol";
@@ -20,9 +21,8 @@ contract AccountTest is Test {
     address public entryPointAddress;
     address public owner;
     address public testTurnkey;
-    UserOperation public someUserOp;
+    UserOperation public userOp;
     bytes32 public userOpHash;
-    bytes32 public typedUserOpDigest;
 
     // intended to contain custom error signatures
     bytes public err;
@@ -33,10 +33,22 @@ contract AccountTest is Test {
         owner = vm.addr(0xbeefEEbabe);
         testTurnkey = vm.addr(0xc0ffEEbabe);
         turnkeyValidator = new TurnkeyValidator(entryPointAddress);
-        userOpHash = turnkeyValidator.getUserOpHash(someUserOp);
-        typedUserOpDigest = turnkeyValidator.getTypedDataHash(userOpHash);
         address[] memory initArray = new address[](1);
         initArray[0] = testTurnkey;
+        userOp = UserOperation({
+            sender: testTurnkey,
+            nonce: 0,
+            initCode: '',
+            callData: '',
+            callGasLimit: 0,
+            verificationGasLimit: 0,
+            preVerificationGas: 0,
+            maxFeePerGas: 0,
+            maxPriorityFeePerGas: 0,
+            paymasterAndData: '',
+            signature: ''
+        });
+        userOpHash = turnkeyValidator.getUserOpHash(userOp);
 
         botAccounts = new BotAccount(entryPointAddress, owner, address(turnkeyValidator), initArray);
     }
@@ -54,7 +66,7 @@ contract AccountTest is Test {
     }
 
     function test_isValidSignature(uint256 startingPrivateKey, uint8 numPrivateKeys) public {
-
+        userOpHash = turnkeyValidator.getUserOpHash(userOp);
         address[] memory newTurnkeys = new address[](numPrivateKeys);
 
         address currentAddr;
@@ -71,7 +83,7 @@ contract AccountTest is Test {
             vm.prank(owner);
             botAccounts.addPermission(Operations.CALL_PERMIT, currentAddr);
 
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(currentPrivateKey, typedUserOpDigest);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(currentPrivateKey, userOpHash);
             bytes memory currentRSV = abi.encodePacked(r, s, v);
             assertEq(currentRSV.length, 65);
 
@@ -87,6 +99,47 @@ contract AccountTest is Test {
             bytes4 eip1271ActualVal = 0x1626ba7e;
             bytes4 eip1271RetVal = botAccounts.isValidSignature(userOpHash, formattedSignatures[j]);
             assertEq(eip1271RetVal, eip1271ActualVal);
+        }
+    }
+
+    function test_validateUserOp(uint256 startingPrivateKey, uint8 numPrivateKeys) public {
+        uint256 missingAccountFunds = 0;
+        address[] memory newTurnkeys = new address[](numPrivateKeys);
+
+        address currentAddr;
+        bytes[] memory formattedSignatures = new bytes[](numPrivateKeys);
+        for (uint8 i; i < numPrivateKeys; ++i) {
+            // private keys must be nonzero and less than the secp256k curve order
+            vm.assume(startingPrivateKey != 0);
+            vm.assume(startingPrivateKey < 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE_BAAEDCE6_AF48A03B_BFD25E8C_D0364141);
+            
+            uint256 currentPrivateKey = startingPrivateKey + i;
+            currentAddr = vm.addr(currentPrivateKey);
+            newTurnkeys[i] = currentAddr;
+            
+            vm.prank(owner);
+            botAccounts.addPermission(Operations.CALL_PERMIT, currentAddr);
+
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(currentPrivateKey, userOpHash);
+            bytes memory currentRSV = abi.encodePacked(r, s, v);
+            assertEq(currentRSV.length, 65);
+
+            // ModularValidation schema developed by GroupOS requires prepended validator & signer addresses
+            // note: `abi.encode` must be used to craft the signature or decoding will fail
+            // ie: `abi.encodePacked(validator, currentAddr, currentRSV)` cannot be decoded
+            bytes memory formattedSig = abi.encode(address(turnkeyValidator), currentAddr, currentRSV);
+
+            formattedSignatures[i] = formattedSig;
+        }
+
+        for (uint8 j; j < numPrivateKeys; ++j) {
+            uint256 expectedValidationData = 0;
+
+            // populate preexisting UserOperation `userOp` with formatted signature to be validated
+            userOp.signature = formattedSignatures[j];
+            vm.prank(entryPointAddress);
+            uint256 returnedValidationData = botAccounts.validateUserOp(userOp, userOpHash, missingAccountFunds);
+            assertEq(returnedValidationData, expectedValidationData);
         }
     }
 

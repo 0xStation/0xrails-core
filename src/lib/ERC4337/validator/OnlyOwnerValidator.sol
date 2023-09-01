@@ -44,11 +44,7 @@ contract OnlyOwnerValidator is Validator {
     function _verifySignature(address signer, bytes32 userOpHash, bytes memory nestedSignature) 
         internal view override returns (bool) 
     {
-        // generate EIP712 digest from `userOpHash`
-        bytes32 digest = getTypedDataHash(userOpHash);
-        // checks both EOA and smart contract signatures
-        if (!SignatureChecker.isValidSignatureNow(signer, digest, nestedSignature)) return false;
-
+        if (!SignatureChecker.isValidSignatureNow(signer, userOpHash, nestedSignature)) return false;
         return signer == Ownable(msg.sender).owner();
     }
 }
