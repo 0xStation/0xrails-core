@@ -181,17 +181,16 @@ abstract contract ERC1155 is IERC1155 {
                 if (fromBalance < value) {
                     revert ERC1155InsufficientBalance(from, fromBalance, value, id);
                 }
-                unchecked {
-                    // Overflow not possible: value <= fromBalance
-                    layout.balances[id][from] = fromBalance - value;
-                }
+                layout.balances[id][from] = fromBalance - value;
             } else {
+                // increase total supply if minting
                 layout.totalSupply[id] += value;
             }
 
             if (to != address(0)) {
                 layout.balances[id][to] += value;
             } else {
+                // decrease total supply if burning
                 layout.totalSupply[id] -= value;
             }
         }
