@@ -23,11 +23,19 @@ contract TurnkeyValidator is Validator {
         // silence compiler by discarding unused variable
         (missingAccountFunds);
 
+        /// @notice BLS sig aggregator and timestamp expiry are not currently supported by this contract 
+        /// so `bytes20(0x0)` and `bytes6(0x0)` suffice. To enable support for aggregator and timestamp expiry,
+        /// override the following params
+        bytes20 authorizer;
+        bytes6 validUntil;
+        bytes6 validAfter;
+        uint256 successData = uint256(bytes32(abi.encodePacked(authorizer, validUntil, validAfter)));
+
         // deconstruct signature into `(validator, nestedSignature)`
         (address signer, bytes memory nestedSignature) = abi.decode(userOp.signature, (address, bytes));
 
         bool validSig = _verifySignature(signer, userOpHash, nestedSignature);
-        validationData = validSig ? 0 : SIG_VALIDATION_FAILED;
+        validationData = validSig ? successData : SIG_VALIDATION_FAILED;
     }
 
     function isValidSignature(bytes32 userOpHash, bytes calldata signature) 
