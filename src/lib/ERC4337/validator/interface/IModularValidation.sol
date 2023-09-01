@@ -2,6 +2,8 @@
 pragma solidity ^0.8.13;
 
 interface IModularValidation {
+  error NotEntryPoint(address caller);
+  
   event ValidatorAdded(address indexed validator);
   event ValidatorRemoved(address indexed validator);
   

@@ -5,8 +5,6 @@ pragma solidity ^0.8.13;
 import {Mage} from "src/Mage.sol";
 import {IAccount} from "src/lib/ERC4337/interface/IAccount.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
-import {ERC4337Internal} from "src/lib/ERC4337/utils/ERC4337Internal.sol";
-import {ERC4337Storage} from "src/lib/ERC4337/utils/ERC4337Storage.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {ModularValidationInternal} from "src/lib/ERC4337/validator/ModularValidationInternal.sol";
 import {IValidator} from "src/lib/ERC4337/validator/interface/IValidator.sol";
@@ -24,19 +22,19 @@ import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 /// @dev This abstract contract provides scaffolding Station's Account signature validation
 /// ERC1271-compliance in combination with Mage's Permissions::EXECUTE_PERMIT system
 /// provides convenient and modular private key management on an infrastructural level
-abstract contract Account is Mage, IAccount, IERC1271, ERC4337Internal, ModularValidationInternal {
+abstract contract Account is Mage, IAccount, IERC1271, ModularValidationInternal {
 
     /*=============
         ACCOUNTS
     ==============*/
+    
+    /// @dev This chain's EntryPoint contract address
+    address public immutable entryPoint;
 
     /// @param _entryPointAddress The contract address for this chain's ERC-4337 EntryPoint contract
     /// Official address for the most recent EntryPoint version is `0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789`
     constructor(address _entryPointAddress) {
-        ERC4337Storage.layout().entryPoint = _entryPointAddress;
-        // error codes
-        ERC4337Storage.layout().SIG_VALIDATION_FAILED = 1;
-        ERC4337Storage.layout().INVALID_SIGNER = hex'ffffffff';
+        entryPoint = _entryPointAddress;
     }
 
     /// @dev Function enabling EIP-4337 compliance as a smart contract wallet account
@@ -70,10 +68,10 @@ abstract contract Account is Mage, IAccount, IERC1271, ERC4337Internal, ModularV
 
             uint256 ret = IValidator(validator).validateUserOp(formattedUserOp, userOpHash, missingAccountFunds);
             // if validator rejects sig, terminate with status code 1
-            if (ret != 0) return uint256(ERC4337Storage.layout().SIG_VALIDATION_FAILED);
+            if (ret != 0) return ret;
         } else {
-            // terminate with status code 1
-            return uint256(ERC4337Storage.layout().SIG_VALIDATION_FAILED);
+            // if validator address not recognized, terminate with status code 1
+            return 1;
         }
 
         /// @notice BLS sig aggregator and timestamp expiry are not currently supported by this contract 
@@ -108,10 +106,7 @@ abstract contract Account is Mage, IAccount, IERC1271, ERC4337Internal, ModularV
         if (isValidator(validator)) {
             // format call for Validator module
             bytes4 ret = IValidator(validator).isValidSignature(hash, abi.encode(signer, formattedSig));
-
-            // if validator returns wrong `magicValue`, return error code
-            if (ret != this.isValidSignature.selector) return ERC4337Storage.layout().INVALID_SIGNER;
-            
+            // validator will return either correct `magicValue` or error code `INVALID_SIGNER`
             magicValue = ret;
         } else {
             // terminate with empty `magicValue`, indicating unrecognized validator
@@ -122,6 +117,11 @@ abstract contract Account is Mage, IAccount, IERC1271, ERC4337Internal, ModularV
     /*===============
         INTERNALS
     ===============*/
+
+    /// @dev View function to limit callers to only the EntryPoint contract of this chain
+    function _checkSenderIsEntryPoint() internal view {
+        if (msg.sender != entryPoint) revert NotEntryPoint(msg.sender);
+    }
 
     /// @dev Since nonce management and collision checks are handled entirely by the EntryPoint,
     /// this function is left empty for contracts inheriting from this one to use EntryPoint's defaults
@@ -139,12 +139,6 @@ abstract contract Account is Mage, IAccount, IERC1271, ERC4337Internal, ModularV
     /*===============
         OVERRIDES
     ===============*/
-
-    /// @dev Override with careful consideration of access control
-    function addValidator(address validator) public virtual override;
-
-    /// @dev Override with careful consideration of access control
-    function removeValidator(address validator) public virtual override;
 
     /// @dev Declare explicit support for ERC1271 interface in addition to existing interfaces
     /// @param interfaceId The interfaceId to check for support
@@ -172,7 +166,7 @@ abstract contract Account is Mage, IAccount, IERC1271, ERC4337Internal, ModularV
     /// @notice Permission to `execute()` via signature validation is restricted to either the Entrypoint,
     /// the owner, or entities possessing the `EXECUTE_PERMIT`or `ADMIN` permissions
     function _checkCanExecute() internal view override {
-        bool auth = (msg.sender == entryPoint() || hasPermission(Operations.CALL, msg.sender));
+        bool auth = (msg.sender == entryPoint || hasPermission(Operations.CALL, msg.sender));
         if (!auth) revert PermissionDoesNotExist(Operations.CALL, msg.sender);
     }
 
@@ -182,8 +176,13 @@ abstract contract Account is Mage, IAccount, IERC1271, ERC4337Internal, ModularV
     }
 
     /// @notice Functions to be overridden by child contracts inheriting from this one
-    /// These ensure that funds do not get locked by deployed contracts inheriting from `Mage`
-    /// which possesses a payable `receive()` fallback
     function preFundEntryPoint() external payable virtual;
+
     function withdrawFromEntryPoint(address payable recipient, uint256 amount) external virtual;
+    
+    /// @dev Override with careful consideration of access control
+    function addValidator(address validator) public virtual override;
+
+    /// @dev Override with careful consideration of access control
+    function removeValidator(address validator) public virtual override;
 }

@@ -84,14 +84,14 @@ BBBQ .:. QBB                                       .BBB .:. BBB
     /// using payable call context + this contract's native currency balance
     function preFundEntryPoint() public payable override {
         uint256 totalFunds = msg.value + address(this).balance;
-        IEntryPoint(entryPoint()).depositTo{ value : totalFunds }(address(this));
+        IEntryPoint(entryPoint).depositTo{ value : totalFunds }(address(this));
     }
 
     /// @dev Function to withdraw funds using the EntryPoint's `withdrawTo()` function
     /// @param recipient The address to receive from the EntryPoint balance
     /// @param amount The amount of funds to withdraw from the EntryPoint
     function withdrawFromEntryPoint(address payable recipient, uint256 amount) public override onlyOwner {
-        IEntryPoint(entryPoint()).withdrawTo(recipient, amount);
+        IEntryPoint(entryPoint).withdrawTo(recipient, amount);
     }
 
     /*===========
@@ -100,7 +100,7 @@ BBBQ .:. QBB                                       .BBB .:. BBB
 
     /// @dev Function to view the EntryPoint's deposit balance for this BotAccount contract address
     function getEntryPointBalance() public view returns (uint256) {
-        return IEntryPoint(entryPoint()).balanceOf(address(this));
+        return IEntryPoint(entryPoint).balanceOf(address(this));
     }
 
     /// @notice This function must be overridden by contracts inheriting `Account` to delineate 

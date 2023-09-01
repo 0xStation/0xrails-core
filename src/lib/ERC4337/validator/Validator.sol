@@ -12,6 +12,13 @@ abstract contract Validator is IValidator {
         STORAGE
     =============*/
 
+    /// @dev Error code for invalid EIP-4337 `validateUserOp()`signature
+    /// @dev Error return value is abbreviated to 1 since it need not include time range
+    uint8 internal constant SIG_VALIDATION_FAILED = 1;
+    /// @dev Error code for invalid EIP-1271 signature in `isValidSignature()`
+    /// @dev Nonzero to define invalid sig error, as opposed to wrong validator address error, ie: `bytes4(0)`
+    bytes4 internal constant INVALID_SIGNER = hex'ffffffff';
+
     /// @dev The EIP-712 type hash of UserOperation struct, used to derive domain separator
     bytes32 internal constant USEROPERATION_TYPE_HASH = 
         keccak256(

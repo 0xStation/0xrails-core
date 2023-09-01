@@ -25,26 +25,25 @@ contract TurnkeyValidator is Validator {
 
         // deconstruct signature into `(validator, nestedSignature)`
         (address signer, bytes memory nestedSignature) = abi.decode(userOp.signature, (address, bytes));
-        uint256 invalidSig = 1;
+        // uint256 invalidSig = 1;
 
         bool validSig = _verifySignature(signer, userOpHash, nestedSignature);
-        validationData = validSig ? 0 : invalidSig;
+        validationData = validSig ? 0 : SIG_VALIDATION_FAILED;
     }
 
     function isValidSignature(bytes32 userOpHash, bytes calldata signature) 
         external view virtual returns (bytes4 magicValue) 
     {
         (address signer, bytes memory nestedSignature) = abi.decode(signature, (address, bytes));
-        bytes4 invalidSig = hex'ffffffff';
 
         bool validSig = _verifySignature(signer, userOpHash, nestedSignature);
-        magicValue = validSig ? this.isValidSignature.selector : invalidSig; 
+        magicValue = validSig ? this.isValidSignature.selector : INVALID_SIGNER; 
     }
 
     /// @dev This implementation is designed to validate addresses granted `CALL_PERMIT` permissions
     /// or higher in the calling Account contract. It expects EIP-712 typed signatures.
     function _verifySignature(address signer, bytes32 userOpHash, bytes memory nestedSignature) 
-        internal view override returns (bool) 
+        internal view override returns (bool)
     {
         // generate EIP712 digest from `userOpHash`
         bytes32 digest = getTypedDataHash(userOpHash);
