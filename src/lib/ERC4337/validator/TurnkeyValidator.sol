@@ -51,8 +51,6 @@ contract TurnkeyValidator is Validator {
         // checks both EOA and smart contract signatures
         if (!SignatureChecker.isValidSignatureNow(signer, digest, nestedSignature)) return false;
 
-        // if (!SignatureChecker.isValidSignatureNow(signer, userOpHash, nestedSignature)) return false; //todo
-
         // check for turnkey or superior permission
         return Access(msg.sender).hasPermission(Operations.CALL_PERMIT, signer);
     }

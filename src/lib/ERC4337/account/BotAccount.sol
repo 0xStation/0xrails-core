@@ -36,7 +36,6 @@ contract BotAccount is Account, Ownable {
         _transferOwnership(_owner);
 
         addValidator(_turnkeyValidator);
-        require(isValidator(_turnkeyValidator)); //todo
 
         // permit Turnkeys to call `execute()` on this contract via valid UserOp.signature only
         unchecked {
@@ -74,6 +73,22 @@ contract BotAccount is Account, Ownable {
     /// @dev Owner stored explicitly using OwnableStorage's ERC7201 namespace
     function owner() public view virtual override(Access, OwnableInternal) returns (address) {
         return OwnableInternal.owner();
+    }
+
+    /*===============
+        OVERRIDES
+    ===============*/
+
+    /// @dev Function to add the address of a Validator module to storage
+    function addValidator(address validator) public override onlyOwner {
+        ModularValidationStorage.Layout storage layout = ModularValidationStorage.layout();
+        layout._validators[validator] = true;
+    }
+
+    /// @dev Function to remove the address of a Validator module to storage
+    function removeValidator(address validator) public override onlyOwner {
+        ModularValidationStorage.Layout storage layout = ModularValidationStorage.layout();
+        layout._validators[validator] = false;
     }
 
     // changes to core functionality must be restricted to owners to protect admins overthrowing

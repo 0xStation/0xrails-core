@@ -141,19 +141,11 @@ abstract contract Account is Mage, IAccount, IERC1271, ERC4337Internal, ModularV
         OVERRIDES
     ===============*/
 
-    /// @dev Function to add the address of a Validator module to storage
-    function addValidator(address validator) public override {
-        //todo access control
-        ModularValidationStorage.Layout storage layout = ModularValidationStorage.layout();
-        layout._validators[validator] = true;
-    }
+    /// @dev Override with careful consideration of access control
+    function addValidator(address validator) public virtual;
 
-    /// @dev Function to remove the address of a Validator module to storage
-    function removeValidator(address validator) public override {
-        //todo access control
-        ModularValidationStorage.Layout storage layout = ModularValidationStorage.layout();
-        layout._validators[validator] = false;
-    }
+    /// @dev Override with careful consideration of access control
+    function removeValidator(address validator) public virtual;
 
     /// @dev Declare explicit support for ERC1271 interface in addition to existing interfaces
     /// @param interfaceId The interfaceId to check for support
