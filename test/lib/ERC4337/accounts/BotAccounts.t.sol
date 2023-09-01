@@ -53,7 +53,7 @@ contract AccountTest is Test {
         assertTrue(botAccounts.hasPermission(Operations.CALL_PERMIT, testTurnkey));
     }
 
-    function test_isValidSignature(uint256 startingPrivateKey, uint8 numPrivateKeys) public returns(address) {
+    function test_isValidSignature(uint256 startingPrivateKey, uint8 numPrivateKeys) public {
 
         address[] memory newTurnkeys = new address[](numPrivateKeys);
 

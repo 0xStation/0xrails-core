@@ -9,7 +9,6 @@ import {ERC4337Internal} from "src/lib/ERC4337/utils/ERC4337Internal.sol";
 import {ERC4337Storage} from "src/lib/ERC4337/utils/ERC4337Storage.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {ModularValidationInternal} from "src/lib/ERC4337/validator/ModularValidationInternal.sol";
-import {ModularValidationStorage} from "src/lib/ERC4337/validator/ModularValidationStorage.sol";
 import {IValidator} from "src/lib/ERC4337/validator/interface/IValidator.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {IOwnable} from "src/access/ownable/interface/IOwnable.sol";
@@ -142,10 +141,10 @@ abstract contract Account is Mage, IAccount, IERC1271, ERC4337Internal, ModularV
     ===============*/
 
     /// @dev Override with careful consideration of access control
-    function addValidator(address validator) public virtual;
+    function addValidator(address validator) public virtual override;
 
     /// @dev Override with careful consideration of access control
-    function removeValidator(address validator) public virtual;
+    function removeValidator(address validator) public virtual override;
 
     /// @dev Declare explicit support for ERC1271 interface in addition to existing interfaces
     /// @param interfaceId The interfaceId to check for support
