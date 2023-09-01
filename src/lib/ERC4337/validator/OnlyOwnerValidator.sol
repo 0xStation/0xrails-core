@@ -11,8 +11,10 @@ import {SignatureChecker} from "openzeppelin-contracts/utils/cryptography/Signat
 /// of the calling Accounts contract 
 contract OnlyOwnerValidator is Validator {
 
+    constructor(address _entryPointAddress) Validator(_entryPointAddress) {}
+
     /// @dev This example contract would only be forwarded signatures formatted as follows:
-    /// `abi.encodePacked(address signer, bytes memory eoaSig)`
+    /// `abi.encode(address signer, bytes memory eoaSig)` (abi decoding fails for `abi.encodePacked`)
     function validateUserOp(
         UserOperation calldata userOp, 
         bytes32 userOpHash, 
@@ -24,7 +26,8 @@ contract OnlyOwnerValidator is Validator {
         // deconstruct signature into `(validator, nestedSignature)`
         (address signer, bytes memory nestedSignature) = abi.decode(userOp.signature, (address, bytes));
         uint256 invalidSig = 1;
-        bool validSig = _checkSignatureAndAccess(signer, userOpHash, nestedSignature);
+
+        bool validSig = _verifySignature(signer, userOpHash, nestedSignature);
         validationData = validSig ? 0 : invalidSig;
     }
 
@@ -33,18 +36,16 @@ contract OnlyOwnerValidator is Validator {
     {
         (address signer, bytes memory nestedSignature) = abi.decode(signature, (address, bytes));
         bytes4 invalidSig = hex'ffffffff';
-        bool validSig = _checkSignatureAndAccess(signer, userOpHash, nestedSignature);
+
+        bool validSig = _verifySignature(signer, userOpHash, nestedSignature);
         magicValue = validSig ? this.isValidSignature.selector : invalidSig;
     }
 
-    function _checkSignatureAndAccess(address signer, bytes32 userOpHash, bytes memory nestedSignature) 
-        internal view returns (bool) 
+    function _verifySignature(address signer, bytes32 userOpHash, bytes memory nestedSignature) 
+        internal view override returns (bool) 
     {
         // generate EIP712 digest from `userOpHash`
-        bytes32 digest = ECDSA.toTypedDataHash(
-            INITIAL_CHAIN_ID == block.chainid ? INITIAL_DOMAIN_SEPARATOR : _domainSeparator(), 
-            userOpHash
-        );
+        bytes32 digest = getTypedDataHash(userOpHash);
         // checks both EOA and smart contract signatures
         if (!SignatureChecker.isValidSignatureNow(signer, digest, nestedSignature)) return false;
 

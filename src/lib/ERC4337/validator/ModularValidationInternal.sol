@@ -7,7 +7,7 @@ import {ModularValidationStorage} from "./ModularValidationStorage.sol";
 
 abstract contract ModularValidationInternal is IModularValidation {
 
-    /// @dev View function to get the ERC-4337 EntryPoint contract address for this chain
+    /// @dev View function to check whether given address has been added as validator
     function isValidator(address validator) public view virtual returns (bool) {
         ModularValidationStorage.Layout storage layout = ModularValidationStorage.layout();
         return layout._validators[validator];

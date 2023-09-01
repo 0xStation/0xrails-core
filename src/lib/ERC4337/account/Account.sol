@@ -96,7 +96,7 @@ abstract contract Account is Mage, IAccount, IERC1271, ERC4337Internal, ModularV
         }
     }
 
-    /// @dev Function to recover a signer address from the provided digest and signature
+    /// @dev Function to recover a signer address from the provided hash and signature
     /// and then verify whether the recovered signer address is a recognized Turnkey 
     /// @param hash The 32 byte digest derived by hashing signed message data. Sadly, name is canonical in ERC1271.
     /// @param signature The signature to be verified via recovery. Must be prepended with validator address
@@ -104,10 +104,11 @@ abstract contract Account is Mage, IAccount, IERC1271, ERC4337Internal, ModularV
         // note: This impl assumes the nested sig within `UserOperation.signature` is created using EIP-712
 
         // extract validator address and sig formatted for validator
-        (address validator, bytes memory formattedSig) = abi.decode(signature, (address, bytes));
+        (address validator, address signer, bytes memory formattedSig) = abi.decode(signature, (address, address, bytes));
+
         if (isValidator(validator)) {
             // format call for Validator module
-            bytes4 ret = IValidator(validator).isValidSignature(hash, formattedSig);
+            bytes4 ret = IValidator(validator).isValidSignature(hash, abi.encode(signer, formattedSig));
 
             // if validator returns wrong `magicValue`, return error code
             if (ret != this.isValidSignature.selector) return ERC4337Storage.layout().INVALID_SIGNER;
@@ -142,12 +143,14 @@ abstract contract Account is Mage, IAccount, IERC1271, ERC4337Internal, ModularV
 
     /// @dev Function to add the address of a Validator module to storage
     function addValidator(address validator) public override {
+        //todo access control
         ModularValidationStorage.Layout storage layout = ModularValidationStorage.layout();
         layout._validators[validator] = true;
     }
 
     /// @dev Function to remove the address of a Validator module to storage
     function removeValidator(address validator) public override {
+        //todo access control
         ModularValidationStorage.Layout storage layout = ModularValidationStorage.layout();
         layout._validators[validator] = false;
     }

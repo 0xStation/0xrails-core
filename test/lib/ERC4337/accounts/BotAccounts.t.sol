@@ -2,8 +2,10 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
+import {TurnkeyValidator} from "src/lib/ERC4337/validator/TurnkeyValidator.sol";
 import {BotAccount} from "src/lib/ERC4337/account/BotAccount.sol";
 import {Operations} from "src/lib/Operations.sol";
+import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 import {IOwnableInternal} from "src/access/ownable/interface/IOwnable.sol";
 import {IPermissions, IPermissionsInternal} from "src/access/permissions/interface/IPermissions.sol";
@@ -13,11 +15,14 @@ import {IExtensions} from "src/extension/interface/IExtensions.sol";
 contract AccountTest is Test {
 
     BotAccount public botAccounts;
+    TurnkeyValidator public turnkeyValidator;
 
     address public entryPointAddress;
     address public owner;
     address public testTurnkey;
-    bytes32 public digest;
+    UserOperation public someUserOp;
+    bytes32 public userOpHash;
+    bytes32 public typedUserOpDigest;
 
     // intended to contain custom error signatures
     bytes public err;
@@ -27,11 +32,13 @@ contract AccountTest is Test {
         entryPointAddress = 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789;
         owner = vm.addr(0xbeefEEbabe);
         testTurnkey = vm.addr(0xc0ffEEbabe);
-        digest = bytes32(hex'beefEEbabe');
+        turnkeyValidator = new TurnkeyValidator(entryPointAddress);
+        userOpHash = turnkeyValidator.getUserOpHash(someUserOp);
+        typedUserOpDigest = turnkeyValidator.getTypedDataHash(userOpHash);
         address[] memory initArray = new address[](1);
         initArray[0] = testTurnkey;
 
-        botAccounts = new BotAccount(entryPointAddress, owner, initArray);
+        botAccounts = new BotAccount(entryPointAddress, owner, address(turnkeyValidator), initArray);
     }
 
     function test_setUp() public {
@@ -46,11 +53,12 @@ contract AccountTest is Test {
         assertTrue(botAccounts.hasPermission(Operations.CALL_PERMIT, testTurnkey));
     }
 
-    function test_isValidSignature(uint256 startingPrivateKey, uint8 numPrivateKeys) public {
+    function test_isValidSignature(uint256 startingPrivateKey, uint8 numPrivateKeys) public returns(address) {
+
         address[] memory newTurnkeys = new address[](numPrivateKeys);
 
         address currentAddr;
-        bytes[] memory rsvArray = new bytes[](numPrivateKeys);
+        bytes[] memory formattedSignatures = new bytes[](numPrivateKeys);
         for (uint8 i; i < numPrivateKeys; ++i) {
             // private keys must be nonzero and less than the secp256k curve order
             vm.assume(startingPrivateKey != 0);
@@ -62,17 +70,22 @@ contract AccountTest is Test {
             
             vm.prank(owner);
             botAccounts.addPermission(Operations.CALL_PERMIT, currentAddr);
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(currentPrivateKey, digest);
+
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(currentPrivateKey, typedUserOpDigest);
             bytes memory currentRSV = abi.encodePacked(r, s, v);
-            
             assertEq(currentRSV.length, 65);
 
-            rsvArray[i] = currentRSV;
+            // ModularValidation schema developed by GroupOS requires prepended validator & signer addresses
+            // note: `abi.encode` must be used to craft the signature or decoding will fail
+            // ie: `abi.encodePacked(validator, currentAddr, currentRSV)` cannot be decoded
+            bytes memory formattedSig = abi.encode(address(turnkeyValidator), currentAddr, currentRSV);
+            
+            formattedSignatures[i] = formattedSig;
         }
 
         for (uint8 j; j < numPrivateKeys; ++j) {
             bytes4 eip1271ActualVal = 0x1626ba7e;
-            bytes4 eip1271RetVal = botAccounts.isValidSignature(digest, rsvArray[j]);
+            bytes4 eip1271RetVal = botAccounts.isValidSignature(userOpHash, formattedSignatures[j]);
             assertEq(eip1271RetVal, eip1271ActualVal);
         }
     }
