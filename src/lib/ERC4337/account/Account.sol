@@ -62,7 +62,7 @@ abstract contract Account is Mage, IAccount, IERC1271, ERC4337Internal, ModularV
         _checkSenderIsEntryPoint();
 
         // extract validator address
-        address validator = address(bytes20(userOp.signature[:20]));
+        address validator = address(bytes20(userOp.signature));
         if (isValidator(validator)) {
             // copy userOp into memory and format for Validator module
             UserOperation memory formattedUserOp = userOp;
