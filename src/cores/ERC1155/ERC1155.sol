@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {IERC1155} from "openzeppelin-contracts/token/ERC1155/IERC1155.sol";
-import {IERC1155MetadataURI} from "openzeppelin-contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
-import {IERC1155Errors} from "openzeppelin-contracts/interfaces/draft-IERC6093.sol";
+import {IERC1155Receiver} from "openzeppelin-contracts/token/ERC1155/IERC1155Receiver.sol";
+import {IERC1155} from "./interface/IERC1155.sol";
 import {ERC1155Storage} from "./ERC1155Storage.sol";
 
-abstract contract ERC1155 is IERC1155, IERC1155MetadataURI {
+abstract contract ERC1155 is IERC1155 {
 
     /*==============
         METADATA
@@ -27,8 +26,8 @@ abstract contract ERC1155 is IERC1155, IERC1155MetadataURI {
         // See: [ERC165](https://eips.ethereum.org/EIPS/eip-165)
         // (e.g. `bytes4(i.functionA.selector ^ i.functionB.selector ^ ...)`)
         return interfaceId == 0x01ffc9a7 // ERC165 interface ID for ERC165.
-            || interfaceId == type(IERC1155).interfaceId // ERC165 interface ID for ERC721.
-            || interfaceId == type(IERC1155MetadataURI).interfaceId; // ERC165 interface ID for ERC721Metadata.
+            || interfaceId == 0xd9b67a26 // ERC165 Interface ID for ERC1155
+            || interfaceId == 0x0e89341c; // ERC165 Interface ID for ERC1155MetadataURI
     }
 
     /*===========
@@ -50,7 +49,7 @@ abstract contract ERC1155 is IERC1155, IERC1155MetadataURI {
         uint256[] memory batchBalances = new uint256[](accounts.length);
 
         for (uint256 i = 0; i < accounts.length; ++i) {
-            batchBalances[i] = balanceOf(accounts.unsafeMemoryAccess(i), ids.unsafeMemoryAccess(i));
+            batchBalances[i] = balanceOf(accounts[i], ids[i]);
         }
 
         return batchBalances;
@@ -92,7 +91,7 @@ abstract contract ERC1155 is IERC1155, IERC1155MetadataURI {
         if (operator == address(0)) {
             revert ERC1155InvalidOperator(address(0));
         }
-        _operatorApprovals[owner][operator] = approved;
+        ERC1155Storage.layout().operatorApprovals[owner][operator] = approved;
         emit ApprovalForAll(owner, operator, approved);
     }
 
@@ -131,7 +130,7 @@ abstract contract ERC1155 is IERC1155, IERC1155MetadataURI {
 
     function _burn(address from, uint256 id, uint256 value) internal {
         (uint256[] memory ids, uint256[] memory values) = _asSingletonArrays(id, value);
-        _burnBatch(from, ids, values, "");
+        _burnBatch(from, ids, values);
     }
 
     function _burnBatch(address from, uint256[] memory ids, uint256[] memory values) internal {
@@ -152,8 +151,8 @@ abstract contract ERC1155 is IERC1155, IERC1155MetadataURI {
         if (to != address(0)) {
             address operator = msg.sender;
             if (ids.length == 1) {
-                uint256 id = ids.unsafeMemoryAccess(0);
-                uint256 value = values.unsafeMemoryAccess(0);
+                uint256 id = ids[0];
+                uint256 value = values[0];
                 _doSafeTransferAcceptanceCheck(operator, from, to, id, value, data);
             } else {
                 _doSafeBatchTransferAcceptanceCheck(operator, from, to, ids, values, data);
@@ -169,13 +168,13 @@ abstract contract ERC1155 is IERC1155, IERC1155MetadataURI {
         ERC1155Storage.Layout storage layout = ERC1155Storage.layout();
 
         // check before
-        (address guard, bytes memory beforeCheckData) = _beforeTokenTransfer(from, to, ids, values);
+        (address guard, bytes memory beforeCheckData) = _beforeTokenTransfers(from, to, ids, values);
 
         address operator = msg.sender;
 
         for (uint256 i = 0; i < ids.length; ++i) {
-            uint256 id = ids.unsafeMemoryAccess(i);
-            uint256 value = values.unsafeMemoryAccess(i);
+            uint256 id = ids[i];
+            uint256 value = values[i];
 
             if (from != address(0)) {
                 uint256 fromBalance = layout.balances[id][from];
@@ -198,8 +197,8 @@ abstract contract ERC1155 is IERC1155, IERC1155MetadataURI {
         }
 
         if (ids.length == 1) {
-            uint256 id = ids.unsafeMemoryAccess(0);
-            uint256 value = values.unsafeMemoryAccess(0);
+            uint256 id = ids[0];
+            uint256 value = values[0];
             emit TransferSingle(operator, from, to, id, value);
         } else {
             emit TransferBatch(operator, from, to, ids, values);
@@ -300,12 +299,12 @@ abstract contract ERC1155 is IERC1155, IERC1155MetadataURI {
         }
     }
 
-    function _beforeTokenTransfer(
+    function _beforeTokenTransfers(
         address from,
         address to,
         uint256[] memory ids,
         uint256[] memory values
     ) internal virtual returns (address guard, bytes memory beforeCheckData);
 
-    function _afterTokenTransfer(address guard, bytes memory checkBeforeData) internal virtual;
+    function _afterTokenTransfers(address guard, bytes memory checkBeforeData) internal virtual;
 }

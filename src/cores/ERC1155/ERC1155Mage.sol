@@ -7,7 +7,6 @@ import {Mage} from "../../Mage.sol";
 import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
 import {ERC1155} from "./ERC1155.sol";
-import {ERC1155Internal} from "./ERC1155Internal.sol";
 import {TokenMetadata} from "../TokenMetadata/TokenMetadata.sol";
 import {TokenMetadataInternal} from "../TokenMetadata/TokenMetadataInternal.sol";
 import {
@@ -33,7 +32,6 @@ contract ERC1155Mage is Mage, Ownable, Initializable, TokenMetadata, ERC1155, IE
         external
         initializer
     {
-        ERC1155Internal._initialize();
         _setName(name_);
         _setSymbol(symbol_);
         if (initData.length > 0) {
@@ -120,7 +118,7 @@ contract ERC1155Mage is Mage, Ownable, Initializable, TokenMetadata, ERC1155, IE
         } else {
             operation = Operations.TRANSFER;
         }
-        bytes memory data = abi.encode(msg.sender, from, to, startTokenId, quantity);
+        bytes memory data = abi.encode(msg.sender, from, to, ids, values);
 
         return checkGuardBefore(operation, data);
     }
