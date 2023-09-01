@@ -69,7 +69,7 @@ BBBQ .:. QBB                                       .BBB .:. BBB
         address _turnkeyValidator,
         address[] memory _turnkeys
     ) Account(_entryPointAddress) {
-        addValidator(_turnkeyValidator);
+        _addValidator(_turnkeyValidator);
         _transferOwnership(_owner);
 
         // permit Turnkeys to call `execute()` on this contract via valid UserOp.signature only
@@ -116,12 +116,24 @@ BBBQ .:. QBB                                       .BBB .:. BBB
 
     /// @dev Function to add the address of a Validator module to storage
     function addValidator(address validator) public override onlyOwner {
-        ModularValidationStorage.Layout storage layout = ModularValidationStorage.layout();
-        layout._validators[validator] = true;
+        _addValidator(validator);
     }
 
     /// @dev Function to remove the address of a Validator module to storage
     function removeValidator(address validator) public override onlyOwner {
+        _removeValidator(validator);
+    }
+
+    /*===============
+        INTERNALS
+    ===============*/
+
+    function _addValidator(address validator) internal {
+        ModularValidationStorage.Layout storage layout = ModularValidationStorage.layout();
+        layout._validators[validator] = true;
+    }
+
+    function _removeValidator(address validator) internal {
         ModularValidationStorage.Layout storage layout = ModularValidationStorage.layout();
         layout._validators[validator] = false;
     }
