@@ -1,0 +1,19 @@
+Deploy and verify ERC721Mage from CLI:
+source .env
+forge create --private-key $PRIVATE_KEY --verify --chain-id 5 --rpc-url $GOERLI_RPC_URL --api-key $ETHERSCAN_API_KEY src/cores/ERC721/ERC721Mage.sol:ERC721Mage
+
+Deploy and verify BotAccounts via script:
+```forge script script/BotAccount.s.sol:BotAccountScript --rpc-url $GOERLI_RPC_URL --chain-id 5 --broadcast --etherscan-api-key $ETHERSCAN_API_KEY --verify -vvvv```
+
+From CLI:
+```
+source .env
+forge create 
+  --private-key $PRIVATE_KEY 
+  --verify 
+  --chain-id 5 
+  --rpc-url $GOERLI_RPC_URL 
+  --api-key $ETHERSCAN_API_KEY 
+  --constructor-args 0x.. 0x.. [0xe, 0xe]
+  src/lib/ERC4337/account/BotAccount.sol:BotAccount
+```
