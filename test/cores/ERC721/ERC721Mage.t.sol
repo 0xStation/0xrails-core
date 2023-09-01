@@ -15,8 +15,9 @@ import {Extensions} from "src/extension/Extensions.sol";
 import {IExtensions} from "src/extension/interface/IExtensions.sol";
 import {TimeRangeGuard} from "src/guard/examples/TimeRangeGuard.sol";
 import {ERC721ReceiverImplementer} from "test/cores/ERC721/helpers/ERC721ReceiverImplementer.sol";
+import {MockAccountDeployer} from "test/lib/MockAccount.sol";
 
-contract ERC721MageTest is Test {
+contract ERC721MageTest is Test, MockAccountDeployer {
 
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
@@ -263,10 +264,10 @@ contract ERC721MageTest is Test {
     }
 
     function test_approve(
-        address from, 
         address operator, 
         uint8 mintQuantity
     ) public {
+        address from = createAccount();
         // prevent mint/approve/delegatecalls to address(0x0)
         vm.assume(from != address(0x0) && from != address(erc721MageProxy));
         vm.assume(operator != address(0x0)); 
@@ -388,15 +389,15 @@ contract ERC721MageTest is Test {
     }
 
     function test_transferFrom(
-        address from, 
-        address to, 
         address operator,
         uint8 mintQuantity, 
         uint8 transferQuantity
     ) public {
+        address from = createAccount();
+        address to = createAccount();
         // prevent transfers, approvals, delegatecalls to/from address(0x0)
-        vm.assume(from != address(0x0) && to != address(0x0) && operator != address(0x0)); 
-        vm.assume(from != operator && from != to);
+        vm.assume(operator != address(0x0)); 
+        vm.assume(from != operator && operator != to);
         vm.assume(from != address(erc721MageProxy));
         vm.assume(mintQuantity > 0);
         vm.assume(transferQuantity < mintQuantity / 3);
@@ -479,6 +480,7 @@ contract ERC721MageTest is Test {
         vm.assume(from != address(0x0) && to != address(0x0)); 
         vm.assume(from != badOperator && from != to);
         vm.assume(mintQuantity > 0);
+        vm.assume(badOperator != address(0));
 
         vm.prank(owner);
         erc721MageProxy.mintTo(from, mintQuantity);
