@@ -8,6 +8,7 @@ interface IInitializableInternal {
     // errors
     error AlreadyInitialized();
     error NotInitializing();
+    error CannotInitializeWhileConstructing();
 
     // views
     function initialized() external view returns (bool);

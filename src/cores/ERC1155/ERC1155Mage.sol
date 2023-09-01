@@ -88,7 +88,7 @@ contract ERC1155Mage is Mage, Ownable, Initializable, TokenMetadata, ERC1155, IE
         _mint(recipient, tokenId, value, "");
     }
 
-    function burn(address from, uint256 tokenId, uint256 value) external {
+    function burnFrom(address from, uint256 tokenId, uint256 value) external {
         if (!hasPermission(Operations.BURN, msg.sender)) {
             _checkCanTransfer(from);
         }

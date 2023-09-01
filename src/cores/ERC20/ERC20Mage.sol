@@ -81,8 +81,10 @@ contract ERC20Mage is Mage, Ownable, Initializable, TokenMetadata, ERC20, IERC20
     }
 
     /// @dev rework allowance to also allow permissioned users burn unconditionally
-    function burn(address from, uint256 amount) external returns(bool) {
-        _spendAllowance(from, msg.sender, amount);
+    function burnFrom(address from, uint256 amount) external returns(bool) {
+        if (!hasPermission(Operations.BURN, msg.sender)) {
+            _spendAllowance(from, msg.sender, amount);
+        }
         _burn(from, amount);
         return true;
     }
@@ -105,7 +107,7 @@ contract ERC20Mage is Mage, Ownable, Initializable, TokenMetadata, ERC20, IERC20
         } else {
             operation = Operations.TRANSFER;
         }
-        bytes memory data = abi.encode(from, to, amount);
+        bytes memory data = abi.encode(msg.sender, from, to, amount);
 
         return checkGuardBefore(operation, data);
     }
