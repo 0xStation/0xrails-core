@@ -62,7 +62,7 @@ BBBQ .:. QBB                                       .BBB .:. BBB
     /// @param _owner The owner address of this contract which retains Turnkey management rights
     /// @param _turnkeyValidator The initial TurnkeyValidator address to handle modular sig verification
     /// @param _turnkeys The initial turnkey addresses to support as recognized signers
-    /// @notice Permission to call `execute()` on this contract is granted to the EntryPoint in Accounts
+    /// @notice Permission to execute `Call::call()` on this contract is granted to the EntryPoint in Accounts
     constructor(
         address _entryPointAddress, 
         address _owner, 
@@ -72,7 +72,7 @@ BBBQ .:. QBB                                       .BBB .:. BBB
         _addValidator(_turnkeyValidator);
         _transferOwnership(_owner);
 
-        // permit Turnkeys to call `execute()` on this contract via valid UserOp.signature only
+        // permit Turnkeys to create valid `UserOp.signature`s via `CALL_PERMIT` permission only
         unchecked {
             for (uint256 i; i < _turnkeys.length; ++i) {
                 _addPermission(Operations.CALL_PERMIT, _turnkeys[i]);

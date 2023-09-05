@@ -19,9 +19,9 @@ import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 /// @title Station Network Account Abstract Contract
 /// @author 👦🏻👦🏻.eth
 
-/// @dev This abstract contract provides scaffolding Station's Account signature validation
-/// ERC1271-compliance in combination with Mage's Permissions::EXECUTE_PERMIT system
-/// provides convenient and modular private key management on an infrastructural level
+/// @dev This abstract contract provides scaffolding for Station's Account signature validation
+/// ERC1271 and ERC4337 compliance in combination with Mage's Permissions system
+/// to provide convenient and modular private key management on an infrastructural level
 abstract contract Account is Mage, IAccount, IERC1271, ModularValidationInternal {
 
     /*=============
@@ -164,10 +164,10 @@ abstract contract Account is Mage, IAccount, IERC1271, ModularValidationInternal
         _checkPermission(Operations.GUARDS, msg.sender);
     }
 
-    /// @dev Provides control over `EXECUTE` permission to the owner only
-    /// @notice Permission to `execute()` via signature validation is restricted to either the Entrypoint,
-    /// the owner, or entities possessing the `EXECUTE_PERMIT`or `ADMIN` permissions
-    function _checkCanExecute() internal view override {
+    /// @dev Permission to `Call::call()` via signature validation is restricted to either
+    /// the EntryPoint, the owner, or entities possessing the `CALL`or `ADMIN` permissions
+    /// @notice Mutiny by Turnkeys is prevented by granting them only the `CALL_PERMIT` permission
+    function _checkCanCall() internal view override {
         bool auth = (msg.sender == entryPoint || hasPermission(Operations.CALL, msg.sender));
         if (!auth) revert PermissionDoesNotExist(Operations.CALL, msg.sender);
     }

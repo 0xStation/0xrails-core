@@ -30,11 +30,11 @@ abstract contract Mage is Access, Guards, Extensions, SupportsInterface, Execute
             || Extensions.supportsInterface(interfaceId) || SupportsInterface.supportsInterface(interfaceId);
     }
 
-    function _beforeExecute(address to, uint256 value, bytes calldata data) internal view override returns (address guard, bytes memory checkBeforeData) {
+    function _beforeCall(address to, uint256 value, bytes calldata data) internal view override returns (address guard, bytes memory checkBeforeData) {
         return checkGuardBefore(Operations.CALL, abi.encode(to, value, data));
     }
 
-    function _afterExecute(address guard, bytes memory checkBeforeData, bytes memory executeData) internal view override {
+    function _afterCall(address guard, bytes memory checkBeforeData, bytes memory executeData) internal view override {
         checkGuardAfter(guard, checkBeforeData, executeData);
     }
 }
