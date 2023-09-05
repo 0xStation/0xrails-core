@@ -1,8 +1,8 @@
 {
     "5": {
       "ERC4337": {
-        "TurnkeyValidator": "0xa330Cf9E52bb205d50d8560c9354356FcDA6f802",
-        "BotAccount": "0x96c4cc120a4131a73120f397a6c641d36b24d402"
+        "TurnkeyValidator": "0xCC4Ca1B0a8e379F7dB5c0Ce01cdBA26B3Ea71A14",
+        "BotAccount": "0x761128EF277d439Cb05E6D605822b8F4ba9C9e87"
       }
     }
 }
