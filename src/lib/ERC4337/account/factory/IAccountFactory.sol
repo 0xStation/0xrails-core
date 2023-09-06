@@ -26,4 +26,5 @@ interface IAccountFactory {
     function simulateCreate2(bytes32 salt, AccountType accountType) external view returns (address);
     function setAccountImpl(address newAccountImpl, AccountType accountType) external;
     function getAccountImpl(AccountType accountType) external view returns (address);
+    function getAllAccountImpls() external view returns (address[] memory);
 }

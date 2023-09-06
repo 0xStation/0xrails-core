@@ -6,6 +6,7 @@ import "forge-std/console2.sol";
 import {TurnkeyValidator} from "src/lib/ERC4337/validator/TurnkeyValidator.sol";
 import {BotAccount} from "src/lib/ERC4337/account/BotAccount.sol";
 import {AccountFactory} from "src/lib/ERC4337/account/factory/AccountFactory.sol";
+import {IAccountFactory} from "src/lib/ERC4337/account/factory/IAccountFactory.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
@@ -77,6 +78,8 @@ contract AccountTest is Test {
     function test_setUp() public {
         assertEq(botAccount.entryPoint(), entryPointAddress);
         assertEq(botAccount.owner(), owner);
+        assertEq(accountFactoryProxy.getAllAccountImpls().length, 3);
+        assertEq(accountFactoryProxy.getAccountImpl(IAccountFactory.AccountType.BOT), address(botAccountImpl));
         
         assertTrue(botAccount.supportsInterface(type(IERC1271).interfaceId));
         assertTrue(botAccount.supportsInterface(botAccount.erc165Id()));

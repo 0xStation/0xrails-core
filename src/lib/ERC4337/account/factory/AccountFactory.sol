@@ -28,16 +28,12 @@ contract AccountFactory is Initializable, Ownable, UUPSUpgradeable, IAccountFact
     constructor() Initializable() {}
 
     function initialize(
-        address _botAccountImpl, /*
-        address _memberAccountImpl, 
-        address _groupAccountImpl */
+        address _botAccountImpl,
         address _owner
     ) external initializer {
         AccountFactoryStorage.Layout storage layout = AccountFactoryStorage.layout();
         layout.accountImpls = new address[](3);
         _updateAccountImpl(_botAccountImpl, AccountType.BOT);
-        // _updateAccountImpl(_memberAccountImpl, AccountType.MEMBER);
-        // _updateAccountImpl(_groupAccountImpl, AccountType.GROUP);
 
         _transferOwnership(_owner);
     }
@@ -66,12 +62,14 @@ contract AccountFactory is Initializable, Ownable, UUPSUpgradeable, IAccountFact
         return AccountFactoryStorage.layout().accountImpls[uint8(accountType)];
     }
 
+    function getAllAccountImpls() public view returns (address[] memory) {
+        return AccountFactoryStorage.layout().accountImpls;
+    }
+
     /// @dev Function to simulate a `CREATE2` deployment using a given salt and desired AccountType
     function simulateCreate2(bytes32 salt, AccountType accountType) public view returns (address) {
         bytes32 creationCodeHash;
         if (accountType == AccountType.BOT) creationCodeHash = keccak256(type(BotAccount).creationCode);
-        // else if (accountType == AccountType.MEMBER) creationCodeHash = keccak256(type(MemberAccount).creationCode);
-        // else if (accountType == AccountType.GROUP) creationCodeHash = keccak256(type(GroupAccount).creationCode);
 
         return _simulateCreate2(salt, creationCodeHash);
     }
@@ -89,18 +87,6 @@ contract AccountFactory is Initializable, Ownable, UUPSUpgradeable, IAccountFact
         newBotAccount = payable(address(new ERC1967Proxy{salt: _salt}(getAccountImpl(AccountType.BOT), '')));
 
         BotAccount(newBotAccount).initialize(_botAccountOwner, _turnkeyValidator, _turnkeys);
-    }
-
-    function _createMemberAccount(bytes32 _salt) internal returns (address payable newMemberAccount) {
-        //todo
-        // newMemberAccount = payable(address(new ERC1967Proxy{salt: _salt}(getAccountImpl(AccountType.MEMBER), '')));
-        // MemberAccount(newMemberAccount).initialize();
-    }
-
-    function _createGroupAccount(bytes32 _salt) internal returns (address payable newGroupAccount) {
-        //todo
-        // newGroupAccount = payable(address(new ERC1967Proxy{salt: _salt}(getAccountImpl(AccountType.GROUP), '')));
-        // GroupAccount(newGroupAccount).initialize();
     }
 
     function _updateAccountImpl(address _newAccountImpl, AccountType _accountType) internal {
