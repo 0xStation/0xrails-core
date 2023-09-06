@@ -33,13 +33,14 @@ contract AccountFactory is Initializable, Ownable, UUPSUpgradeable, IAccountFact
         address _groupAccountImpl */
         address _owner
     ) external initializer {
+        AccountFactoryStorage.Layout storage layout = AccountFactoryStorage.layout();
+        layout.accountImpls = new address[](3);
         _updateAccountImpl(_botAccountImpl, AccountType.BOT);
         // _updateAccountImpl(_memberAccountImpl, AccountType.MEMBER);
         // _updateAccountImpl(_groupAccountImpl, AccountType.GROUP);
 
         _transferOwnership(_owner);
     }
-
 
     /*====================
         ACCOUNTFACTORY
@@ -52,7 +53,7 @@ contract AccountFactory is Initializable, Ownable, UUPSUpgradeable, IAccountFact
         address turnkeyValidator, 
         address[] calldata turnkeys
     ) external returns (address newAccount) {
-        _createBotAccount(salt, botAccountOwner, turnkeyValidator, turnkeys);
+        newAccount = _createBotAccount(salt, botAccountOwner, turnkeyValidator, turnkeys);
 
         emit AccountCreated(newAccount, AccountType.BOT);
     }

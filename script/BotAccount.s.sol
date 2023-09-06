@@ -5,6 +5,8 @@ import {Script} from "forge-std/Script.sol";
 import {TurnkeyValidator} from "src/lib/ERC4337/validator/TurnkeyValidator.sol";
 import {BotAccount} from "src/lib/ERC4337/account/BotAccount.sol";
 
+/// @dev Script to deploy new implementations of BotAccount.sol and TurnkeyValidator.sol only.
+/// To deploy accounts as proxies, see AccountFactory.sol
 contract BotAccountScript is Script {
     function run() public {
 
@@ -39,7 +41,7 @@ contract BotAccountScript is Script {
         turnkeys[0] = turnkey;
 
         turnkeyValidator = new TurnkeyValidator(entryPointAddress);
-        botAccount = new BotAccount(entryPointAddress, owner, address(turnkeyValidator), turnkeys);
+        botAccount = new BotAccount(entryPointAddress);
 
         vm.stopBroadcast();
     }

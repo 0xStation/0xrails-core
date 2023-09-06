@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import "forge-std/console2.sol";
 import {TurnkeyValidator} from "src/lib/ERC4337/validator/TurnkeyValidator.sol";
 import {BotAccount} from "src/lib/ERC4337/account/BotAccount.sol";
+import {AccountFactory} from "src/lib/ERC4337/account/factory/AccountFactory.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
@@ -12,17 +13,23 @@ import {IOwnableInternal} from "src/access/ownable/interface/IOwnable.sol";
 import {IPermissions, IPermissionsInternal} from "src/access/permissions/interface/IPermissions.sol";
 import {IGuards} from "src/guard/interface/IGuards.sol";
 import {IExtensions} from "src/extension/interface/IExtensions.sol";
+import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract AccountTest is Test {
 
-    BotAccount public botAccounts;
+    BotAccount public botAccountImpl;
+    BotAccount public botAccount;
     TurnkeyValidator public turnkeyValidator;
+    AccountFactory public accountFactoryImpl;
+    AccountFactory public accountFactoryProxy;
 
     address public entryPointAddress;
     address public owner;
     address public testTurnkey;
     UserOperation public userOp;
     bytes32 public userOpHash;
+    bytes32 public salt;
+    bytes public accountFactoryInitData;
 
     // intended to contain custom error signatures
     bytes public err;
@@ -33,8 +40,8 @@ contract AccountTest is Test {
         owner = vm.addr(0xbeefEEbabe);
         testTurnkey = vm.addr(0xc0ffEEbabe);
         turnkeyValidator = new TurnkeyValidator(entryPointAddress);
-        address[] memory initArray = new address[](1);
-        initArray[0] = testTurnkey;
+        address[] memory turnkeyArray = new address[](1);
+        turnkeyArray[0] = testTurnkey;
         userOp = UserOperation({
             sender: testTurnkey,
             nonce: 0,
@@ -49,20 +56,35 @@ contract AccountTest is Test {
             signature: ''
         });
         userOpHash = turnkeyValidator.getUserOpHash(userOp);
+        salt = bytes32('garlicsalt');
 
-        botAccounts = new BotAccount(entryPointAddress, owner, address(turnkeyValidator), initArray);
+        botAccountImpl = new BotAccount(entryPointAddress);
+        accountFactoryImpl = new AccountFactory();
+        accountFactoryInitData = abi.encodeWithSelector(
+            AccountFactory.initialize.selector, 
+            address(botAccountImpl), 
+            owner 
+        );
+        accountFactoryProxy = AccountFactory(address(new ERC1967Proxy(address(accountFactoryImpl), accountFactoryInitData)));
+        botAccount = BotAccount(payable(accountFactoryProxy.createBotAccount(
+            salt, 
+            owner,
+            address(turnkeyValidator), 
+            turnkeyArray
+        )));
     }
 
     function test_setUp() public {
-        assertEq(botAccounts.owner(), owner);
+        assertEq(botAccount.entryPoint(), entryPointAddress);
+        assertEq(botAccount.owner(), owner);
         
-        assertTrue(botAccounts.supportsInterface(type(IERC1271).interfaceId));
-        assertTrue(botAccounts.supportsInterface(botAccounts.erc165Id()));
-        assertTrue(botAccounts.supportsInterface(type(IPermissions).interfaceId));
-        assertTrue(botAccounts.supportsInterface(type(IGuards).interfaceId));
-        assertTrue(botAccounts.supportsInterface(type(IExtensions).interfaceId));
+        assertTrue(botAccount.supportsInterface(type(IERC1271).interfaceId));
+        assertTrue(botAccount.supportsInterface(botAccount.erc165Id()));
+        assertTrue(botAccount.supportsInterface(type(IPermissions).interfaceId));
+        assertTrue(botAccount.supportsInterface(type(IGuards).interfaceId));
+        assertTrue(botAccount.supportsInterface(type(IExtensions).interfaceId));
  
-        assertTrue(botAccounts.hasPermission(Operations.CALL_PERMIT, testTurnkey));
+        assertTrue(botAccount.hasPermission(Operations.CALL_PERMIT, testTurnkey));
     }
 
     function test_isValidSignature(uint256 startingPrivateKey, uint8 numPrivateKeys) public {
@@ -81,7 +103,7 @@ contract AccountTest is Test {
             newTurnkeys[i] = currentAddr;
             
             vm.prank(owner);
-            botAccounts.addPermission(Operations.CALL_PERMIT, currentAddr);
+            botAccount.addPermission(Operations.CALL_PERMIT, currentAddr);
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(currentPrivateKey, userOpHash);
             bytes memory currentRSV = abi.encodePacked(r, s, v);
@@ -97,7 +119,7 @@ contract AccountTest is Test {
 
         for (uint8 j; j < numPrivateKeys; ++j) {
             bytes4 eip1271ActualVal = 0x1626ba7e;
-            bytes4 eip1271RetVal = botAccounts.isValidSignature(userOpHash, formattedSignatures[j]);
+            bytes4 eip1271RetVal = botAccount.isValidSignature(userOpHash, formattedSignatures[j]);
             assertEq(eip1271RetVal, eip1271ActualVal);
         }
     }
@@ -118,7 +140,7 @@ contract AccountTest is Test {
             newTurnkeys[i] = currentAddr;
             
             vm.prank(owner);
-            botAccounts.addPermission(Operations.CALL_PERMIT, currentAddr);
+            botAccount.addPermission(Operations.CALL_PERMIT, currentAddr);
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(currentPrivateKey, userOpHash);
             bytes memory currentRSV = abi.encodePacked(r, s, v);
@@ -138,7 +160,7 @@ contract AccountTest is Test {
             // populate preexisting UserOperation `userOp` with formatted signature to be validated
             userOp.signature = formattedSignatures[j];
             vm.prank(entryPointAddress);
-            uint256 returnedValidationData = botAccounts.validateUserOp(userOp, userOpHash, missingAccountFunds);
+            uint256 returnedValidationData = botAccount.validateUserOp(userOp, userOpHash, missingAccountFunds);
             assertEq(returnedValidationData, expectedValidationData);
         }
     }
@@ -156,22 +178,22 @@ contract AccountTest is Test {
             currentAddr = vm.addr(startingPrivateKey + i);
             newTurnkeys[i] = currentAddr;
             vm.prank(owner);
-            botAccounts.addPermission(op, currentAddr);
+            botAccount.addPermission(op, currentAddr);
         }
 
         for (uint256 j; j < newTurnkeys.length; ++j) {
             currentAddr = newTurnkeys[j];
-            assertTrue(botAccounts.hasPermission(op, currentAddr));
+            assertTrue(botAccount.hasPermission(op, currentAddr));
         }
 
         // extra permission is due to testTurnkey added in setUp()
-        assertEq(botAccounts.getAllPermissions().length, uint256(numPrivateKeys) + 1);
+        assertEq(botAccount.getAllPermissions().length, uint256(numPrivateKeys) + 1);
     }
 
     function test_addTurnkeyRevertPermissionDoesNotExist(address someAddress) public {
         err = abi.encodeWithSelector(IPermissionsInternal.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this));
         vm.expectRevert(err);
-        botAccounts.addPermission(Operations.CALL_PERMIT, someAddress);
+        botAccount.addPermission(Operations.CALL_PERMIT, someAddress);
     }
 
     function test_removeTurnkey(uint256 startingPrivateKey, uint8 numPrivateKeys) public {
@@ -187,35 +209,35 @@ contract AccountTest is Test {
             currentAddr = vm.addr(startingPrivateKey + i);
             newTurnkeys[i] = currentAddr;
             vm.prank(owner);
-            botAccounts.addPermission(op, currentAddr);
+            botAccount.addPermission(op, currentAddr);
         }
 
         for (uint256 j; j < newTurnkeys.length; ++j) {
             currentAddr = newTurnkeys[j];
-            assertTrue(botAccounts.hasPermission(op, currentAddr));
+            assertTrue(botAccount.hasPermission(op, currentAddr));
 
             vm.prank(owner);
-            botAccounts.removePermission(op, currentAddr);
+            botAccount.removePermission(op, currentAddr);
 
-            assertFalse(botAccounts.hasPermission(op, currentAddr));
+            assertFalse(botAccount.hasPermission(op, currentAddr));
         }
 
         // extra permission is due to testTurnkey added in setUp()
-        assertEq(botAccounts.getAllPermissions().length, 1);
+        assertEq(botAccount.getAllPermissions().length, 1);
 
         vm.prank(owner);
-        botAccounts.removePermission(op, testTurnkey);
-        assertEq(botAccounts.getAllPermissions().length, 0);
+        botAccount.removePermission(op, testTurnkey);
+        assertEq(botAccount.getAllPermissions().length, 0);
     }
 
     function test_removeTurnkeyRevertPermissionDoesNotExist(address someAddress) public {
         bytes8 op = Operations.CALL_PERMIT;
         vm.prank(owner);
-        botAccounts.addPermission(op, someAddress);
+        botAccount.addPermission(op, someAddress);
 
         // attempt removal of added permission without pranking owner
         err = abi.encodeWithSelector(IPermissionsInternal.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this));
         vm.expectRevert(err);
-        botAccounts.removePermission(op, someAddress);
+        botAccount.removePermission(op, someAddress);
     }
 }

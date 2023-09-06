@@ -62,15 +62,18 @@ BBBQ .:. QBB                                       .BBB .:. BBB
     /// @param _entryPointAddress The contract address for this chain's ERC-4337 EntryPoint contract
     constructor(address _entryPointAddress) Account(_entryPointAddress) {}
 
+    // @param _entryPointAddress The contract address for this chain's ERC-4337 EntryPoint contract//todo
     /// @param _owner The owner address of this contract which retains Turnkey management rights
     /// @param _turnkeyValidator The initial TurnkeyValidator address to handle modular sig verification
     /// @param _turnkeys The initial turnkey addresses to support as recognized signers
     /// @notice Permission to execute `Call::call()` on this contract is granted to the EntryPoint in Accounts
     function initialize(
+        // address _entryPointAddress,//todo
         address _owner, 
         address _turnkeyValidator,
         address[] memory _turnkeys
     ) external initializer {
+        // entryPoint = _entryPointAddress;//todo
         _addValidator(_turnkeyValidator);
         _transferOwnership(_owner);
 
