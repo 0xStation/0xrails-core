@@ -8,7 +8,7 @@ abstract contract SupportsInterfaceInternal is ISupportsInterfaceInternal {
 
     /// @dev For explicit EIP165 compliance, the interfaceId of the standard IERC165 implementation
     /// which is derived from `bytes4(keccak256('supportsInterface(bytes4)'))` 
-    /// is stored directly as a constant in order to preserve Mage's ERC7201 namespace pattern
+    /// is stored directly as a constant in order to preserve Rails's ERC7201 namespace pattern
     bytes4 public constant erc165Id = 0x01ffc9a7;
 
     /*===========

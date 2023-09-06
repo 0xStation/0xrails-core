@@ -5,11 +5,11 @@ import {Test} from "forge-std/Test.sol";
 import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {Initializable} from "src/lib/initializable/Initializable.sol";
 import {InitializableStorage} from "src/lib/initializable/InitializableStorage.sol";
-import {ERC721Mage} from "src/cores/ERC721/ERC721Mage.sol";
+import {ERC721Rails} from "src/cores/ERC721/ERC721Rails.sol";
 
 contract InitializableTest is Test {
-    ERC721Mage public implementation;
-    ERC721Mage public proxy; // ERC1967 proxy wrapped in ERC721Mage for convenience
+    ERC721Rails public implementation;
+    ERC721Rails public proxy; // ERC1967 proxy wrapped in ERC721Rails for convenience
     address public owner;
     string public name;
     string public symbol;
@@ -27,15 +27,15 @@ contract InitializableTest is Test {
         owner = address(0xbeefEbabe);
         name = "BeefEBabe";
         symbol = "BEEF";
-        implementation = new ERC721Mage();
+        implementation = new ERC721Rails();
         bytes memory initializeData = abi.encodeWithSelector(
-            ERC721Mage.initialize.selector, 
+            ERC721Rails.initialize.selector, 
             owner, 
             name, 
             symbol,
             ''
         );
-        proxy = ERC721Mage(payable(address(new ERC1967Proxy(address(implementation), initializeData))));
+        proxy = ERC721Rails(payable(address(new ERC1967Proxy(address(implementation), initializeData))));
     }
 
     function test_setUp() public {
@@ -55,13 +55,13 @@ contract InitializableTest is Test {
     function test_initialize() public {
         // initialize new membership
         bytes memory newInitializeData = abi.encodeWithSelector(
-            ERC721Mage.initialize.selector, 
+            ERC721Rails.initialize.selector, 
             owner, 
             name, 
             symbol,
             ''
         );
-        ERC721Mage newProxy = ERC721Mage(payable(address(new ERC1967Proxy(address(implementation), newInitializeData))));
+        ERC721Rails newProxy = ERC721Rails(payable(address(new ERC1967Proxy(address(implementation), newInitializeData))));
         
         assertEq(newProxy.owner(), owner);
         assertEq(newProxy.name(), name);
@@ -77,7 +77,7 @@ contract InitializableTest is Test {
     }
 
     function test_initializeImplementationRevertDisabled() public {
-        bytes memory maliciousMintToCall = abi.encodeWithSelector(ERC721Mage.mintTo.selector, address(this), 42069);
+        bytes memory maliciousMintToCall = abi.encodeWithSelector(ERC721Rails.mintTo.selector, address(this), 42069);
 
         vm.expectRevert();
         implementation.initialize(address(this), '', '', maliciousMintToCall);
