@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 library ERC721Storage {
-    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("mage.ERC721")) - 1));
+    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("0xrails.ERC721")) - 1));
 
     struct Layout {
         uint256 currentIndex; // max supply is 18e18

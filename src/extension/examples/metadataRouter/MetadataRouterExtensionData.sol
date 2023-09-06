@@ -9,7 +9,7 @@ abstract contract MetadataRouterExtensionData {
 }
 
 library MetadataRouterStorage {
-    bytes32 public constant STORAGE_POSITION = keccak256("mage.extensions.metadataRouter.storage");
+    bytes32 public constant STORAGE_POSITION = keccak256("0xrails.extensions.metadataRouter.storage");
 
     struct Data {
         address metadataRouter;
