@@ -146,7 +146,7 @@ contract ERC721Mage is Mage, Ownable, Initializable, TokenMetadata, ERC721, IERC
     }
 
     function _checkCanExecuteCall() internal view override {
-        _checkPermission(Operations.EXECUTE, msg.sender);
+        _checkPermission(Operations.CALL, msg.sender);
     }
 
     function _checkCanUpdateInterfaces() internal view override {

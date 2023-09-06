@@ -31,7 +31,7 @@ abstract contract Mage is Access, Guards, Extensions, SupportsInterface, Execute
     }
 
     function _beforeExecuteCall(address to, uint256 value, bytes calldata data) internal view override returns (address guard, bytes memory checkBeforeData) {
-        return checkGuardBefore(Operations.EXECUTE, abi.encode(to, value, data));
+        return checkGuardBefore(Operations.CALL, abi.encode(to, value, data));
     }
 
     function _afterExecuteCall(address guard, bytes memory checkBeforeData, bytes memory executeData) internal view override {
