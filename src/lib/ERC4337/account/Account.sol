@@ -167,7 +167,7 @@ abstract contract Account is Mage, IAccount, IERC1271, ModularValidationInternal
     /// @dev Permission to `Call::call()` via signature validation is restricted to either
     /// the EntryPoint, the owner, or entities possessing the `CALL`or `ADMIN` permissions
     /// @notice Mutiny by Turnkeys is prevented by granting them only the `CALL_PERMIT` permission
-    function _checkCanCall() internal view override {
+    function _checkCanExecuteCall() internal view override {
         bool auth = (msg.sender == entryPoint || hasPermission(Operations.CALL, msg.sender));
         if (!auth) revert PermissionDoesNotExist(Operations.CALL, msg.sender);
     }
