@@ -6,8 +6,8 @@ import {Mage} from "src/Mage.sol";
 import {IAccount} from "src/lib/ERC4337/interface/IAccount.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
-import {ModularValidationInternal} from "src/lib/ERC4337/validator/ModularValidationInternal.sol";
-import {IValidator} from "src/lib/ERC4337/validator/interface/IValidator.sol";
+import {ValidatorsInternal} from "src/validator/ValidatorsInternal.sol";
+import {IValidator} from "src/validator/interface/IValidator.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {IOwnable} from "src/access/ownable/interface/IOwnable.sol";
 import {OwnableInternal} from "src/access/ownable/OwnableInternal.sol";
@@ -22,7 +22,7 @@ import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 /// @dev This abstract contract provides scaffolding for Station's Account signature validation
 /// ERC1271 and ERC4337 compliance in combination with Mage's Permissions system
 /// to provide convenient and modular private key management on an infrastructural level
-abstract contract Account is Mage, IAccount, IERC1271, ModularValidationInternal {
+abstract contract Account is Mage, IAccount, IERC1271, ValidatorsInternal {
 
     /*=============
         ACCOUNTS

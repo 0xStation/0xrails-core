@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.13;
 
-import {IModularValidation} from "./interface/IModularValidation.sol";
-import {ModularValidationStorage} from "./ModularValidationStorage.sol";
+import {IValidators} from "./interface/IValidators.sol";
+import {ValidatorsStorage} from "./ValidatorsStorage.sol";
 
-abstract contract ModularValidationInternal is IModularValidation {
+abstract contract ValidatorsInternal is IValidators {
 
     /// @dev View function to check whether given address has been added as validator
     function isValidator(address validator) public view virtual returns (bool) {
-        ModularValidationStorage.Layout storage layout = ModularValidationStorage.layout();
+        ValidatorsStorage.Layout storage layout = ValidatorsStorage.layout();
         return layout._validators[validator];
     }
 

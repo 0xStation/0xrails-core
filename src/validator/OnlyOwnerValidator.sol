@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Validator} from "src/lib/ERC4337/validator/Validator.sol";
+import {Validator} from "src/validator/Validator.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {Ownable} from "src/access/ownable/Ownable.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";

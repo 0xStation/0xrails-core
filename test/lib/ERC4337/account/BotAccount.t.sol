@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
 import "forge-std/console2.sol";
-import {TurnkeyValidator} from "src/lib/ERC4337/validator/TurnkeyValidator.sol";
+import {TurnkeyValidator} from "src/validator/TurnkeyValidator.sol";
 import {BotAccount} from "src/lib/ERC4337/account/BotAccount.sol";
 import {AccountFactory} from "src/lib/ERC4337/account/factory/AccountFactory.sol";
 import {IAccountFactory} from "src/lib/ERC4337/account/factory/IAccountFactory.sol";

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Validator} from "src/lib/ERC4337/validator/Validator.sol";
+import {Validator} from "src/validator/Validator.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {Access} from "src/access/Access.sol";
@@ -54,7 +54,7 @@ contract TurnkeyValidator is Validator {
     {
         if (!SignatureChecker.isValidSignatureNow(signer, userOpHash, nestedSignature)) return false;
 
-        // check for turnkey or superior permission
+        // check for `CALL_PERMIT` or superior permission
         return Access(msg.sender).hasPermission(Operations.CALL_PERMIT, signer);
     }
 }
