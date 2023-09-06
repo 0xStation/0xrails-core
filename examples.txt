@@ -18,5 +18,5 @@ forge create
   --rpc-url $GOERLI_RPC_URL 
   --api-key $ETHERSCAN_API_KEY 
   --constructor-args 0x.. 0x.. [0xe, 0xe]
-  src/lib/ERC4337/account/BotAccount.sol:BotAccount
+  src/cores/account/BotAccount.sol:BotAccount
 ```

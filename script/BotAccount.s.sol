@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Script} from "forge-std/Script.sol";
 import {TurnkeyValidator} from "src/validator/TurnkeyValidator.sol";
-import {BotAccount} from "src/lib/ERC4337/account/BotAccount.sol";
+import {BotAccount} from "src/cores/account/BotAccount.sol";
 
 /// @dev Script to deploy new implementations of BotAccount.sol and TurnkeyValidator.sol only.
 /// To deploy accounts as proxies, see AccountFactory.sol

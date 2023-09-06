@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.13;
 
-import {Account} from "src/lib/ERC4337/account/Account.sol";
+import {Account} from "src/cores/account/Account.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {ValidatorsStorage} from "src/validator/ValidatorsStorage.sol";
 import {Initializable} from "src/lib/initializable/Initializable.sol";
