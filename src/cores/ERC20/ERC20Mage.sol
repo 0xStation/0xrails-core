@@ -128,7 +128,7 @@ contract ERC20Mage is Mage, Ownable, Initializable, TokenMetadata, ERC20, IERC20
         _checkPermission(Operations.GUARDS, msg.sender);
     }
 
-    function _checkCanExecute() internal view override {
+    function _checkCanExecuteCall() internal view override {
         _checkPermission(Operations.EXECUTE, msg.sender);
     }
 
