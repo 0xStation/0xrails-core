@@ -17,7 +17,13 @@ interface IAccountFactory {
         address _owner
     ) external;
 
-    function create2(bytes32 salt, AccountType accountType) external returns (address membership);
+    function createBotAccount(
+        bytes32 salt, 
+        address botAccountOwner, 
+        address turnkeyValidator, 
+        address[] calldata turnkeys
+    ) external returns (address newBotAccount);
+    function simulateCreate2(bytes32 salt, AccountType accountType) external view returns (address);
     function setAccountImpl(address newAccountImpl, AccountType accountType) external;
     function getAccountImpl(AccountType accountType) external view returns (address);
 }

@@ -11,6 +11,7 @@ import {AccountFactoryStorage} from "src/lib/ERC4337/account/factory/AccountFact
 import {Initializable} from "src/lib/initializable/Initializable.sol";
 import {Ownable} from "src/access/ownable/Ownable.sol";
 import {UUPSUpgradeable} from "openzeppelin-contracts/proxy/utils/UUPSUpgradeable.sol";
+import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 /// @title Station Network Account Factory Contract
 /// @author 👦🏻👦🏻.eth
@@ -45,14 +46,15 @@ contract AccountFactory is Initializable, Ownable, UUPSUpgradeable, IAccountFact
     ====================*/
 
     /// @dev Function to deploy a new Account using the `CREATE2` opcode
-    function create2(bytes32 salt, AccountType accountType) external returns (address newAccount) {
-        if (accountType == AccountType.BOT) newAccount = _createBotAccount(salt);
-        else if (accountType == AccountType.MEMBER) newAccount = _createMemberAccount(salt);
-        else if (accountType == AccountType.GROUP) newAccount = _createGroupAccount(salt);
+    function createBotAccount(
+        bytes32 salt, 
+        address botAccountOwner, 
+        address turnkeyValidator, 
+        address[] calldata turnkeys
+    ) external returns (address newAccount) {
+        _createBotAccount(salt, botAccountOwner, turnkeyValidator, turnkeys);
 
-        Account(payable(newAccount)).initialize();
-
-        emit AccountCreated(newAccount, accountType);
+        emit AccountCreated(newAccount, AccountType.BOT);
     }
 
     function setAccountImpl(address newAccountImpl, AccountType accountType) external onlyOwner {
@@ -77,18 +79,27 @@ contract AccountFactory is Initializable, Ownable, UUPSUpgradeable, IAccountFact
         INTERNALS
     ===============*/
 
-    function _createBotAccount(bytes32 _salt) internal returns (address) {
-        return address(new BotAccount{salt: _salt}());
+    function _createBotAccount(
+        bytes32 _salt, 
+        address _botAccountOwner,
+        address _turnkeyValidator,
+        address[] memory _turnkeys
+    ) internal returns (address payable newBotAccount) {
+        newBotAccount = payable(address(new ERC1967Proxy{salt: _salt}(getAccountImpl(AccountType.BOT), '')));
+
+        BotAccount(newBotAccount).initialize(_botAccountOwner, _turnkeyValidator, _turnkeys);
     }
 
-    function _createMemberAccount(bytes32 _salt) internal returns (address) {
+    function _createMemberAccount(bytes32 _salt) internal returns (address payable newMemberAccount) {
         //todo
-        // return address(new MemberAccount{salt: _salt}());
+        // newMemberAccount = payable(address(new ERC1967Proxy{salt: _salt}(getAccountImpl(AccountType.MEMBER), '')));
+        // MemberAccount(newMemberAccount).initialize();
     }
 
-    function _createGroupAccount(bytes32 _salt) internal returns (address) {
+    function _createGroupAccount(bytes32 _salt) internal returns (address payable newGroupAccount) {
         //todo
-        // return address(new GroupAccount{salt: _salt}());
+        // newGroupAccount = payable(address(new ERC1967Proxy{salt: _salt}(getAccountImpl(AccountType.GROUP), '')));
+        // GroupAccount(newGroupAccount).initialize();
     }
 
     function _updateAccountImpl(address _newAccountImpl, AccountType _accountType) internal {
@@ -130,8 +141,8 @@ contract AccountFactory is Initializable, Ownable, UUPSUpgradeable, IAccountFact
             let ptr := mload(0x40) // instantiate free mem pointer
             
             mstore(add(ptr, 0x0b), 0xff) // insert single byte create2 constant at 11th offset (starting from 0)
-            mstore(ptr, address(this)) // insert 20-byte deployer address at 12th offset
-            mstore(add(ptr, 0x20), salt) // insert 32-byte salt at 32nd offset
+            mstore(ptr, address()) // insert 20-byte deployer address at 12th offset
+            mstore(add(ptr, 0x20), _salt) // insert 32-byte salt at 32nd offset
             mstore(add(ptr, 0x40), _creationCodeHash) // insert 32-byte creationCodeHash at 64th offset
 
             // hash all inserted data, which is 85 bytes long, starting from 0xff constant at 11th offset
