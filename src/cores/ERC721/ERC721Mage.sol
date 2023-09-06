@@ -123,8 +123,7 @@ contract ERC721Mage is Mage, Ownable, Initializable, TokenMetadata, ERC721, IERC
         } else {
             operation = Operations.TRANSFER;
         }
-        /// @todo add msg.sender operator into guard data to support cases of "only allow X operation with Y module"
-        bytes memory data = abi.encode(from, to, startTokenId, quantity);
+        bytes memory data = abi.encode(msg.sender, from, to, startTokenId, quantity);
 
         return checkGuardBefore(operation, data);
     }
