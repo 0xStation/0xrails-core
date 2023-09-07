@@ -3,11 +3,12 @@ pragma solidity ^0.8.13;
 
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 
-import {Mage} from "../../Mage.sol";
+import {Rails} from "../../Rails.sol";
 import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
-import {ERC20} from "./ERC20.sol";
-import {IERC20} from "./interface/IERC20.sol";
+import {ERC721AUpgradeable} from "./ERC721AUpgradeable.sol";
+import {ERC721} from "./ERC721.sol";
+import {ERC721Internal} from "./ERC721Internal.sol";
 import {TokenMetadata} from "../TokenMetadata/TokenMetadata.sol";
 import {TokenMetadataInternal} from "../TokenMetadata/TokenMetadataInternal.sol";
 import {
@@ -15,11 +16,12 @@ import {
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
 import {Operations} from "../../lib/Operations.sol";
 import {PermissionsStorage} from "../../access/permissions/PermissionsStorage.sol";
-import {IERC20Mage} from "./interface/IERC20Mage.sol";
+import {IERC721Rails} from "./interface/IERC721Rails.sol";
 import {Initializable} from "../../lib/initializable/Initializable.sol";
 
-/// @notice apply Mage pattern to ERC20s
-contract ERC20Mage is Mage, Ownable, Initializable, TokenMetadata, ERC20, IERC20Mage {
+/// @notice apply Rails pattern to ERC721 NFTs
+/// @dev ERC721A chosen for only practical solution for large token supply allocations
+contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IERC721Rails {
 
     constructor() Initializable() {}
     
@@ -33,6 +35,7 @@ contract ERC20Mage is Mage, Ownable, Initializable, TokenMetadata, ERC20, IERC20
         external
         initializer
     {
+        ERC721Internal._initialize();
         _setName(name_);
         _setSymbol(symbol_);
         if (initData.length > 0) {
@@ -53,16 +56,32 @@ contract ERC20Mage is Mage, Ownable, Initializable, TokenMetadata, ERC20, IERC20
         }
     }
 
+
+    // override starting tokenId exposed by ERC721A
+    function _startTokenId() internal pure override returns (uint256) {
+        return 1;
+    }
+
     /*==============
         METADATA
     ==============*/
 
-    function name() public view override(IERC20, TokenMetadataInternal) returns (string memory) {
+    function supportsInterface(bytes4 interfaceId) public view override(Rails, ERC721) returns (bool) {
+        return Rails.supportsInterface(interfaceId) || ERC721.supportsInterface(interfaceId);
+    }
+
+    function name() public view override(ERC721, TokenMetadataInternal) returns (string memory) {
         return TokenMetadataInternal.name();
     }
 
-    function symbol() public view override(IERC20, TokenMetadataInternal) returns (string memory) {
+    function symbol() public view override(ERC721, TokenMetadataInternal) returns (string memory) {
         return TokenMetadataInternal.symbol();
+    }
+
+    // must override ERC721A implementation
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        // to avoid clashing selectors, use standardized `ext_` prefix
+        return ITokenURIExtension(address(this)).ext_tokenURI(tokenId);
     }
 
     // include contractURI as modern standard for NFTs
@@ -75,25 +94,22 @@ contract ERC20Mage is Mage, Ownable, Initializable, TokenMetadata, ERC20, IERC20
         SETTERS
     =============*/
 
-    function mintTo(address recipient, uint256 amount) external onlyPermission(Operations.MINT) returns (bool) {
-        _mint(recipient, amount);
-        return true;
+    function mintTo(address recipient, uint256 quantity) external onlyPermission(Operations.MINT) {
+        _safeMint(recipient, quantity);
     }
 
-    /// @dev rework allowance to also allow permissioned users burn unconditionally
-    function burnFrom(address from, uint256 amount) external returns(bool) {
+    function burn(uint256 tokenId) external {
         if (!hasPermission(Operations.BURN, msg.sender)) {
-            _spendAllowance(from, msg.sender, amount);
+            _checkCanTransfer(ownerOf(tokenId), tokenId); /// @todo resolve gas inefficiency of reading ownerOf twice
         }
-        _burn(from, amount);
-        return true;
+        _burn(tokenId);
     }
 
     /*===========
         GUARD
     ===========*/
 
-    function _beforeTokenTransfer(address from, address to, uint256 amount)
+    function _beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity)
         internal
         view
         override
@@ -107,12 +123,12 @@ contract ERC20Mage is Mage, Ownable, Initializable, TokenMetadata, ERC20, IERC20
         } else {
             operation = Operations.TRANSFER;
         }
-        bytes memory data = abi.encode(msg.sender, from, to, amount);
+        bytes memory data = abi.encode(msg.sender, from, to, startTokenId, quantity);
 
         return checkGuardBefore(operation, data);
     }
 
-    function _afterTokenTransfer(address guard, bytes memory checkBeforeData) internal view override {
+    function _afterTokenTransfers(address guard, bytes memory checkBeforeData) internal view override {
         checkGuardAfter(guard, checkBeforeData, ""); // no execution data
     }
 
@@ -128,8 +144,8 @@ contract ERC20Mage is Mage, Ownable, Initializable, TokenMetadata, ERC20, IERC20
         _checkPermission(Operations.GUARDS, msg.sender);
     }
 
-    function _checkCanExecute() internal view override {
-        _checkPermission(Operations.EXECUTE, msg.sender);
+    function _checkCanExecuteCall() internal view override {
+        _checkPermission(Operations.CALL, msg.sender);
     }
 
     function _checkCanUpdateInterfaces() internal view override {

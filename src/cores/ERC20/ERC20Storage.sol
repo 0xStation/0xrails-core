@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 library ERC20Storage {
-    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("mage.ERC20")) - 1));
+    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("0xrails.ERC20")) - 1));
 
     struct Layout {
         mapping(address => uint256) balances;

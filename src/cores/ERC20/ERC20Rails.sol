@@ -3,10 +3,11 @@ pragma solidity ^0.8.13;
 
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 
-import {Mage} from "../../Mage.sol";
+import {Rails} from "../../Rails.sol";
 import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
-import {ERC1155} from "./ERC1155.sol";
+import {ERC20} from "./ERC20.sol";
+import {IERC20} from "./interface/IERC20.sol";
 import {TokenMetadata} from "../TokenMetadata/TokenMetadata.sol";
 import {TokenMetadataInternal} from "../TokenMetadata/TokenMetadataInternal.sol";
 import {
@@ -14,11 +15,11 @@ import {
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
 import {Operations} from "../../lib/Operations.sol";
 import {PermissionsStorage} from "../../access/permissions/PermissionsStorage.sol";
-import {IERC1155Mage} from "./interface/IERC1155Mage.sol";
+import {IERC20Rails} from "./interface/IERC20Rails.sol";
 import {Initializable} from "../../lib/initializable/Initializable.sol";
 
-/// @notice apply Mage pattern to ERC1155 NFTs
-contract ERC1155Mage is Mage, Ownable, Initializable, TokenMetadata, ERC1155, IERC1155Mage {
+/// @notice apply Rails pattern to ERC20s
+contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC20Rails {
 
     constructor() Initializable() {}
     
@@ -56,22 +57,12 @@ contract ERC1155Mage is Mage, Ownable, Initializable, TokenMetadata, ERC1155, IE
         METADATA
     ==============*/
 
-    function name() public view override(ERC1155, TokenMetadataInternal) returns (string memory) {
+    function name() public view override(IERC20, TokenMetadataInternal) returns (string memory) {
         return TokenMetadataInternal.name();
     }
 
-    function symbol() public view override(ERC1155, TokenMetadataInternal) returns (string memory) {
+    function symbol() public view override(IERC20, TokenMetadataInternal) returns (string memory) {
         return TokenMetadataInternal.symbol();
-    }
-
-    function supportsInterface(bytes4 interfaceId) public view override(Mage, ERC1155) returns (bool) {
-        return Mage.supportsInterface(interfaceId) || ERC1155.supportsInterface(interfaceId);
-    }
-
-    // must override ERC1155 implementation
-    function uri(uint256 tokenId) public view override returns (string memory) {
-        // to avoid clashing selectors, use standardized `ext_` prefix
-        return ITokenURIExtension(address(this)).ext_tokenURI(tokenId);
     }
 
     // include contractURI as modern standard for NFTs
@@ -84,27 +75,25 @@ contract ERC1155Mage is Mage, Ownable, Initializable, TokenMetadata, ERC1155, IE
         SETTERS
     =============*/
 
-    function mintTo(address recipient, uint256 tokenId, uint256 value) external onlyPermission(Operations.MINT) {
-        _mint(recipient, tokenId, value, "");
+    function mintTo(address recipient, uint256 amount) external onlyPermission(Operations.MINT) returns (bool) {
+        _mint(recipient, amount);
+        return true;
     }
 
-    function burnFrom(address from, uint256 tokenId, uint256 value) external {
+    /// @dev rework allowance to also allow permissioned users burn unconditionally
+    function burnFrom(address from, uint256 amount) external returns(bool) {
         if (!hasPermission(Operations.BURN, msg.sender)) {
-            _checkCanTransfer(from);
+            _spendAllowance(from, msg.sender, amount);
         }
-        _burn(from, tokenId, value);
+        _burn(from, amount);
+        return true;
     }
 
     /*===========
         GUARD
     ===========*/
 
-    function _beforeTokenTransfers(
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory values
-    )
+    function _beforeTokenTransfer(address from, address to, uint256 amount)
         internal
         view
         override
@@ -118,12 +107,12 @@ contract ERC1155Mage is Mage, Ownable, Initializable, TokenMetadata, ERC1155, IE
         } else {
             operation = Operations.TRANSFER;
         }
-        bytes memory data = abi.encode(msg.sender, from, to, ids, values);
+        bytes memory data = abi.encode(msg.sender, from, to, amount);
 
         return checkGuardBefore(operation, data);
     }
 
-    function _afterTokenTransfers(address guard, bytes memory checkBeforeData) internal view override {
+    function _afterTokenTransfer(address guard, bytes memory checkBeforeData) internal view override {
         checkGuardAfter(guard, checkBeforeData, ""); // no execution data
     }
 
@@ -139,8 +128,8 @@ contract ERC1155Mage is Mage, Ownable, Initializable, TokenMetadata, ERC1155, IE
         _checkPermission(Operations.GUARDS, msg.sender);
     }
 
-    function _checkCanExecute() internal view override {
-        _checkPermission(Operations.EXECUTE, msg.sender);
+    function _checkCanExecuteCall() internal view override {
+        _checkPermission(Operations.CALL, msg.sender);
     }
 
     function _checkCanUpdateInterfaces() internal view override {

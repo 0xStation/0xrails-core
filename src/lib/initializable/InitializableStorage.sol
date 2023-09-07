@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 library InitializableStorage {
-    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("mage.Initializable")) - 1));
+    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("0xrails.Initializable")) - 1));
 
     struct Layout {
         bool _initialized;

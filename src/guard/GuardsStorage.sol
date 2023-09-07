@@ -3,7 +3,7 @@
 pragma solidity ^0.8.16;
 
 library GuardsStorage {
-    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("mage.Guards")) - 1));
+    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("0xrails.Guards")) - 1));
     address internal constant MAX_ADDRESS = 0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF;
 
     struct Layout {
