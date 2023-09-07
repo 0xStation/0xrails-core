@@ -25,7 +25,7 @@ contract BotAccount is Account, Ownable, Initializable {
     ==================*/
 
     /// @param _entryPointAddress The contract address for this chain's ERC-4337 EntryPoint contract
-    constructor(address _entryPointAddress) Account(_entryPointAddress) {}
+    constructor(address _entryPointAddress) Account(_entryPointAddress) Initializable() {}
 
     /// @param _owner The owner address of this contract which retains Turnkey management rights
     /// @param _callPermitValidator The initial CallPermitValidator address to handle modular sig verification

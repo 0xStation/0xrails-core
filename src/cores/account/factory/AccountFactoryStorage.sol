@@ -11,7 +11,7 @@ library AccountFactoryStorage {
     bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("0xrails.AccountFactory")) - 1));
 
     struct Layout {
-        address[] accountImpls;
+        address accountImpl;
     }
 
     function layout() internal pure returns (Layout storage l) {

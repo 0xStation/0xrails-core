@@ -5,8 +5,8 @@ import {Test} from "forge-std/Test.sol";
 import "forge-std/console2.sol";
 import {CallPermitValidator} from "src/validator/CallPermitValidator.sol";
 import {BotAccount} from "src/cores/account/BotAccount.sol";
-import {AccountFactory} from "src/cores/account/factory/AccountFactory.sol";
-import {IAccountFactory} from "src/cores/account/factory/IAccountFactory.sol";
+import {BotAccountFactory} from "src/cores/account/factory/BotAccountFactory.sol";
+import {IAccountFactory} from "src/cores/account/factory/interface/IAccountFactory.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
@@ -16,13 +16,13 @@ import {IGuards} from "src/guard/interface/IGuards.sol";
 import {IExtensions} from "src/extension/interface/IExtensions.sol";
 import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-contract AccountTest is Test {
+contract BotAccountTest is Test {
 
     BotAccount public botAccountImpl;
     BotAccount public botAccount;
     CallPermitValidator public callPermitValidator;
-    AccountFactory public accountFactoryImpl;
-    AccountFactory public accountFactoryProxy;
+    BotAccountFactory public botAccountFactoryImpl;
+    BotAccountFactory public botAccountFactoryProxy;
 
     address public entryPointAddress;
     address public owner;
@@ -30,7 +30,7 @@ contract AccountTest is Test {
     UserOperation public userOp;
     bytes32 public userOpHash;
     bytes32 public salt;
-    bytes public accountFactoryInitData;
+    bytes public botAccountFactoryInitData;
 
     // intended to contain custom error signatures
     bytes public err;
@@ -60,14 +60,14 @@ contract AccountTest is Test {
         salt = bytes32('garlicsalt');
 
         botAccountImpl = new BotAccount(entryPointAddress);
-        accountFactoryImpl = new AccountFactory();
-        accountFactoryInitData = abi.encodeWithSelector(
-            AccountFactory.initialize.selector, 
+        botAccountFactoryImpl = new BotAccountFactory();
+        botAccountFactoryInitData = abi.encodeWithSelector(
+            BotAccountFactory.initialize.selector, 
             address(botAccountImpl), 
             owner 
         );
-        accountFactoryProxy = AccountFactory(address(new ERC1967Proxy(address(accountFactoryImpl), accountFactoryInitData)));
-        botAccount = BotAccount(payable(accountFactoryProxy.createBotAccount(
+        botAccountFactoryProxy = BotAccountFactory(address(new ERC1967Proxy(address(botAccountFactoryImpl), botAccountFactoryInitData)));
+        botAccount = BotAccount(payable(botAccountFactoryProxy.createBotAccount(
             salt, 
             owner,
             address(callPermitValidator), 
@@ -78,8 +78,7 @@ contract AccountTest is Test {
     function test_setUp() public {
         assertEq(botAccount.entryPoint(), entryPointAddress);
         assertEq(botAccount.owner(), owner);
-        assertEq(accountFactoryProxy.getAllAccountImpls().length, 3);
-        assertEq(accountFactoryProxy.getAccountImpl(IAccountFactory.AccountType.BOT), address(botAccountImpl));
+        assertEq(botAccountFactoryProxy.getAccountImpl(), address(botAccountImpl));
         
         assertTrue(botAccount.supportsInterface(type(IERC1271).interfaceId));
         assertTrue(botAccount.supportsInterface(botAccount.erc165Id()));

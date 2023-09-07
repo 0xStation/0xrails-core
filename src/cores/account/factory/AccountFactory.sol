@@ -1,76 +1,35 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.13;
 
-import {Account} from "src/cores/account/Account.sol";
-import {BotAccount} from "src/cores/account/BotAccount.sol";
-// import {MemberAccount} from "src/cores/account/MemberAccount.sol";
-// import {GroupAccount} from "src/cores/account/GroupAccount.sol";
-import {IAccountFactory} from "src/cores/account/factory/IAccountFactory.sol";
+import {IAccountFactory} from "src/cores/account/factory/interface/IAccountFactory.sol";
 import {AccountFactoryStorage} from "src/cores/account/factory/AccountFactoryStorage.sol";
-import {Initializable} from "src/lib/initializable/Initializable.sol";
 import {Ownable} from "src/access/ownable/Ownable.sol";
-import {UUPSUpgradeable} from "openzeppelin-contracts/proxy/utils/UUPSUpgradeable.sol";
-import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 /// @title Station Network Account Factory Contract
 /// @author 👦🏻👦🏻.eth
 
 /// @dev This AccountFactory contract uses the `CREATE2` opcode to deterministically
 /// deploy a new ERC1271 and ERC4337 compliant Account to a counterfactual address.
-/// Deployments can be precomputed using the deployer address,
-contract AccountFactory is Initializable, Ownable, UUPSUpgradeable, IAccountFactory {
-
-    /*====================
-        INITIALIZATION
-    ====================*/
-
-    constructor() Initializable() {}
-
-    function initialize(
-        address _botAccountImpl,
-        address _owner
-    ) external initializer {
-        AccountFactoryStorage.Layout storage layout = AccountFactoryStorage.layout();
-        layout.accountImpls = new address[](3);
-        _updateAccountImpl(_botAccountImpl, AccountType.BOT);
-
-        _transferOwnership(_owner);
-    }
+/// Deployments can be precomputed using the deployer address, random salt, and 
+/// a keccak hash of the contract's creation code
+abstract contract AccountFactory is Ownable, IAccountFactory {
 
     /*====================
         ACCOUNTFACTORY
     ====================*/
 
-    /// @dev Function to deploy a new Account using the `CREATE2` opcode
-    function createBotAccount(
-        bytes32 salt, 
-        address botAccountOwner, 
-        address callPermitValidator, 
-        address[] calldata turnkeys
-    ) external returns (address newAccount) {
-        newAccount = _createBotAccount(salt, botAccountOwner, callPermitValidator, turnkeys);
-
-        emit AccountCreated(newAccount, AccountType.BOT);
+    /// @dev Function to set the implementation address whose logic will be used by deployed account proxies
+    function setAccountImpl(address newAccountImpl) external onlyOwner {
+        _updateAccountImpl(newAccountImpl);
     }
 
-    function setAccountImpl(address newAccountImpl, AccountType accountType) external onlyOwner {
-        _updateAccountImpl(newAccountImpl, accountType);
-    }
-
-    function getAccountImpl(AccountType accountType) public view returns (address) {
-        return AccountFactoryStorage.layout().accountImpls[uint8(accountType)];
-    }
-
-    function getAllAccountImpls() public view returns (address[] memory) {
-        return AccountFactoryStorage.layout().accountImpls;
+    /// @dev Function to get the implementation address whose logic is used by deployed account  proxies
+    function getAccountImpl() public view returns (address) {
+        return AccountFactoryStorage.layout().accountImpl;
     }
 
     /// @dev Function to simulate a `CREATE2` deployment using a given salt and desired AccountType
-    function simulateCreate2(bytes32 salt, AccountType accountType) public view returns (address) {
-        bytes32 creationCodeHash;
-        if (accountType == AccountType.BOT) creationCodeHash = keccak256(type(BotAccount).creationCode);
-
+    function simulateCreate2(bytes32 salt, bytes32 creationCodeHash) public view returns (address) {
         return _simulateCreate2(salt, creationCodeHash);
     }
 
@@ -78,24 +37,13 @@ contract AccountFactory is Initializable, Ownable, UUPSUpgradeable, IAccountFact
         INTERNALS
     ===============*/
 
-    function _createBotAccount(
-        bytes32 _salt, 
-        address _botAccountOwner,
-        address _callPermitValidator,
-        address[] memory _turnkeys
-    ) internal returns (address payable newBotAccount) {
-        newBotAccount = payable(address(new ERC1967Proxy{salt: _salt}(getAccountImpl(AccountType.BOT), '')));
-
-        BotAccount(newBotAccount).initialize(_botAccountOwner, _callPermitValidator, _turnkeys);
-    }
-
-    function _updateAccountImpl(address _newAccountImpl, AccountType _accountType) internal {
+    function _updateAccountImpl(address _newAccountImpl) internal {
         if (_newAccountImpl == address(0x0)) revert InvalidImplementation();
 
         AccountFactoryStorage.Layout storage layout = AccountFactoryStorage.layout();
-        layout.accountImpls[uint8(_accountType)] = _newAccountImpl;
+        layout.accountImpl = _newAccountImpl;
 
-        emit AccountImplUpdated(_newAccountImpl, _accountType);
+        emit AccountImplUpdated(_newAccountImpl);
     }
 
     /** @notice To help visualize the bytes constructed using Yul assembly, here is a deconstructed rundown
@@ -136,11 +84,4 @@ contract AccountFactory is Initializable, Ownable, UUPSUpgradeable, IAccountFact
             simulatedDeploymentAddress := keccak256(add(ptr, 0x0b), 85)
         }
     }
-
-    /*===============
-        OVERRIDES
-    ===============*/
-
-    /// @dev Only the owner may authorize a UUPS upgrade
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }
