@@ -2,10 +2,10 @@
 pragma solidity ^0.8.13;
 
 import {Script} from "forge-std/Script.sol";
-import {TurnkeyValidator} from "src/validator/TurnkeyValidator.sol";
+import {CallPermitValidator} from "src/validator/CallPermitValidator.sol";
 import {BotAccount} from "src/cores/account/BotAccount.sol";
 
-/// @dev Script to deploy new implementations of BotAccount.sol and TurnkeyValidator.sol only.
+/// @dev Script to deploy new implementations of BotAccount.sol and CallPermitValidator.sol only.
 /// To deploy accounts as proxies, see AccountFactory.sol
 contract BotAccountScript is Script {
     function run() public {
@@ -14,7 +14,7 @@ contract BotAccountScript is Script {
             ENVIRONMENT 
         =================*/
 
-        TurnkeyValidator turnkeyValidator;
+        CallPermitValidator callPermitValidator;
         BotAccount botAccount;
 
         // address frog = 0xE7affDB964178261Df49B86BFdBA78E9d768Db6D;
@@ -40,7 +40,7 @@ contract BotAccountScript is Script {
         address[] memory turnkeys = new address[](1);
         turnkeys[0] = turnkey;
 
-        turnkeyValidator = new TurnkeyValidator(entryPointAddress);
+        callPermitValidator = new CallPermitValidator(entryPointAddress);
         botAccount = new BotAccount(entryPointAddress);
 
         vm.stopBroadcast();

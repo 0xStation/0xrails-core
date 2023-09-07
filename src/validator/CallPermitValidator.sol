@@ -9,7 +9,7 @@ import {SignatureChecker} from "openzeppelin-contracts/utils/cryptography/Signat
 
 /// @dev Validator module that restricts valid signatures to only come from recognized Turnkeys
 /// for the calling Accounts contract 
-contract TurnkeyValidator is Validator {
+contract CallPermitValidator is Validator {
 
     constructor(address _entryPointAddress) Validator(_entryPointAddress) {}
 

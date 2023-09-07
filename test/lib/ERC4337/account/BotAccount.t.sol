@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
 import "forge-std/console2.sol";
-import {TurnkeyValidator} from "src/validator/TurnkeyValidator.sol";
+import {CallPermitValidator} from "src/validator/CallPermitValidator.sol";
 import {BotAccount} from "src/cores/account/BotAccount.sol";
 import {AccountFactory} from "src/cores/account/factory/AccountFactory.sol";
 import {IAccountFactory} from "src/cores/account/factory/IAccountFactory.sol";
@@ -20,7 +20,7 @@ contract AccountTest is Test {
 
     BotAccount public botAccountImpl;
     BotAccount public botAccount;
-    TurnkeyValidator public turnkeyValidator;
+    CallPermitValidator public callPermitValidator;
     AccountFactory public accountFactoryImpl;
     AccountFactory public accountFactoryProxy;
 
@@ -40,7 +40,7 @@ contract AccountTest is Test {
         entryPointAddress = 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789;
         owner = vm.addr(0xbeefEEbabe);
         testTurnkey = vm.addr(0xc0ffEEbabe);
-        turnkeyValidator = new TurnkeyValidator(entryPointAddress);
+        callPermitValidator = new CallPermitValidator(entryPointAddress);
         address[] memory turnkeyArray = new address[](1);
         turnkeyArray[0] = testTurnkey;
         userOp = UserOperation({
@@ -56,7 +56,7 @@ contract AccountTest is Test {
             paymasterAndData: '',
             signature: ''
         });
-        userOpHash = turnkeyValidator.getUserOpHash(userOp);
+        userOpHash = callPermitValidator.getUserOpHash(userOp);
         salt = bytes32('garlicsalt');
 
         botAccountImpl = new BotAccount(entryPointAddress);
@@ -70,7 +70,7 @@ contract AccountTest is Test {
         botAccount = BotAccount(payable(accountFactoryProxy.createBotAccount(
             salt, 
             owner,
-            address(turnkeyValidator), 
+            address(callPermitValidator), 
             turnkeyArray
         )));
     }
@@ -91,7 +91,7 @@ contract AccountTest is Test {
     }
 
     function test_isValidSignature(uint256 startingPrivateKey, uint8 numPrivateKeys) public {
-        userOpHash = turnkeyValidator.getUserOpHash(userOp);
+        userOpHash = callPermitValidator.getUserOpHash(userOp);
         address[] memory newTurnkeys = new address[](numPrivateKeys);
 
         address currentAddr;
@@ -115,7 +115,7 @@ contract AccountTest is Test {
             // ModularValidation schema developed by GroupOS requires prepended validator & signer addresses
             // note: `abi.encode` must be used to craft the signature or decoding will fail
             // ie: `abi.encodePacked(validator, currentAddr, currentRSV)` cannot be decoded
-            bytes memory formattedSig = abi.encode(address(turnkeyValidator), currentAddr, currentRSV);
+            bytes memory formattedSig = abi.encode(address(callPermitValidator), currentAddr, currentRSV);
             
             formattedSignatures[i] = formattedSig;
         }
@@ -152,7 +152,7 @@ contract AccountTest is Test {
             // ModularValidation schema developed by GroupOS requires prepended validator & signer addresses
             // note: `abi.encode` must be used to craft the signature or decoding will fail
             // ie: `abi.encodePacked(validator, currentAddr, currentRSV)` cannot be decoded
-            bytes memory formattedSig = abi.encode(address(turnkeyValidator), currentAddr, currentRSV);
+            bytes memory formattedSig = abi.encode(address(callPermitValidator), currentAddr, currentRSV);
 
             formattedSignatures[i] = formattedSig;
         }

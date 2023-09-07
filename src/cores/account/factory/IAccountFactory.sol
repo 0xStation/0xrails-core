@@ -20,7 +20,7 @@ interface IAccountFactory {
     function createBotAccount(
         bytes32 salt, 
         address botAccountOwner, 
-        address turnkeyValidator, 
+        address callPermitValidator, 
         address[] calldata turnkeys
     ) external returns (address newBotAccount);
     function simulateCreate2(bytes32 salt, AccountType accountType) external view returns (address);

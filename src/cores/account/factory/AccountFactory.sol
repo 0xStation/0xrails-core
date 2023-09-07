@@ -46,10 +46,10 @@ contract AccountFactory is Initializable, Ownable, UUPSUpgradeable, IAccountFact
     function createBotAccount(
         bytes32 salt, 
         address botAccountOwner, 
-        address turnkeyValidator, 
+        address callPermitValidator, 
         address[] calldata turnkeys
     ) external returns (address newAccount) {
-        newAccount = _createBotAccount(salt, botAccountOwner, turnkeyValidator, turnkeys);
+        newAccount = _createBotAccount(salt, botAccountOwner, callPermitValidator, turnkeys);
 
         emit AccountCreated(newAccount, AccountType.BOT);
     }
@@ -81,12 +81,12 @@ contract AccountFactory is Initializable, Ownable, UUPSUpgradeable, IAccountFact
     function _createBotAccount(
         bytes32 _salt, 
         address _botAccountOwner,
-        address _turnkeyValidator,
+        address _callPermitValidator,
         address[] memory _turnkeys
     ) internal returns (address payable newBotAccount) {
         newBotAccount = payable(address(new ERC1967Proxy{salt: _salt}(getAccountImpl(AccountType.BOT), '')));
 
-        BotAccount(newBotAccount).initialize(_botAccountOwner, _turnkeyValidator, _turnkeys);
+        BotAccount(newBotAccount).initialize(_botAccountOwner, _callPermitValidator, _turnkeys);
     }
 
     function _updateAccountImpl(address _newAccountImpl, AccountType _accountType) internal {

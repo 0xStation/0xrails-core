@@ -28,15 +28,15 @@ contract BotAccount is Account, Ownable, Initializable {
     constructor(address _entryPointAddress) Account(_entryPointAddress) {}
 
     /// @param _owner The owner address of this contract which retains Turnkey management rights
-    /// @param _turnkeyValidator The initial TurnkeyValidator address to handle modular sig verification
+    /// @param _callPermitValidator The initial CallPermitValidator address to handle modular sig verification
     /// @param _turnkeys The initial turnkey addresses to support as recognized signers
     /// @notice Permission to execute `Call::call()` on this contract is granted to the EntryPoint in Accounts
     function initialize(
         address _owner, 
-        address _turnkeyValidator,
+        address _callPermitValidator,
         address[] memory _turnkeys
     ) external initializer {
-        _addValidator(_turnkeyValidator);
+        _addValidator(_callPermitValidator);
         _transferOwnership(_owner);
 
         // permit Turnkeys to create valid `UserOp.signature`s via `CALL_PERMIT` permission only
