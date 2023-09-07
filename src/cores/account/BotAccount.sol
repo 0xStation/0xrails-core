@@ -81,30 +81,6 @@ contract BotAccount is Account, Ownable, Initializable {
         OVERRIDES
     ===============*/
 
-    /// @dev Function to add the address of a Validator module to storage
-    function addValidator(address validator) public override onlyOwner {
-        _addValidator(validator);
-    }
-
-    /// @dev Function to remove the address of a Validator module to storage
-    function removeValidator(address validator) public override onlyOwner {
-        _removeValidator(validator);
-    }
-
-    /*===============
-        INTERNALS
-    ===============*/
-
-    function _addValidator(address validator) internal {
-        ValidatorsStorage.Layout storage layout = ValidatorsStorage.layout();
-        layout._validators[validator] = true;
-    }
-
-    function _removeValidator(address validator) internal {
-        ValidatorsStorage.Layout storage layout = ValidatorsStorage.layout();
-        layout._validators[validator] = false;
-    }
-
     // changes to core functionality must be restricted to owners to protect admins overthrowing
     function _checkCanUpdateExtensions() internal view override {
         _checkOwner();

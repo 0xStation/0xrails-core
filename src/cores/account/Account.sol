@@ -6,7 +6,7 @@ import {Rails} from "src/Rails.sol";
 import {IAccount} from "src/lib/ERC4337/interface/IAccount.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
-import {ValidatorsInternal} from "src/validator/ValidatorsInternal.sol";
+import {Validators} from "src/validator/Validators.sol";
 import {IValidator} from "src/validator/interface/IValidator.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {IOwnable} from "src/access/ownable/interface/IOwnable.sol";
@@ -22,7 +22,7 @@ import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 /// @dev This abstract contract provides scaffolding for Station's Account signature validation
 /// ERC1271 and ERC4337 compliance in combination with Rails's Permissions system
 /// to provide convenient and modular private key management on an infrastructural level
-abstract contract Account is Rails, IAccount, IERC1271, ValidatorsInternal {
+abstract contract Account is Rails, IAccount, IERC1271, Validators {
 
     /*=============
         ACCOUNTS
@@ -152,6 +152,13 @@ abstract contract Account is Rails, IAccount, IERC1271, ValidatorsInternal {
         );
     }
 
+    /// @dev Provides control over adding and removing recognized validator contracts
+    /// only to either the owner or entities possessing `ADMIN` or `VALIDATOR` permissions
+    /// @notice Can be overridden for more restrictive access if desired
+    function _checkCanUpdateValidators() internal view virtual override {
+        _checkPermission(Operations.VALIDATOR, msg.sender);
+    }
+
     /// @dev Provides control over Turnkey addresses to the owner only
     /// @notice Permission to `addPermission(Operations.CALL_PERMIT)`, which is the intended
     /// function call to be called by the owner for adding valid signer accounts such as Turnkeys,
@@ -181,10 +188,4 @@ abstract contract Account is Rails, IAccount, IERC1271, ValidatorsInternal {
     function preFundEntryPoint() external payable virtual;
 
     function withdrawFromEntryPoint(address payable recipient, uint256 amount) external virtual;
-    
-    /// @dev Override with careful consideration of access control
-    function addValidator(address validator) public virtual override;
-
-    /// @dev Override with careful consideration of access control
-    function removeValidator(address validator) public virtual override;
 }

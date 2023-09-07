@@ -9,6 +9,7 @@ library Operations {
     bytes8 constant METADATA = 0x0e5de49ee56c0bd3; // hashOperation("METADATA");
     bytes8 constant PERMISSIONS = 0x96bbcfa480f6f1a8; // hashOperation("PERMISSIONS");
     bytes8 constant GUARDS = 0x53cbed5bdabf52cc; // hashOperation("GUARDS");
+    bytes8 constant VALIDATOR = 0xa95257aebefccffa; // hashOperation("VALIDATOR");
     bytes8 constant CALL = 0x706a455ca44ffc9f; // hashOperation("CALL");
     bytes8 constant INTERFACE = 0x4a9bf2931aa5eae4; // hashOperation("INTERFACE");
 
@@ -35,6 +36,8 @@ library Operations {
             return "PERMISSIONS";
         } else if (operation == GUARDS) {
             return "GUARDS";
+        } else if (operation == VALIDATOR) {
+            return "VALIDATOR";
         } else if (operation == CALL) {
             return "CALL";
         } else if (operation == INTERFACE) {
