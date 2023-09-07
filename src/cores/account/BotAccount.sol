@@ -20,41 +20,6 @@ import {Operations} from "src/lib/Operations.sol";
 /// provides convenient and modular private key management on an infrastructural level
 contract BotAccount is Account, Ownable, Initializable {
 
-/**
-      .                                                  .     
-  iBBBBBBB:                                          iBBBBBBB: 
- BBBBBBBBBBB                                        BBBBBQBBBBB
-QBBB     BBB                                       .BBQ  .  BBB
-BBBQ .:. QBB                                       .BBB .:. BBB
- BBBBd.:BBBB   vBBBBQBBBBBBBBBQBBBBBBBBBBBBBQBBBr   BBBB:.BBBBB
-  BBBQ..BQB  BBBBBBv77:.....BQBBBBBB.....:7r1BBBBBB .BBB..BBBQ 
-   BQB .iBBBBBB:            ::....::            :BBBBBB:..BBB  
-   BBB.:.BBBB               Yrririvr              .BBBB :.BBB  
-   BBB.:.:BB                Jvr7r7vv                BB.::.BBB  
-   BBB.:i:B                 j77r7rL7                 B:ii.BBB  
-   BBQ.:r7                  IEsvYLRY                  vii.BQB  
-   BBB.irv                   :r7rr.                   vr:.BBQ  
-   BBB.irv                                            Yri.BBB  
-   BBB.irL     .IBBBBBQrrrrrriiiiiirrrrrrBBBBBBu      Lr:.QBB  
-   BBB.:rv    iBBBBBBBBQBBBBBBBBBBBBBBBBBBBBBBBBB:    sr:.BBB  
-   BBB :i7    BBBBQ    BBBBBBBBBBBBBBBBBd    BQBBY    7i. BBB  
-   BBBB .:    BBBB      BBBBBBBBBBBBBBBB      BBBr    :..BBBB  
-    BBBBBB    QBBB      BBBBBBBBBBBBBBBB      BBBr    BBBBQB   
-     :BBBQ    BQBB.    .BBBBBBBBBBBBBBBB.    .BBB7    BBBB.    
-       BQB    BBBBBv  rBBBBBBBBBBBBBBBBBBi  gBBBB7    QBB      
-       BBB     BBQBBBBBBBBBBBBBBBBBBBBBBBBBBBBBQB     BBB      
-       BBBi.                                        .sBBB      
-       BBB:iL:                                    ivi7BBB      
-       .BBB irrvJi       .... . . .....       rsvrr: BBB       
-        QBB7.iirrvui     BQBQBBBBBBBBBB     i1vrir:.QBQB       
-         BBB..iirrYr     BBBBQBBBQBBBBB     77riri..BBB        
-         vBBB..iir7i                        r7ii:..BBB:        
-           :QBBB..i:                       :ii..BBBB.          
-              777BBBBBY.                .PBBBBB77              
-                :7BBBBBBBBBBvri::irsQBQBQBQB7:                  
-                   ::77BBBBBBBBBQBQBBBB77:                     
- */
-
     /*==================
         BOT ACCOUNT
     ==================*/
