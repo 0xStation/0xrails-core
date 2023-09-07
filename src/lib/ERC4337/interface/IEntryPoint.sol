@@ -57,6 +57,7 @@ interface IEntryPoint is IStakeManager {
 
 /// @notice GroupOS does not make use of BLS aggregated signatures
 /// This interface is required only for compiling the spec
+/// @todo Look into the benefits and drawbacks (if any) of supporting aggregated signatures
 interface IAggregator {
 
     function validateUserOpSignature(UserOperation calldata userOp)
