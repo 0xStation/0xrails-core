@@ -3,7 +3,7 @@
 pragma solidity ^0.8.13;
 
 library ValidatorsStorage {
-    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("mage.ModularValidation")) - 1));
+    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("0xrails.ModularValidation")) - 1));
 
     struct Layout {
         mapping(address => bool) _validators;

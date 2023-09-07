@@ -8,8 +8,7 @@ pragma solidity ^0.8.13;
 /// @dev This library uses ERC7201 namespace storage
 /// to provide a collision-resistant ledger of current account implementations
 library AccountFactoryStorage {
-    //todo rename mage namespaces to 0xrails across repo- not in scope of this branch
-    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("mage.AccountFactory")) - 1));
+    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("0xrails.AccountFactory")) - 1));
 
     struct Layout {
         address[] accountImpls;

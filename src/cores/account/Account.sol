@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.13;
 
-import {Mage} from "src/Mage.sol";
+import {Rails} from "src/Rails.sol";
 import {IAccount} from "src/lib/ERC4337/interface/IAccount.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
@@ -20,9 +20,9 @@ import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 /// @author 👦🏻👦🏻.eth
 
 /// @dev This abstract contract provides scaffolding for Station's Account signature validation
-/// ERC1271 and ERC4337 compliance in combination with Mage's Permissions system
+/// ERC1271 and ERC4337 compliance in combination with Rails's Permissions system
 /// to provide convenient and modular private key management on an infrastructural level
-abstract contract Account is Mage, IAccount, IERC1271, ValidatorsInternal {
+abstract contract Account is Rails, IAccount, IERC1271, ValidatorsInternal {
 
     /*=============
         ACCOUNTS
