@@ -63,12 +63,13 @@ abstract contract Account is Rails, IAccount, IERC1271, Validators {
         address validator = address(bytes20(userOp.signature[12:32]));
 
         if (isValidator(validator)) {
-            ( , address signer, bytes memory nestedSig) = abi.decode(userOp.signature, (address, address, bytes));
+            ( , bytes memory nestedSig) = abi.decode(userOp.signature, (address, bytes));
             // copy userOp into memory and format for Validator module
             UserOperation memory formattedUserOp = userOp;
-            formattedUserOp.signature = abi.encode(signer, nestedSig);
+            formattedUserOp.signature = nestedSig;
 
             uint256 ret = IValidator(validator).validateUserOp(formattedUserOp, userOpHash, missingAccountFunds);
+            
             // if validator rejects sig, terminate with status code 1
             if (ret != 0) return ret;
         } else {
@@ -103,11 +104,12 @@ abstract contract Account is Rails, IAccount, IERC1271, Validators {
         // note: This impl assumes the nested sig within `UserOperation.signature` is created using EIP-712
 
         // extract validator address and sig formatted for validator
-        (address validator, address signer, bytes memory nestedSig) = abi.decode(signature, (address, address, bytes));
+        (address validator, bytes memory nestedSig) = abi.decode(signature, (address, bytes));
 
         if (isValidator(validator)) {
             // format call for Validator module
-            bytes4 ret = IValidator(validator).isValidSignature(hash, abi.encode(signer, nestedSig));
+            bytes4 ret = IValidator(validator).isValidSignature(hash, nestedSig);
+
             // validator will return either correct `magicValue` or error code `INVALID_SIGNER`
             magicValue = ret;
         } else {

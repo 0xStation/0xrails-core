@@ -6,15 +6,15 @@ import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {Access} from "src/access/Access.sol";
 import {SignatureChecker} from "openzeppelin-contracts/utils/cryptography/SignatureChecker.sol";
+import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 
-/// @dev Validator module that restricts valid signatures to only come from recognized Turnkeys
-/// for the calling Accounts contract 
+/// @dev Validator module that restricts valid signatures to only come from addresses
+/// that have been granted the `CALL_PERMIT` permission in the calling Accounts contract 
 contract CallPermitValidator is Validator {
 
     constructor(address _entryPointAddress) Validator(_entryPointAddress) {}
 
-    /// @dev This example contract would only be forwarded signatures formatted as follows:
-    /// `abi.encodePacked(address signer, bytes memory eoaSig)`
+    /// @dev This example contract would be forwarded regular ECDSA signatures
     function validateUserOp(
         UserOperation calldata userOp, 
         bytes32 userOpHash, 
@@ -31,30 +31,31 @@ contract CallPermitValidator is Validator {
         bytes6 validAfter;
         uint256 successData = uint256(bytes32(abi.encodePacked(authorizer, validUntil, validAfter)));
 
-        // deconstruct signature into `(validator, nestedSignature)`
-        (address signer, bytes memory nestedSignature) = abi.decode(userOp.signature, (address, bytes));
-
-        bool validSig = _verifySignature(signer, userOpHash, nestedSignature);
-        validationData = validSig ? successData : SIG_VALIDATION_FAILED;
+        // revert if recovered signer address does not match `userOp.sender`
+        if (!SignatureChecker.isValidSignatureNow(userOp.sender, userOpHash, userOp.signature)) return SIG_VALIDATION_FAILED;
+        
+        // apply this validator's authentication logic
+        bool validSigner = _verifySigner(userOp.sender);
+        validationData = validSigner ? successData : SIG_VALIDATION_FAILED;
     }
 
-    function isValidSignature(bytes32 userOpHash, bytes calldata signature) 
+    /// @dev This example contract would be forwarded regular ECDSA signatures
+    function isValidSignature(bytes32 msgHash, bytes memory signature) 
         external view virtual returns (bytes4 magicValue) 
     {
-        (address signer, bytes memory nestedSignature) = abi.decode(signature, (address, bytes));
-
-        bool validSig = _verifySignature(signer, userOpHash, nestedSignature);
-        magicValue = validSig ? this.isValidSignature.selector : INVALID_SIGNER; 
+        // recover signer address, reverting malleable or invalid signatures
+        address signer = ECDSA.recover(msgHash, signature);
+        // apply this validator's authentication logic
+        bool validSigner = _verifySigner(signer);
+        magicValue = validSigner ? this.isValidSignature.selector : INVALID_SIGNER;
     }
 
-    /// @dev This implementation is designed to validate addresses granted `CALL_PERMIT` permissions
-    /// or higher in the calling Account contract. It expects EIP-712 typed signatures.
-    function _verifySignature(address signer, bytes32 userOpHash, bytes memory nestedSignature) 
+    /// @dev This implementation is designed to authenticate addresses with `CALL_PERMIT` permissions
+    /// or higher in the calling Account contract.
+    function _verifySigner(address _signer) 
         internal view override returns (bool)
     {
-        if (!SignatureChecker.isValidSignatureNow(signer, userOpHash, nestedSignature)) return false;
-
         // check for `CALL_PERMIT` or superior permission
-        return Access(msg.sender).hasPermission(Operations.CALL_PERMIT, signer);
+        return Access(msg.sender).hasPermission(Operations.CALL_PERMIT, _signer);
     }
 }

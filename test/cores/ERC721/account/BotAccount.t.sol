@@ -242,4 +242,21 @@ contract BotAccountTest is Test {
         vm.expectRevert(err);
         botAccount.removePermission(op, someAddress);
     }
+
+    function test_thing() public {
+        uint256 turnkeyPrivatekey = 0xc0ffEEbabe;
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(turnkeyPrivatekey, userOpHash);
+        bytes memory sig = abi.encodePacked(r, s, v);
+        bytes memory formattedSig = abi.encode(address(callPermitValidator), sig);
+        console2.logBytes(formattedSig);
+
+        bytes4 retVal = botAccount.isValidSignature(userOpHash, formattedSig);
+        bytes4 expectedVal = botAccount.isValidSignature.selector;
+        assertEq(retVal, expectedVal);
+
+        userOp.signature = formattedSig;
+        vm.prank(entryPointAddress);
+        uint256 retUint = botAccount.validateUserOp(userOp, userOpHash, 0);
+        assertEq(retUint, 0);
+    }
 }

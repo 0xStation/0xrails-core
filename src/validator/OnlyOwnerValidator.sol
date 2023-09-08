@@ -23,28 +23,27 @@ contract OnlyOwnerValidator is Validator {
         // silence compiler by discarding unused variable
         (missingAccountFunds);
 
-        // deconstruct signature into `(validator, nestedSignature)`
-        (address signer, bytes memory nestedSignature) = abi.decode(userOp.signature, (address, bytes));
-        uint256 invalidSig = 1;
+        // terminate if recovered signer address does not match `userOp.sender`
+        if (!SignatureChecker.isValidSignatureNow(userOp.sender, userOpHash, userOp.signature)) return SIG_VALIDATION_FAILED;
 
-        bool validSig = _verifySignature(signer, userOpHash, nestedSignature);
-        validationData = validSig ? 0 : invalidSig;
+        // apply this validator's authentication logic
+        bool validSigner = _verifySigner(userOp.sender);
+        validationData = validSigner ? 0 : SIG_VALIDATION_FAILED;
     }
 
     function isValidSignature(bytes32 userOpHash, bytes calldata signature) 
         external view virtual returns (bytes4 magicValue) 
     {
-        (address signer, bytes memory nestedSignature) = abi.decode(signature, (address, bytes));
-        bytes4 invalidSig = hex'ffffffff';
-
-        bool validSig = _verifySignature(signer, userOpHash, nestedSignature);
-        magicValue = validSig ? this.isValidSignature.selector : invalidSig;
+        // recover signer address, reverting malleable or invalid signatures
+        address signer = ECDSA.recover(userOpHash, signature);
+        // apply this validator's authentication logic
+        bool validSigner = _verifySigner(signer);
+        magicValue = validSigner ? this.isValidSignature.selector : INVALID_SIGNER;
     }
 
-    function _verifySignature(address signer, bytes32 userOpHash, bytes memory nestedSignature) 
+    function _verifySigner(address _signer)
         internal view override returns (bool) 
     {
-        if (!SignatureChecker.isValidSignatureNow(signer, userOpHash, nestedSignature)) return false;
-        return signer == Ownable(msg.sender).owner();
+        return _signer == Ownable(msg.sender).owner();
     }
 }

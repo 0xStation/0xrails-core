@@ -43,12 +43,10 @@ abstract contract Validator is IValidator {
         INTERNALS
     ===============*/
 
-    /// @dev Function to verify signatures forwarded to this contract. Must be overridden by validator
+    /// @dev Function to authenticate recovered signer addresses. Must be overridden by validator
     /// child contracts in a way that suits the use case of their design
-    function _verifySignature(
-        address signer, 
-        bytes32 userOpHash, 
-        bytes memory nestedSignature
+    function _verifySigner(
+        address _signer
     ) internal view virtual returns (bool);
 
     /// @dev Function to compute the struct hash, used within EntryPoint's `getUserOpHash()` function
