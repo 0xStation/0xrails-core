@@ -31,7 +31,7 @@ contract CallPermitValidator is Validator {
         bytes6 validAfter;
         uint256 successData = uint256(bytes32(abi.encodePacked(authorizer, validUntil, validAfter)));
 
-        // revert if recovered signer address does not match `userOp.sender`
+        // terminate if recovered signer address does not match `userOp.sender`
         if (!SignatureChecker.isValidSignatureNow(userOp.sender, userOpHash, userOp.signature)) return SIG_VALIDATION_FAILED;
         
         // apply this validator's authentication logic
@@ -44,7 +44,7 @@ contract CallPermitValidator is Validator {
         external view virtual returns (bytes4 magicValue) 
     {
         // recover signer address, reverting malleable or invalid signatures
-        address signer = ECDSA.recover(msgHash, signature);
+        address signer = ECDSA.tryRecover(msgHash, signature);
         // apply this validator's authentication logic
         bool validSigner = _verifySigner(signer);
         magicValue = validSigner ? this.isValidSignature.selector : INVALID_SIGNER;
