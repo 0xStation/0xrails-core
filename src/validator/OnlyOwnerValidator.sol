@@ -34,8 +34,11 @@ contract OnlyOwnerValidator is Validator {
     function isValidSignature(bytes32 userOpHash, bytes calldata signature) 
         external view virtual returns (bytes4 magicValue) 
     {
-        // recover signer address, reverting malleable or invalid signatures
-        address signer = ECDSA.recover(userOpHash, signature);
+        // recover signer address, returning on malleable or invalid signatures
+        (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(userOpHash, signature);
+        // return if signature is malformed
+        if (err != ECDSA.RecoverError.NoError) return INVALID_SIGNER;
+        
         // apply this validator's authentication logic
         bool validSigner = _verifySigner(signer);
         magicValue = validSigner ? this.isValidSignature.selector : INVALID_SIGNER;

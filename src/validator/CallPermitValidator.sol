@@ -44,7 +44,10 @@ contract CallPermitValidator is Validator {
         external view virtual returns (bytes4 magicValue) 
     {
         // recover signer address, reverting malleable or invalid signatures
-        address signer = ECDSA.tryRecover(msgHash, signature);
+        (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(msgHash, signature);
+        // return if signature is malformed
+        if (err != ECDSA.RecoverError.NoError) return INVALID_SIGNER;
+
         // apply this validator's authentication logic
         bool validSigner = _verifySigner(signer);
         magicValue = validSigner ? this.isValidSignature.selector : INVALID_SIGNER;
