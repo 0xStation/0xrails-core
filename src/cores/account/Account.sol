@@ -60,10 +60,12 @@ abstract contract Account is Rails, IAccount, IERC1271, Validators {
         _checkSenderIsEntryPoint();
 
         // extract validator address using cheap calldata slicing before decoding 
+        bytes8 flag = bytes8(userOp.signature[:8]);
         address validator = address(bytes20(userOp.signature[12:32]));
 
-        if (isValidator(validator)) {
-            ( , bytes memory nestedSig) = abi.decode(userOp.signature, (address, bytes));
+        if (flag == 0xf88284b100000000 && isValidator(validator)) {
+            ( , bytes memory nestedSig) = abi.decode(userOp.signature, (bytes32, bytes)); // old
+
             // copy userOp into memory and format for Validator module
             UserOperation memory formattedUserOp = userOp;
             formattedUserOp.signature = nestedSig;
@@ -103,10 +105,13 @@ abstract contract Account is Rails, IAccount, IERC1271, Validators {
     function isValidSignature(bytes32 hash, bytes memory signature) public view returns (bytes4 magicValue) {
         // note: This impl assumes the nested sig within `UserOperation.signature` is created using EIP-712
 
-        // extract validator address and sig formatted for validator
-        (address validator, bytes memory nestedSig) = abi.decode(signature, (address, bytes));
+        // extract packed validator data and sig formatted for validator
+        (bytes32 validatorData, bytes memory nestedSig) = abi.decode(signature, (bytes32, bytes));
+        (bytes8 flag, address validator) = (bytes8(validatorData), address(uint160(uint256(validatorData))));
 
-        if (isValidator(validator)) {
+        // `validatorFlag == 0xf88284b100000000` could be derived and stored as a constant
+        bytes8 validatorFlag = bytes8(bytes4(keccak256('VALIDATORFLAG'))) & 0xFFFFFFFF00000000;
+        if (flag == validatorFlag && isValidator(validator)) {
             // format call for Validator module
             bytes4 ret = IValidator(validator).isValidSignature(hash, nestedSig);
 

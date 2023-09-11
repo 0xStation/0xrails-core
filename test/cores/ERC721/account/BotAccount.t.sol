@@ -247,9 +247,11 @@ contract BotAccountTest is Test {
         uint256 turnkeyPrivatekey = 0xc0ffEEbabe;
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(turnkeyPrivatekey, userOpHash);
         bytes memory sig = abi.encodePacked(r, s, v);
-        bytes memory formattedSig = abi.encode(address(callPermitValidator), sig);
-        console2.logBytes(formattedSig);
-
+        bytes8 validatorFlag = 0xf88284b100000000; // `keccak256('VALIDATORFLAG')`
+        // pack 32-byte word using `validatorFlag` OR against `address`
+        bytes32 validatorData = validatorFlag | bytes32(uint256(uint160(address(callPermitValidator))));
+        bytes memory formattedSig = abi.encode(validatorData, sig);
+        
         bytes4 retVal = botAccount.isValidSignature(userOpHash, formattedSig);
         bytes4 expectedVal = botAccount.isValidSignature.selector;
         assertEq(retVal, expectedVal);
