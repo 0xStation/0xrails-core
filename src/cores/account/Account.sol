@@ -78,11 +78,17 @@ abstract contract Account is Rails, IAccount, IERC1271, Validators {
 
             uint256 ret = IValidator(validator).validateUserOp(formattedUserOp, userOpHash, missingAccountFunds);
             
-            // if validator rejects sig, terminate with status code 1
+            // if validator rejects sig, terminate early with status code 1
             if (ret != 0) return ret;
         } else {
-            // if validator address not recognized, terminate with status code 1
-            return 1;
+            // support non-modular signatures by recovering signer address and reverting malleable or invalid signatures
+            (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(userOpHash, userOp.signature);
+            // return if signature is malformed
+            if (err != ECDSA.RecoverError.NoError) return 1;
+
+            // authenticate signer, terminating early with status code 1 on failure
+            bool validSigner = _verifySigner(signer);
+            if (!validSigner) return 1;
         }
 
         /// @notice BLS sig aggregator and timestamp expiry are not currently supported by this contract 
@@ -109,16 +115,12 @@ abstract contract Account is Rails, IAccount, IERC1271, Validators {
     /// @param hash The 32 byte digest derived by hashing signed message data. Sadly, name is canonical in ERC1271.
     /// @param signature The signature to be verified via recovery. Must be prepended with validator address
     function isValidSignature(bytes32 hash, bytes memory signature) public view returns (bytes4 magicValue) {
-        // note: This impl assumes the nested sig within `UserOperation.signature` is created using EIP-712
-
         // try extracting packed validator data to check for modular validation format
         bytes32 data;
         assembly { data := mload(add(signature, 0x20)) }
         (bytes8 flag, address validator) = (bytes8(data), address(uint160(uint256(data))));
 
-        // (bytes32 validatorData, bytes memory nestedSig) = abi.decode(signature, (bytes32, bytes));
-        // (bytes8 flag, address validator) = (bytes8(validatorData), address(uint160(uint256(validatorData))));
-
+        // collision of a signature's first 8 bytes with flag is very unlikely; impossible when incl validator address
         if (flag == VALIDATOR_FLAG && isValidator(validator)) {
             ( , bytes memory nestedSig) = abi.decode(signature, (bytes32, bytes));
 
@@ -130,7 +132,7 @@ abstract contract Account is Rails, IAccount, IERC1271, Validators {
         } else {
             // support non-modular signatures by recovering signer address and reverting malleable or invalid signatures
             (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(hash, signature);
-            // return if signature is malformed or invalid
+            // return if signature is malformed
             if (err != ECDSA.RecoverError.NoError) return bytes4(0);
 
             // authenticate signer

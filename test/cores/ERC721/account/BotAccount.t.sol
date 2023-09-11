@@ -296,20 +296,28 @@ contract BotAccountTest is Test {
         bytes4 expectedVal = botAccount.isValidSignature.selector;
         assertEq(retVal, expectedVal);
 
-
         newUserOp.signature = sig;
         vm.prank(entryPointAddress);
-        uint256 retUint = botAccount.validateUserOp(userOp, userOpHash, 0);
+        uint256 retUint = botAccount.validateUserOp(newUserOp, newUserOpHash, 0);
         assertEq(retUint, 0); // expect 4337 success code: 0
     }
 
     function test_invalidLegacySignature() public {
         uint256 notOwnerPrivatekey = 0xdead;
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(notOwnerPrivatekey, userOpHash);
+        UserOperation memory newUserOp = userOp;
+        newUserOp.sender = vm.addr(notOwnerPrivatekey);
+
+        bytes32 newUserOpHash = callPermitValidator.getUserOpHash(newUserOp);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(notOwnerPrivatekey, newUserOpHash);
         bytes memory sig = abi.encodePacked(r, s, v);
 
-        bytes4 retVal = botAccount.isValidSignature(userOpHash, sig);
+        bytes4 retVal = botAccount.isValidSignature(newUserOpHash, sig);
         bytes4 expectedVal = bytes4(hex'ffffffff');
         assertEq(retVal, expectedVal);
+
+        newUserOp.signature = sig;
+        vm.prank(entryPointAddress);
+        uint256 retUint = botAccount.validateUserOp(newUserOp, newUserOpHash, 0);
+        assertEq(retUint, 1); // expect 4337 failure code: 1
     }
 }
