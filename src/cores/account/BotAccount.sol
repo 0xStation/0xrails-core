@@ -3,6 +3,7 @@
 pragma solidity ^0.8.13;
 
 import {Account} from "src/cores/account/Account.sol";
+import {BaseAccount} from "src/cores/account/BaseAccount.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {ValidatorsStorage} from "src/validator/ValidatorsStorage.sol";
 import {Initializable} from "src/lib/initializable/Initializable.sol";
@@ -18,14 +19,14 @@ import {Operations} from "src/lib/Operations.sol";
 /// created by addresses with the `Operations::CALL_PERMIT` permission.
 /// ERC1271 and ERC4337 compliance in combination with the 0xRails permissions system
 /// provides convenient and modular private key management on an infrastructural level
-contract BotAccount is Account, Ownable, Initializable {
+contract BotAccount is Account, Initializable {
 
     /*==================
         BOT ACCOUNT
     ==================*/
 
     /// @param _entryPointAddress The contract address for this chain's ERC-4337 EntryPoint contract
-    constructor(address _entryPointAddress) Account(_entryPointAddress) Initializable() {}
+    constructor(address _entryPointAddress) BaseAccount(_entryPointAddress) Initializable() {}
 
     /// @param _owner The owner address of this contract which retains call permissions management rights
     /// @param _callPermitValidator The initial CallPermitValidator address to handle modular sig verification
@@ -45,36 +46,6 @@ contract BotAccount is Account, Ownable, Initializable {
                 _addPermission(Operations.CALL_PERMIT, _trustedCallers[i]);
             }
         }
-    }
-
-    /// @dev Function to pre-fund the EntryPoint contract's `depositTo()` function
-    /// using payable call context + this contract's native currency balance
-    function preFundEntryPoint() public payable override {
-        uint256 totalFunds = msg.value + address(this).balance;
-        IEntryPoint(entryPoint).depositTo{ value : totalFunds }(address(this));
-    }
-
-    /// @dev Function to withdraw funds using the EntryPoint's `withdrawTo()` function
-    /// @param recipient The address to receive from the EntryPoint balance
-    /// @param amount The amount of funds to withdraw from the EntryPoint
-    function withdrawFromEntryPoint(address payable recipient, uint256 amount) public override onlyOwner {
-        IEntryPoint(entryPoint).withdrawTo(recipient, amount);
-    }
-
-    /*===========
-        VIEWS
-    ===========*/
-
-    /// @dev Function to view the EntryPoint's deposit balance for this BotAccount contract address
-    function getEntryPointBalance() public view returns (uint256) {
-        return IEntryPoint(entryPoint).balanceOf(address(this));
-    }
-
-    /// @notice This function must be overridden by contracts inheriting `Account` to delineate 
-    /// the type of Account: `Bot`, `Member`, or `Group`
-    /// @dev Owner stored explicitly using OwnableStorage's ERC7201 namespace
-    function owner() public view virtual override(Access, OwnableInternal) returns (address) {
-        return OwnableInternal.owner();
     }
 
     /*===============

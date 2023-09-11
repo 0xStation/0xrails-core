@@ -3,12 +3,14 @@
 pragma solidity ^0.8.13;
 
 import {Rails} from "src/Rails.sol";
+import {BaseAccount} from "src/cores/account/BaseAccount.sol";
 import {IAccount} from "src/lib/ERC4337/interface/IAccount.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {Validators} from "src/validator/Validators.sol";
 import {IValidator} from "src/validator/interface/IValidator.sol";
 import {Operations} from "src/lib/Operations.sol";
+import {Ownable} from "src/access/ownable/Ownable.sol";
 import {IOwnable} from "src/access/ownable/interface/IOwnable.sol";
 import {OwnableInternal} from "src/access/ownable/OwnableInternal.sol";
 import {Access} from "src/access/Access.sol";
@@ -22,26 +24,11 @@ import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 /// @dev This abstract contract provides scaffolding for Station's Account signature validation
 /// ERC1271 and ERC4337 compliance in combination with Rails's Permissions system
 /// to provide convenient and modular private key management on an infrastructural level
-abstract contract Account is Rails, IAccount, IERC1271, Validators {
+abstract contract Account is Rails, Ownable, BaseAccount, IERC1271, Validators {
 
     /*=============
-        ACCOUNTS
+        ACCOUNT
     ==============*/
-    
-    /// @dev This chain's EntryPoint contract address
-    address public immutable entryPoint;
-
-    /// @dev 8-Byte value signaling support for modular validation schema developed by GroupOS 
-    /// @notice To use, prepend signatures with a 32-byte word packed with 8-byte flag and target validator address,
-    /// Leaving 4 empty bytes inbetween the packed values. 
-    /// Ie: `bytes32 validatorData == 0xf88284b100000000 | bytes32(uint256(uint160(address(callPermitValidator))));`
-    bytes8 public constant VALIDATOR_FLAG = bytes8(bytes4(keccak256('VALIDATORFLAG'))) & 0xFFFFFFFF00000000;
-
-    /// @param _entryPointAddress The contract address for this chain's ERC-4337 EntryPoint contract
-    /// Official address for the most recent EntryPoint version is `0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789`
-    constructor(address _entryPointAddress) {
-        entryPoint = _entryPointAddress;
-    }
 
     /// @dev Function enabling EIP-4337 compliance as a smart contract wallet account
     /// @param userOp The UserOperation to validate before executing
@@ -171,6 +158,20 @@ abstract contract Account is Rails, IAccount, IERC1271, Validators {
         OVERRIDES
     ===============*/
 
+    /// @dev Function to withdraw funds using the EntryPoint's `withdrawTo()` function
+    /// @param recipient The address to receive from the EntryPoint balance
+    /// @param amount The amount of funds to withdraw from the EntryPoint
+    function withdrawFromEntryPoint(address payable recipient, uint256 amount) public virtual override onlyOwner {
+        IEntryPoint(entryPoint).withdrawTo(recipient, amount);
+    }
+
+    /// @notice This function must be overridden by contracts inheriting `Account` to delineate 
+    /// the type of Account: `Bot`, `Member`, or `Group`
+    /// @dev Owner stored explicitly using OwnableStorage's ERC7201 namespace
+    function owner() public view virtual override(Access, OwnableInternal) returns (address) {
+        return OwnableInternal.owner();
+    }
+
     /// @dev Declare explicit support for ERC1271 interface in addition to existing interfaces
     /// @param interfaceId The interfaceId to check for support
     function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
@@ -212,9 +213,4 @@ abstract contract Account is Rails, IAccount, IERC1271, Validators {
     function _checkCanUpdateInterfaces() internal view override {
         _checkPermission(Operations.INTERFACE, msg.sender);
     }
-
-    /// @notice Functions to be overridden by child contracts inheriting from this one
-    function preFundEntryPoint() external payable virtual;
-
-    function withdrawFromEntryPoint(address payable recipient, uint256 amount) external virtual;
 }

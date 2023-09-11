@@ -43,7 +43,7 @@ contract CallPermitValidator is Validator {
     function isValidSignature(bytes32 msgHash, bytes memory signature) 
         external view virtual returns (bytes4 magicValue) 
     {
-        // recover signer address, reverting malleable or invalid signatures
+        // recover signer address, returning on malleable or invalid signatures
         (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(msgHash, signature);
         // return if signature is malformed
         if (err != ECDSA.RecoverError.NoError) return INVALID_SIGNER;
