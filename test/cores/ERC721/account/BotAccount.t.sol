@@ -245,7 +245,8 @@ contract BotAccountTest is Test {
         uint256 turnkeyPrivatekey = 0xc0ffEEbabe;
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(turnkeyPrivatekey, userOpHash);
         bytes memory sig = abi.encodePacked(r, s, v);
-        bytes8 validatorFlag = 0xf88284b100000000; // `keccak256('VALIDATORFLAG')`
+        bytes8 validatorFlag = botAccount.VALIDATOR_FLAG(); // 0xf88284b100000000
+        
         // pack 32-byte word using `validatorFlag` OR against `address`
         bytes32 validatorData = validatorFlag | bytes32(uint256(uint160(address(callPermitValidator))));
         bytes memory formattedSig = abi.encode(validatorData, sig);
@@ -254,9 +255,61 @@ contract BotAccountTest is Test {
         bytes4 expectedVal = botAccount.isValidSignature.selector;
         assertEq(retVal, expectedVal);
 
+        // userOp.sender is already correct (== vm.addr(turnkeyPrivatekey))
         userOp.signature = formattedSig;
         vm.prank(entryPointAddress);
         uint256 retUint = botAccount.validateUserOp(userOp, userOpHash, 0);
         assertEq(retUint, 0);
+    }
+
+    function test_invalidValidatorFlag() public {
+        uint256 turnkeyPrivatekey = 0xc0ffEEbabe;
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(turnkeyPrivatekey, userOpHash);
+        bytes memory sig = abi.encodePacked(r, s, v);
+        bytes8 wrongValidatorFlag = bytes8(uint64(botAccount.VALIDATOR_FLAG()) + 1); // 0xf88284b100000001
+        
+        // pack 32-byte word using `wrongValidatorFlag` OR against `address`
+        bytes32 validatorData = wrongValidatorFlag | bytes32(uint256(uint160(address(callPermitValidator))));
+        bytes memory formattedSig = abi.encode(validatorData, sig);
+        
+        bytes4 retVal = botAccount.isValidSignature(userOpHash, formattedSig);
+        bytes4 expectedVal = 0; // expect EIP1271 sig error: bytes4(0)
+        assertEq(retVal, expectedVal);
+
+        // userOp.sender is already correct (== vm.addr(turnkeyPrivatekey))
+        userOp.signature = formattedSig;
+        vm.prank(entryPointAddress);
+        uint256 retUint = botAccount.validateUserOp(userOp, userOpHash, 0);
+        assertEq(retUint, 1); // expect EIP4337 sig error: 1 
+    }
+
+    function test_legacySignature() public {
+        uint256 ownerPrivatekey = 0xbeefEEbabe;
+        UserOperation memory newUserOp = userOp;
+        newUserOp.sender = owner;
+        
+        bytes32 newUserOpHash = callPermitValidator.getUserOpHash(newUserOp);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivatekey, newUserOpHash);
+        bytes memory sig = abi.encodePacked(r, s, v);
+
+        bytes4 retVal = botAccount.isValidSignature(newUserOpHash, sig);
+        bytes4 expectedVal = botAccount.isValidSignature.selector;
+        assertEq(retVal, expectedVal);
+
+
+        newUserOp.signature = sig;
+        vm.prank(entryPointAddress);
+        uint256 retUint = botAccount.validateUserOp(userOp, userOpHash, 0);
+        assertEq(retUint, 0); // expect 4337 success code: 0
+    }
+
+    function test_invalidLegacySignature() public {
+        uint256 notOwnerPrivatekey = 0xdead;
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(notOwnerPrivatekey, userOpHash);
+        bytes memory sig = abi.encodePacked(r, s, v);
+
+        bytes4 retVal = botAccount.isValidSignature(userOpHash, sig);
+        bytes4 expectedVal = bytes4(hex'ffffffff');
+        assertEq(retVal, expectedVal);
     }
 }

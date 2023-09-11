@@ -81,6 +81,11 @@ contract BotAccount is Account, Ownable, Initializable {
         OVERRIDES
     ===============*/
 
+    /// @dev Support for legacy signatures is enabled by default only for the owner
+    function _verifySigner(address _signer) internal view override returns (bool _validSigner) {
+        if (_signer == owner()) return true;
+    }
+
     // changes to core functionality must be restricted to owners to protect admins overthrowing
     function _checkCanUpdateExtensions() internal view override {
         _checkOwner();

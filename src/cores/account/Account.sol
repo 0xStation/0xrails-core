@@ -111,25 +111,41 @@ abstract contract Account is Rails, IAccount, IERC1271, Validators {
     function isValidSignature(bytes32 hash, bytes memory signature) public view returns (bytes4 magicValue) {
         // note: This impl assumes the nested sig within `UserOperation.signature` is created using EIP-712
 
-        // extract packed validator data and sig formatted for validator
-        (bytes32 validatorData, bytes memory nestedSig) = abi.decode(signature, (bytes32, bytes));
-        (bytes8 flag, address validator) = (bytes8(validatorData), address(uint160(uint256(validatorData))));
+        // try extracting packed validator data to check for modular validation format
+        bytes32 data;
+        assembly { data := mload(add(signature, 0x20)) }
+        (bytes8 flag, address validator) = (bytes8(data), address(uint160(uint256(data))));
+
+        // (bytes32 validatorData, bytes memory nestedSig) = abi.decode(signature, (bytes32, bytes));
+        // (bytes8 flag, address validator) = (bytes8(validatorData), address(uint160(uint256(validatorData))));
 
         if (flag == VALIDATOR_FLAG && isValidator(validator)) {
+            ( , bytes memory nestedSig) = abi.decode(signature, (bytes32, bytes));
+
             // format call for Validator module
             bytes4 ret = IValidator(validator).isValidSignature(hash, nestedSig);
 
             // validator will return either correct `magicValue` or error code `INVALID_SIGNER`
             magicValue = ret;
         } else {
-            // terminate with empty `magicValue`, indicating unrecognized validator
-            return bytes4(0);
+            // support non-modular signatures by recovering signer address and reverting malleable or invalid signatures
+            (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(hash, signature);
+            // return if signature is malformed or invalid
+            if (err != ECDSA.RecoverError.NoError) return bytes4(0);
+
+            // authenticate signer
+            bool validSigner = _verifySigner(signer);
+            magicValue = validSigner ? this.isValidSignature.selector : bytes4(hex'ffffffff');
         }
     }
 
     /*===============
         INTERNALS
     ===============*/
+
+    /// @dev Function to authenticate a recovered signer address. Identical to `Validator::_verifySigner()`, except
+    /// called only on signatures that were not constructed using the modular verification flag
+    function _verifySigner(address _signer) internal view virtual returns (bool);
 
     /// @dev View function to limit callers to only the EntryPoint contract of this chain
     function _checkSenderIsEntryPoint() internal view {
