@@ -111,10 +111,11 @@ contract BotAccountTest is Test {
             bytes memory currentRSV = abi.encodePacked(r, s, v);
             assertEq(currentRSV.length, 65);
 
-            // ModularValidation schema developed by GroupOS requires prepended validator & signer addresses
+            // ModularValidation schema developed by GroupOS requires prepended `validatorFlag` packed with validator address 
             // note: `abi.encode` must be used to craft the signature or decoding will fail
-            // ie: `abi.encodePacked(validator, currentAddr, currentRSV)` cannot be decoded
-            bytes memory formattedSig = abi.encode(address(callPermitValidator), currentAddr, currentRSV);
+            // ie: `abi.encodePacked(validatorData, currentRSV)` cannot be decoded
+            bytes32 validatorData = botAccount.VALIDATOR_FLAG() | bytes32(uint256(uint160(address(callPermitValidator))));
+            bytes memory formattedSig = abi.encode(validatorData, currentRSV);
             
             formattedSignatures[i] = formattedSig;
         }
@@ -127,11 +128,7 @@ contract BotAccountTest is Test {
     }
 
     function test_validateUserOp(uint256 startingPrivateKey, uint8 numPrivateKeys) public {
-        uint256 missingAccountFunds = 0;
-        address[] memory newTurnkeys = new address[](numPrivateKeys);
-
         address currentAddr;
-        bytes[] memory formattedSignatures = new bytes[](numPrivateKeys);
         for (uint8 i; i < numPrivateKeys; ++i) {
             // private keys must be nonzero and less than the secp256k curve order
             vm.assume(startingPrivateKey != 0);
@@ -139,30 +136,31 @@ contract BotAccountTest is Test {
             
             uint256 currentPrivateKey = startingPrivateKey + i;
             currentAddr = vm.addr(currentPrivateKey);
-            newTurnkeys[i] = currentAddr;
             
             vm.prank(owner);
             botAccount.addPermission(Operations.CALL_PERMIT, currentAddr);
 
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(currentPrivateKey, userOpHash);
+            // populate preexisting UserOperation `userOp` with sender and formatted signature to be validated
+            UserOperation memory currentUserOp = userOp;
+            currentUserOp.sender = currentAddr;
+            bytes32 currentUserOpHash = callPermitValidator.getUserOpHash(currentUserOp);
+
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(currentPrivateKey, currentUserOpHash);
             bytes memory currentRSV = abi.encodePacked(r, s, v);
             assertEq(currentRSV.length, 65);
 
-            // ModularValidation schema developed by GroupOS requires prepended validator & signer addresses
+            // ModularValidation schema developed by GroupOS requires prepended validatorFlag & validator address
             // note: `abi.encode` must be used to craft the signature or decoding will fail
-            // ie: `abi.encodePacked(validator, currentAddr, currentRSV)` cannot be decoded
-            bytes memory formattedSig = abi.encode(address(callPermitValidator), currentAddr, currentRSV);
+            // ie: `abi.encodePacked(validatorData, currentRSV)` cannot be decoded
+            // pack 32-byte word using `VALIDATOR_FLAG` OR against `address`
+            bytes32 validatorData = botAccount.VALIDATOR_FLAG() | bytes32(uint256(uint160(address(callPermitValidator))));
+            bytes memory formattedSig = abi.encode(validatorData, currentRSV);
+            currentUserOp.signature = formattedSig;
 
-            formattedSignatures[i] = formattedSig;
-        }
-
-        for (uint8 j; j < numPrivateKeys; ++j) {
             uint256 expectedValidationData = 0;
-
-            // populate preexisting UserOperation `userOp` with formatted signature to be validated
-            userOp.signature = formattedSignatures[j];
+            uint256 missingAccountFunds = 0;
             vm.prank(entryPointAddress);
-            uint256 returnedValidationData = botAccount.validateUserOp(userOp, userOpHash, missingAccountFunds);
+            uint256 returnedValidationData = botAccount.validateUserOp(currentUserOp, currentUserOpHash, missingAccountFunds);
             assertEq(returnedValidationData, expectedValidationData);
         }
     }
@@ -243,7 +241,7 @@ contract BotAccountTest is Test {
         botAccount.removePermission(op, someAddress);
     }
 
-    function test_thing() public {
+    function test_validatorFlag() public {
         uint256 turnkeyPrivatekey = 0xc0ffEEbabe;
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(turnkeyPrivatekey, userOpHash);
         bytes memory sig = abi.encodePacked(r, s, v);

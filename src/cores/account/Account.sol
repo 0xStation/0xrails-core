@@ -31,6 +31,12 @@ abstract contract Account is Rails, IAccount, IERC1271, Validators {
     /// @dev This chain's EntryPoint contract address
     address public immutable entryPoint;
 
+    /// @dev 8-Byte value signaling support for modular validation schema developed by GroupOS 
+    /// @notice To use, prepend signatures with a 32-byte word packed with 8-byte flag and target validator address,
+    /// Leaving 4 empty bytes inbetween the packed values. 
+    /// Ie: `bytes32 validatorData == 0xf88284b100000000 | bytes32(uint256(uint160(address(callPermitValidator))));`
+    bytes8 public constant VALIDATOR_FLAG = bytes8(bytes4(keccak256('VALIDATORFLAG'))) & 0xFFFFFFFF00000000;
+
     /// @param _entryPointAddress The contract address for this chain's ERC-4337 EntryPoint contract
     /// Official address for the most recent EntryPoint version is `0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789`
     constructor(address _entryPointAddress) {
@@ -63,8 +69,8 @@ abstract contract Account is Rails, IAccount, IERC1271, Validators {
         bytes8 flag = bytes8(userOp.signature[:8]);
         address validator = address(bytes20(userOp.signature[12:32]));
 
-        if (flag == 0xf88284b100000000 && isValidator(validator)) {
-            ( , bytes memory nestedSig) = abi.decode(userOp.signature, (bytes32, bytes)); // old
+        if (flag == VALIDATOR_FLAG && isValidator(validator)) {
+            ( , bytes memory nestedSig) = abi.decode(userOp.signature, (bytes32, bytes));
 
             // copy userOp into memory and format for Validator module
             UserOperation memory formattedUserOp = userOp;
@@ -109,9 +115,7 @@ abstract contract Account is Rails, IAccount, IERC1271, Validators {
         (bytes32 validatorData, bytes memory nestedSig) = abi.decode(signature, (bytes32, bytes));
         (bytes8 flag, address validator) = (bytes8(validatorData), address(uint160(uint256(validatorData))));
 
-        // `validatorFlag == 0xf88284b100000000` could be derived and stored as a constant
-        bytes8 validatorFlag = bytes8(bytes4(keccak256('VALIDATORFLAG'))) & 0xFFFFFFFF00000000;
-        if (flag == validatorFlag && isValidator(validator)) {
+        if (flag == VALIDATOR_FLAG && isValidator(validator)) {
             // format call for Validator module
             bytes4 ret = IValidator(validator).isValidSignature(hash, nestedSig);
 
