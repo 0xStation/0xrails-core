@@ -15,8 +15,8 @@ import {Operations} from "src/lib/Operations.sol";
 /// @author 👦🏻👦🏻.eth
 
 /// @dev This contract provides a single hub for managing and verifying signatures
-/// created by addresses with private keys generated via Turnkey's API, abstracting them away.
-/// ERC1271-compliance in combination with enabling and disabling individual Turnkey addresses 
+/// created by addresses with the `Operations::CALL_PERMIT` permission.
+/// ERC1271 and ERC4337 compliance in combination with the 0xRails permissions system
 /// provides convenient and modular private key management on an infrastructural level
 contract BotAccount is Account, Ownable, Initializable {
 
@@ -27,22 +27,22 @@ contract BotAccount is Account, Ownable, Initializable {
     /// @param _entryPointAddress The contract address for this chain's ERC-4337 EntryPoint contract
     constructor(address _entryPointAddress) Account(_entryPointAddress) Initializable() {}
 
-    /// @param _owner The owner address of this contract which retains Turnkey management rights
+    /// @param _owner The owner address of this contract which retains call permissions management rights
     /// @param _callPermitValidator The initial CallPermitValidator address to handle modular sig verification
-    /// @param _turnkeys The initial turnkey addresses to support as recognized signers
+    /// @param _trustedCallers The initial trusted caller addresses to support as recognized signers
     /// @notice Permission to execute `Call::call()` on this contract is granted to the EntryPoint in Accounts
     function initialize(
         address _owner, 
         address _callPermitValidator,
-        address[] memory _turnkeys
+        address[] memory _trustedCallers
     ) external initializer {
         _addValidator(_callPermitValidator);
         _transferOwnership(_owner);
 
-        // permit Turnkeys to create valid `UserOp.signature`s via `CALL_PERMIT` permission only
+        // permit trusted callers to create valid `UserOp.signature`s via `CALL_PERMIT` permission only
         unchecked {
-            for (uint256 i; i < _turnkeys.length; ++i) {
-                _addPermission(Operations.CALL_PERMIT, _turnkeys[i]);
+            for (uint256 i; i < _trustedCallers.length; ++i) {
+                _addPermission(Operations.CALL_PERMIT, _trustedCallers[i]);
             }
         }
     }
