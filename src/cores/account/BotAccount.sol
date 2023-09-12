@@ -19,7 +19,7 @@ import {Operations} from "src/lib/Operations.sol";
 /// created by addresses with the `Operations::CALL_PERMIT` permission.
 /// ERC1271 and ERC4337 compliance in combination with the 0xRails permissions system
 /// provides convenient and modular private key management on an infrastructural level
-contract BotAccount is Account, Initializable {
+contract BotAccount is Account, Ownable, Initializable {
 
     /*==================
         BOT ACCOUNT
@@ -51,6 +51,21 @@ contract BotAccount is Account, Initializable {
     /*===============
         OVERRIDES
     ===============*/
+
+
+    /// @notice This function must be overridden by contracts inheriting `Account` to delineate 
+    /// the type of Account: `Bot`, `Member`, or `Group`
+    /// @dev Owner stored explicitly using OwnableStorage's ERC7201 namespace
+    function owner() public view virtual override(Access, OwnableInternal) returns (address) {
+        return OwnableInternal.owner();
+    }
+
+    /// @dev Function to withdraw funds using the EntryPoint's `withdrawTo()` function
+    /// @param recipient The address to receive from the EntryPoint balance
+    /// @param amount The amount of funds to withdraw from the EntryPoint
+    function withdrawFromEntryPoint(address payable recipient, uint256 amount) public virtual override onlyOwner {
+        IEntryPoint(entryPoint).withdrawTo(recipient, amount);
+    }
 
     /// @dev Support for legacy signatures is enabled by default only for the owner
     function _verifySigner(address _signer) internal view override returns (bool _validSigner) {

@@ -24,7 +24,7 @@ import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 /// @dev This abstract contract provides scaffolding for Station's Account signature validation
 /// ERC1271 and ERC4337 compliance in combination with Rails's Permissions system
 /// to provide convenient and modular private key management on an infrastructural level
-abstract contract Account is Rails, Ownable, BaseAccount, IERC1271, Validators {
+abstract contract Account is Rails, BaseAccount, IERC1271, Validators {
 
     /*=============
         ACCOUNT
@@ -157,20 +157,6 @@ abstract contract Account is Rails, Ownable, BaseAccount, IERC1271, Validators {
     /*===============
         OVERRIDES
     ===============*/
-
-    /// @dev Function to withdraw funds using the EntryPoint's `withdrawTo()` function
-    /// @param recipient The address to receive from the EntryPoint balance
-    /// @param amount The amount of funds to withdraw from the EntryPoint
-    function withdrawFromEntryPoint(address payable recipient, uint256 amount) public virtual override onlyOwner {
-        IEntryPoint(entryPoint).withdrawTo(recipient, amount);
-    }
-
-    /// @notice This function must be overridden by contracts inheriting `Account` to delineate 
-    /// the type of Account: `Bot`, `Member`, or `Group`
-    /// @dev Owner stored explicitly using OwnableStorage's ERC7201 namespace
-    function owner() public view virtual override(Access, OwnableInternal) returns (address) {
-        return OwnableInternal.owner();
-    }
 
     /// @dev Declare explicit support for ERC1271 interface in addition to existing interfaces
     /// @param interfaceId The interfaceId to check for support
