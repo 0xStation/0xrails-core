@@ -9,7 +9,8 @@ import {SignatureChecker} from "openzeppelin-contracts/utils/cryptography/Signat
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 
 /// @dev Validator module that restricts valid signatures to only come from addresses
-/// that have been granted the `CALL_PERMIT` permission in the calling Accounts contract 
+/// that have been granted the `CALL_PERMIT` permission in the calling Accounts contract,
+/// providing a convenient modular way to manage permissioned private keys
 contract CallPermitValidator is Validator {
 
     constructor(address _entryPointAddress) Validator(_entryPointAddress) {}
@@ -39,7 +40,10 @@ contract CallPermitValidator is Validator {
         validationData = validSigner ? successData : SIG_VALIDATION_FAILED;
     }
 
-    /// @dev This example contract would be forwarded regular ECDSA signatures
+    /// @dev This example contract expects signatures in this function's call context
+    /// to contain a `signer` address prepended to the ECDSA `nestedSignature`
+    /// @notice The top level call context to an `Account` implementation would need
+    /// to prepend an additional 32-byte word packed with the `VALIDATOR_FLAG` and this address
     function isValidSignature(bytes32 msgHash, bytes memory signature) 
         external view virtual returns (bytes4 magicValue) 
     {

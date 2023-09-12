@@ -67,14 +67,9 @@ abstract contract Account is Rails, BaseAccount, IERC1271, Validators {
             
             // if validator rejects sig, terminate early with status code 1
             if (ret != 0) return ret;
-        } else {
-            // support non-modular signatures by recovering signer address and reverting malleable or invalid signatures
-            (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(userOpHash, userOp.signature);
-            // return if signature is malformed
-            if (err != ECDSA.RecoverError.NoError) return 1;
-
+        } else { // support non-modular signatures by default
             // authenticate signer, terminating early with status code 1 on failure
-            bool validSigner = _verifySigner(signer);
+            bool validSigner = _defaultValidateUserOp(userOp, userOpHash, missingAccountFunds);
             if (!validSigner) return 1;
         }
 
@@ -101,6 +96,11 @@ abstract contract Account is Rails, BaseAccount, IERC1271, Validators {
     /// and then verify whether the recovered signer address is a recognized Turnkey 
     /// @param hash The 32 byte digest derived by hashing signed message data. Sadly, name is canonical in ERC1271.
     /// @param signature The signature to be verified via recovery. Must be prepended with validator address
+    /// @return magicValue The 4-byte value representing signature validity, as defined by EIP1271
+    /// Can be one of three values:
+    ///   - `this.isValidSignature.selector` indicates a valid signature
+    ///   - `bytes4(hex'ffffffff')` indicates a signature failure bubbled up from an external modular validator
+    ///   - `bytes4(0)` indicates a default signature failure, ie not using the modular `VALIDATOR_FLAG`
     function isValidSignature(bytes32 hash, bytes memory signature) public view returns (bytes4 magicValue) {
         // try extracting packed validator data to check for modular validation format
         bytes32 data;
@@ -116,15 +116,11 @@ abstract contract Account is Rails, BaseAccount, IERC1271, Validators {
 
             // validator will return either correct `magicValue` or error code `INVALID_SIGNER`
             magicValue = ret;
-        } else {
-            // support non-modular signatures by recovering signer address and reverting malleable or invalid signatures
-            (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(hash, signature);
-            // return if signature is malformed
-            if (err != ECDSA.RecoverError.NoError) return bytes4(0);
-
-            // authenticate signer
-            bool validSigner = _verifySigner(signer);
-            magicValue = validSigner ? this.isValidSignature.selector : bytes4(hex'ffffffff');
+        } else { // support non-modular signatures by default
+            // authenticate signer using overridden internal func
+            bool validSigner = _defaultIsValidSignature(hash, signature);
+            // return `bytes4(0)` if default signature validation also fails
+            magicValue = validSigner ? this.isValidSignature.selector : bytes4(0);
         }
     }
 
@@ -132,9 +128,21 @@ abstract contract Account is Rails, BaseAccount, IERC1271, Validators {
         INTERNALS
     ===============*/
 
-    /// @dev Function to authenticate a recovered signer address. Identical to `Validator::_verifySigner()`, except
+    /// @dev Function to recover and authenticate a signer address in the context of `isValidSignature()`,
     /// called only on signatures that were not constructed using the modular verification flag
-    function _verifySigner(address _signer) internal view virtual returns (bool);
+    /// @notice Accounts do not express opinion on whether the `signer` is encoded into `userOp.signature`,
+    /// so the OZ ECDSA library should be used rather than the SignatureChecker
+    function _defaultIsValidSignature(bytes32 hash, bytes memory signature) internal view virtual returns (bool);
+
+    /// @dev Function to recover and authenticate a signer address in the context of `validateUserOp()`,
+    /// called only on signatures that were not constructed using the modular verification flag
+    /// @notice Accounts do not express opinion on whether the `signer` is available, ie encoded into `userOp.signature`,
+    /// so the OZ ECDSA library should be used rather than the SignatureChecker
+    function _defaultValidateUserOp(
+        UserOperation calldata userOp, 
+        bytes32 userOpHash, 
+        uint256 missingAccountFunds
+    ) internal view virtual returns (bool);
 
     /// @dev View function to limit callers to only the EntryPoint contract of this chain
     function _checkSenderIsEntryPoint() internal view {

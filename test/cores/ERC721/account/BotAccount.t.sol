@@ -283,7 +283,7 @@ contract BotAccountTest is Test {
         assertEq(retUint, 1); // expect EIP4337 sig error: 1 
     }
 
-    function test_legacySignature() public {
+    function test_defaultSignature() public {
         uint256 ownerPrivatekey = 0xbeefEEbabe;
         UserOperation memory newUserOp = userOp;
         newUserOp.sender = owner;
@@ -302,7 +302,7 @@ contract BotAccountTest is Test {
         assertEq(retUint, 0); // expect 4337 success code: 0
     }
 
-    function test_invalidLegacySignature() public {
+    function test_invalidDefaultSignature() public {
         uint256 notOwnerPrivatekey = 0xdead;
         UserOperation memory newUserOp = userOp;
         newUserOp.sender = vm.addr(notOwnerPrivatekey);
@@ -312,7 +312,7 @@ contract BotAccountTest is Test {
         bytes memory sig = abi.encodePacked(r, s, v);
 
         bytes4 retVal = botAccount.isValidSignature(newUserOpHash, sig);
-        bytes4 expectedVal = bytes4(hex'ffffffff');
+        bytes4 expectedVal = bytes4(0); // expect default signature error code: bytes4(0)
         assertEq(retVal, expectedVal);
 
         newUserOp.signature = sig;
