@@ -7,7 +7,7 @@ import {SupportsInterfaceInternal} from "src/lib/ERC165/SupportsInterfaceInterna
 import {SupportsInterfaceStorage} from "src/lib/ERC165/SupportsInterfaceStorage.sol";
 import {SupportsInterface} from "src/lib/ERC165/SupportsInterface.sol";
 import {IERC721Receiver} from "src/cores/ERC721/interface/IERC721.sol";
-import {InterfaceInternal, InterfaceExternal} from "src/lib/erc7201/Interface.sol";
+import {InterfaceInternal, InterfaceExternal} from "src/lib/ERC7201/Interface.sol";
 
 contract SupportsInterfaceTest is Test, SupportsInterface {
 
