@@ -14,32 +14,48 @@ contract OnlyOwnerValidator is Validator {
     constructor(address _entryPointAddress) Validator(_entryPointAddress) {}
 
     /// @dev This example contract would only be forwarded signatures formatted as follows:
-    /// `abi.encode(address signer, bytes memory eoaSig)`
+    /// `abi.encodePacked(address signer, bytes memory eoaSig)`
     function validateUserOp(
         UserOperation calldata userOp, 
         bytes32 userOpHash, 
         uint256 /*missingAccountFunds*/
     ) external virtual returns (uint256 validationData) {
-        (address signer, bytes memory nestedSig) = abi.decode(userOp.signature, (address, bytes));
+        bytes memory signerData = userOp.signature[:20];
+        address signer = address((bytes20(signerData)));
+
+        bytes memory nestedSig = userOp.signature[20:];
 
         // terminate if recovered signer address does not match packed signer
-        if (!SignatureChecker.isValidSignatureNow(signer, userOpHash, userOp.signature)) return SIG_VALIDATION_FAILED;
+        if (!SignatureChecker.isValidSignatureNow(signer, userOpHash, nestedSig)) return SIG_VALIDATION_FAILED;
 
         // apply this validator's authentication logic
         bool validSigner = signer == Ownable(msg.sender).owner();
         validationData = validSigner ? 0 : SIG_VALIDATION_FAILED;
     }
 
-    function isValidSignature(bytes32 userOpHash, bytes calldata signature) 
+    function isValidSignature(bytes32 msgHash, bytes memory signature) 
         external view virtual returns (bytes4 magicValue) 
     {
-        // recover signer address, returning on malleable or invalid signatures
-        (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(userOpHash, signature);
-        // return if signature is malformed
-        if (err != ECDSA.RecoverError.NoError) return INVALID_SIGNER;
-        
+        bytes32 signerData;
+        assembly { signerData := mload(add(signature, 0x20)) }
+        address signer = address(bytes20(signerData));
+       
+        // start is now 20th index since only signer is prepended
+        uint256 start = 20;
+        uint256 len = signature.length - start;
+        bytes memory nestedSig = new bytes(len);
+        for (uint256 i; i < len; ++i) {
+            nestedSig[i] = signature[start + i];
+        }
+
+        // use SignatureChecker to evaluate `signer` and `nestedSig`
+        bool validSig = SignatureChecker.isValidSignatureNow(signer, msgHash, nestedSig);
+
         // apply this validator's authentication logic
-        bool validSigner = signer == Ownable(msg.sender).owner();
-        magicValue = validSigner ? this.isValidSignature.selector : INVALID_SIGNER;
+        if (validSig && signer == Ownable(msg.sender).owner()) {
+            magicValue = this.isValidSignature.selector;
+        } else {
+            magicValue = INVALID_SIGNER;
+        }
     }
 }

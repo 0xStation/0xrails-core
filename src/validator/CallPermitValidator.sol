@@ -34,7 +34,7 @@ contract CallPermitValidator is Validator {
         
         bytes memory nestedSig = userOp.signature[20:];
 
-        // terminate if recovered signer address does not the one in the encoding`
+        // terminate if recovered signer address does not match packed signer
         if (!SignatureChecker.isValidSignatureNow(signer, userOpHash, nestedSig)) return SIG_VALIDATION_FAILED;
         
         // check signer has `Operations::CALL_PERMIT`
