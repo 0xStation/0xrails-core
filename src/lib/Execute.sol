@@ -15,6 +15,10 @@ abstract contract Execute {
         return executeData;
     }
 
+    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
+        return interfaceId == type(Execute).interfaceId;
+    }
+
     function _checkCanExecuteCall() internal view virtual;
 
     function _beforeExecuteCall(address to, uint256 value, bytes calldata data) internal virtual returns (address guard, bytes memory checkBeforeData);
