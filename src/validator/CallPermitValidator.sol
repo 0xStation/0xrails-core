@@ -19,11 +19,8 @@ contract CallPermitValidator is Validator {
     function validateUserOp(
         UserOperation calldata userOp, 
         bytes32 userOpHash, 
-        uint256 missingAccountFunds
+        uint256 /*missingAccountFunds*/
     ) external virtual returns (uint256 validationData) {
-        // silence compiler by discarding unused variable
-        (missingAccountFunds);
-
         /// @notice BLS sig aggregator and timestamp expiry are not currently supported by this contract 
         /// so `bytes20(0x0)` and `bytes6(0x0)` suffice. To enable support for aggregator and timestamp expiry,
         /// override the following params
@@ -31,13 +28,21 @@ contract CallPermitValidator is Validator {
         bytes6 validUntil;
         bytes6 validAfter;
         uint256 successData = uint256(bytes32(abi.encodePacked(authorizer, validUntil, validAfter)));
-
-        // terminate if recovered signer address does not match `userOp.sender`
-        if (!SignatureChecker.isValidSignatureNow(userOp.sender, userOpHash, userOp.signature)) return SIG_VALIDATION_FAILED;
+            
+        bytes memory signerData = userOp.signature[:20];
+        address signer = address((bytes20(signerData)));
         
-        // apply this validator's authentication logic
-        bool validSigner = _verifySigner(userOp.sender);
-        validationData = validSigner ? successData : SIG_VALIDATION_FAILED;
+        bytes memory nestedSig = userOp.signature[20:];
+
+        // terminate if recovered signer address does not the one in the encoding`
+        if (!SignatureChecker.isValidSignatureNow(signer, userOpHash, nestedSig)) return SIG_VALIDATION_FAILED;
+        
+        // check signer has `Operations::CALL_PERMIT`
+        if (Access(msg.sender).hasPermission(Operations.CALL_PERMIT, signer)) {
+            validationData = successData;
+        } else {
+            validationData = SIG_VALIDATION_FAILED;
+        }
     }
 
     /// @dev This example contract expects signatures in this function's call context
@@ -47,22 +52,26 @@ contract CallPermitValidator is Validator {
     function isValidSignature(bytes32 msgHash, bytes memory signature) 
         external view virtual returns (bytes4 magicValue) 
     {
-        // recover signer address, returning on malleable or invalid signatures
-        (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(msgHash, signature);
-        // return if signature is malformed
-        if (err != ECDSA.RecoverError.NoError) return INVALID_SIGNER;
+        bytes32 signerData;
+        assembly { signerData := mload(add(signature, 0x20)) }
+        address signer = address(bytes20(signerData));
+        
+        // start is now 20th index since only signer is prepended
+        uint256 start = 20;
+        uint256 len = signature.length - start;
+        bytes memory nestedSig = new bytes(len);
+        for (uint256 i; i < len; ++i) {
+            nestedSig[i] = signature[start + i];
+        }
 
-        // apply this validator's authentication logic
-        bool validSigner = _verifySigner(signer);
-        magicValue = validSigner ? this.isValidSignature.selector : INVALID_SIGNER;
-    }
+        // use SignatureChecker to evaluate `signer` and `nestedSig`
+        bool validSig = SignatureChecker.isValidSignatureNow(signer, msgHash, nestedSig);
 
-    /// @dev This implementation is designed to authenticate addresses with `CALL_PERMIT` permissions
-    /// or higher in the calling Account contract.
-    function _verifySigner(address _signer) 
-        internal view override returns (bool)
-    {
-        // check for `CALL_PERMIT` or superior permission
-        return Access(msg.sender).hasPermission(Operations.CALL_PERMIT, _signer);
+        // check signer has `Operations::CALL_PERMIT`
+        if (validSig && Access(msg.sender).hasPermission(Operations.CALL_PERMIT, signer)) {
+            magicValue = this.isValidSignature.selector;
+        } else {
+            magicValue = INVALID_SIGNER;
+        }
     }
 }

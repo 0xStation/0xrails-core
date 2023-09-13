@@ -43,12 +43,6 @@ abstract contract Validator is IValidator {
         INTERNALS
     ===============*/
 
-    /// @dev Function to authenticate recovered signer addresses. Must be overridden by validator
-    /// child contracts in a way that suits the use case of their design
-    function _verifySigner(
-        address _signer
-    ) internal view virtual returns (bool);
-
     /// @dev Function to compute the struct hash, used within EntryPoint's `getUserOpHash()` function
     function _innerOpHash(UserOperation memory userOp) internal pure returns (bytes32) {
         return keccak256(

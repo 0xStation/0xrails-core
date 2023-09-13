@@ -10,9 +10,6 @@ import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {Validators} from "src/validator/Validators.sol";
 import {IValidator} from "src/validator/interface/IValidator.sol";
 import {Operations} from "src/lib/Operations.sol";
-import {Ownable} from "src/access/ownable/Ownable.sol";
-import {IOwnable} from "src/access/ownable/interface/IOwnable.sol";
-import {OwnableInternal} from "src/access/ownable/OwnableInternal.sol";
 import {Access} from "src/access/Access.sol";
 import {SupportsInterface} from "src/lib/ERC165/SupportsInterface.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
@@ -36,6 +33,8 @@ abstract contract Account is Rails, BaseAccount, IERC1271, Validators {
     /// @param missingAccountFunds Delta representing this account's missing funds in the EntryPoint contract
     /// Corresponds to minimum native currency that must be transferred to the EntryPoint to complete execution
     /// Can be 0 if this account has already deposited enough funds or if a paymaster is used
+    /// @notice To craft the signature, string concatenation or `abi.encodePacked` *must* be used
+    /// Zero-padded data will fail. Ie: `abi.encodePacked(validatorData, signer, currentRSV)` is correct
     /** 
     *   @return validationData A packed uint256 of three concatenated variables
     *   ie: `uint256(abi.encodePacked(address authorizor, uint48 validUntil, uint48 validAfter))`
@@ -57,11 +56,11 @@ abstract contract Account is Rails, BaseAccount, IERC1271, Validators {
         address validator = address(bytes20(userOp.signature[12:32]));
 
         if (flag == VALIDATOR_FLAG && isValidator(validator)) {
-            ( , bytes memory nestedSig) = abi.decode(userOp.signature, (bytes32, bytes));
+            bytes memory formattedSig = userOp.signature[32:];
 
             // copy userOp into memory and format for Validator module
             UserOperation memory formattedUserOp = userOp;
-            formattedUserOp.signature = nestedSig;
+            formattedUserOp.signature = formattedSig;
 
             uint256 ret = IValidator(validator).validateUserOp(formattedUserOp, userOpHash, missingAccountFunds);
             
@@ -96,23 +95,33 @@ abstract contract Account is Rails, BaseAccount, IERC1271, Validators {
     /// and then verify whether the recovered signer address is a recognized Turnkey 
     /// @param hash The 32 byte digest derived by hashing signed message data. Sadly, name is canonical in ERC1271.
     /// @param signature The signature to be verified via recovery. Must be prepended with validator address
+    /// @notice To craft the signature, string concatenation or `abi.encodePacked` *must* be used
+    /// Zero-padded data will fail. Ie: `abi.encodePacked(validatorData, signer, currentRSV)` is correct
     /// @return magicValue The 4-byte value representing signature validity, as defined by EIP1271
     /// Can be one of three values:
     ///   - `this.isValidSignature.selector` indicates a valid signature
     ///   - `bytes4(hex'ffffffff')` indicates a signature failure bubbled up from an external modular validator
     ///   - `bytes4(0)` indicates a default signature failure, ie not using the modular `VALIDATOR_FLAG`
     function isValidSignature(bytes32 hash, bytes memory signature) public view returns (bytes4 magicValue) {
+        // set start index
+        uint256 start = 0x20;
         // try extracting packed validator data to check for modular validation format
         bytes32 data;
-        assembly { data := mload(add(signature, 0x20)) }
+        assembly { data := mload(add(signature, start)) }
         (bytes8 flag, address validator) = (bytes8(data), address(uint160(uint256(data))));
 
         // collision of a signature's first 8 bytes with flag is very unlikely; impossible when incl validator address
         if (flag == VALIDATOR_FLAG && isValidator(validator)) {
-            ( , bytes memory nestedSig) = abi.decode(signature, (bytes32, bytes));
+            uint256 len = signature.length - start;
+            bytes memory formattedSig = new bytes(len);
+
+            // copy relevant data into new bytes array, ie `abi.encodePacked(signer, nestedSig)`
+            for (uint256 i; i < len; ++i) {
+                formattedSig[i] = signature[start + i];
+            }
 
             // format call for Validator module
-            bytes4 ret = IValidator(validator).isValidSignature(hash, nestedSig);
+            bytes4 ret = IValidator(validator).isValidSignature(hash, formattedSig);
 
             // validator will return either correct `magicValue` or error code `INVALID_SIGNER`
             magicValue = ret;

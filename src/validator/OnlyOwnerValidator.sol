@@ -14,20 +14,19 @@ contract OnlyOwnerValidator is Validator {
     constructor(address _entryPointAddress) Validator(_entryPointAddress) {}
 
     /// @dev This example contract would only be forwarded signatures formatted as follows:
-    /// `abi.encode(address signer, bytes memory eoaSig)` (abi decoding fails for `abi.encodePacked`)
+    /// `abi.encode(address signer, bytes memory eoaSig)`
     function validateUserOp(
         UserOperation calldata userOp, 
         bytes32 userOpHash, 
-        uint256 missingAccountFunds
+        uint256 /*missingAccountFunds*/
     ) external virtual returns (uint256 validationData) {
-        // silence compiler by discarding unused variable
-        (missingAccountFunds);
+        (address signer, bytes memory nestedSig) = abi.decode(userOp.signature, (address, bytes));
 
-        // terminate if recovered signer address does not match `userOp.sender`
-        if (!SignatureChecker.isValidSignatureNow(userOp.sender, userOpHash, userOp.signature)) return SIG_VALIDATION_FAILED;
+        // terminate if recovered signer address does not match packed signer
+        if (!SignatureChecker.isValidSignatureNow(signer, userOpHash, userOp.signature)) return SIG_VALIDATION_FAILED;
 
         // apply this validator's authentication logic
-        bool validSigner = _verifySigner(userOp.sender);
+        bool validSigner = signer == Ownable(msg.sender).owner();
         validationData = validSigner ? 0 : SIG_VALIDATION_FAILED;
     }
 
@@ -40,13 +39,7 @@ contract OnlyOwnerValidator is Validator {
         if (err != ECDSA.RecoverError.NoError) return INVALID_SIGNER;
         
         // apply this validator's authentication logic
-        bool validSigner = _verifySigner(signer);
+        bool validSigner = signer == Ownable(msg.sender).owner();
         magicValue = validSigner ? this.isValidSignature.selector : INVALID_SIGNER;
-    }
-
-    function _verifySigner(address _signer)
-        internal view override returns (bool) 
-    {
-        return _signer == Ownable(msg.sender).owner();
     }
 }
