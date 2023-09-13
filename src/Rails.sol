@@ -22,11 +22,12 @@ abstract contract Rails is Access, Guards, Extensions, SupportsInterface, Execut
         public
         view
         virtual
-        override(Access, Guards, Extensions, SupportsInterface)
+        override(Access, Guards, Extensions, SupportsInterface, Execute)
         returns (bool)
     {
-        return Access.supportsInterface(interfaceId) || Guards.supportsInterface(interfaceId)
-            || Extensions.supportsInterface(interfaceId) || SupportsInterface.supportsInterface(interfaceId);
+        return Access.supportsInterface(interfaceId) 
+            || Guards.supportsInterface(interfaceId) || Extensions.supportsInterface(interfaceId) 
+            || SupportsInterface.supportsInterface(interfaceId) || Execute.supportsInterface(interfaceId);
     }
 
     function _beforeExecuteCall(address to, uint256 value, bytes calldata data) internal view override returns (address guard, bytes memory checkBeforeData) {
