@@ -7,7 +7,7 @@ Rails is an acronym for the architecture pattern's four layers: **Module**, **Ac
 Rails's intuition began cultivating in mid-2021 in response to designing for modular token design and vault management problems.
 Currently, Rails is being developed and applied in production for [GroupOS](https://groupos.xyz/), a protocol and product for creating autonomous networks.
 
-<img width="566" alt="image" src="https://github.com/0xStation/rails/assets/38736612/f20a4d8b-4b42-4607-ba03-fd635ff1ea94">
+<img width="566" alt="image" src="https://github.com/0xStation/mage/assets/38736612/f20a4d8b-4b42-4607-ba03-fd635ff1ea94">
 
 ## Deployments
 
