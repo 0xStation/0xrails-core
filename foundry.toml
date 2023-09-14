@@ -12,6 +12,6 @@ remappings = [
 ]
 
 # Configures permissions for cheatcodes that touch the filesystem like `vm.readFile`
-fs_permissions = [{ access = "read", path = "./script/input" }]
+fs_permissions = [{ access = "read-write", path = "./script/input" }]
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

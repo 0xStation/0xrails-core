@@ -6,6 +6,7 @@ import {CallPermitValidator} from "src/validator/CallPermitValidator.sol";
 import {BotAccount} from "src/cores/account/BotAccount.sol";
 import {BotAccountFactory} from "src/cores/account/factory/BotAccountFactory.sol";
 import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 
 /// @dev Script to deploy new implementations of BotAccount.sol and CallPermitValidator.sol only.
 /// To deploy a factory enabling permissionless creation of proxy accounts, see BotAccountFactory.s.sol
@@ -50,7 +51,11 @@ contract BotAccountScript is ScriptUtils {
         botAccountProxy.initialize(owner, address(callPermitValidator), turnkeys);
         
         // the two previous calls are external so they are broadcast as separate txs; thus check state externally
-        if (!botAccountProxy.initialized()) revert Create2Failure(); 
+        if (!botAccountProxy.initialized()) revert Create2Failure();
+
+        writeUsedSalt(saltString, string.concat("CallPermitValidator @", Strings.toHexString(address(callPermitValidator))));
+        writeUsedSalt(saltString, string.concat("BotAccountImpl @", Strings.toHexString(address(botAccountImpl))));
+        writeUsedSalt(saltString, string.concat("BotAccountProxy @", Strings.toHexString(address(botAccountImpl))));
 
         vm.stopBroadcast();
     }

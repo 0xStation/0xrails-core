@@ -28,4 +28,11 @@ abstract contract ScriptUtils is Script {
         string memory file = string.concat(inputDir, fileName);
         return vm.readFile(file);
     }
+
+    // write used salts to an output file upon completion of scripts that used `readSalt()`
+    function writeUsedSalt(string memory consumedSalt, string memory deployment) internal {
+        string memory output = string.concat(consumedSalt, " : ", deployment, ", "); // eg. "GarlicSalt : ERC721Mage, "
+        string memory dest = "./script/input/usedSalts";
+        return vm.writeLine(dest, output);
+    }
 }
