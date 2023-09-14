@@ -7,9 +7,10 @@ import {BotAccount} from "src/cores/account/BotAccount.sol";
 import {BotAccountFactory} from "src/cores/account/factory/BotAccountFactory.sol";
 import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-/// @dev Script to deploy new implementations of BotAccount.sol and CallPermitValidator.sol only.
-/// To deploy a factory enabling permissionless creation of proxy accounts, see BotAccountFactory.s.sol
-contract BotAccountScript is ScriptUtils {
+/// @dev Script to deploy the BotAccountFactory to enable permissionless creation of BotAccounts 
+/// Creates a CallPermitValidator and the BotAccountFactory implementation and proxy.
+/// To deploy standalone BotAccounts, see BotAccount.s.sol
+contract BotAccountFactoryScript is ScriptUtils {
     function run() public {
 
         /*=================
@@ -17,9 +18,10 @@ contract BotAccountScript is ScriptUtils {
         =================*/
 
         /// @dev The following contracts will be deployed and initialized by this script
+        BotAccountFactory botAccountFactoryImpl;
+        BotAccountFactory botAccountFactoryProxy;
         CallPermitValidator callPermitValidator;
         BotAccount botAccountImpl;
-        BotAccount botAccountProxy;
         
         // uncomment all instances of `deployerPrivateKey` if using a private key in shell env var
         // uint256 deployerPrivateKey = vm.envUint("PK");
@@ -42,15 +44,28 @@ contract BotAccountScript is ScriptUtils {
         // deploy turnkeyValidator
         callPermitValidator = new CallPermitValidator{salt: salt}(entryPointAddress);
 
-        // deploy botAccountImpl, `_disableInitializers()` called in constructor
+        // deploy botAccountImpl for the factory to use
         botAccountImpl = new BotAccount{salt: salt}(entryPointAddress);
 
-        // deploy and initialize the botAccountProxy
-        botAccountProxy = BotAccount(payable(address(new ERC1967Proxy{salt: salt}(address(botAccountImpl), ''))));
-        botAccountProxy.initialize(owner, address(callPermitValidator), turnkeys);
-        
-        // the two previous calls are external so they are broadcast as separate txs; thus check state externally
-        if (!botAccountProxy.initialized()) revert Create2Failure(); 
+        // deploy factoryImpl
+        botAccountFactoryImpl = new BotAccountFactory{salt: salt}();
+
+        // craft initData for factoryProxy
+        bytes memory botAccountFactoryInitData = abi.encodeWithSelector(
+            BotAccountFactory.initialize.selector, 
+            address(botAccountImpl), 
+            owner 
+        );
+        // deploy factoryProxy
+        botAccountFactoryProxy = BotAccountFactory(address(new ERC1967Proxy(address(botAccountFactoryImpl), botAccountFactoryInitData)));
+
+        // Now anyone can permissionlessly deploy a BotAccount like so:
+        // BotAccount(payable(botAccountFactoryProxy.createBotAccount(
+        //     salt, 
+        //     owner,
+        //     address(callPermitValidator), 
+        //     turnkeys
+        // )));
 
         vm.stopBroadcast();
     }
