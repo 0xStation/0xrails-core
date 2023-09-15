@@ -46,28 +46,6 @@ abstract contract AccountFactory is Ownable, IAccountFactory {
         emit AccountImplUpdated(_newAccountImpl);
     }
 
-    /** @notice To help visualize the bytes constructed using Yul assembly, here is a deconstructed rundown
-    .  For the following hypothetical values. Active memory is shown with a preceding arrow: `->`
-    .   `address(this) = 0xbeefbeefbeefbeefbeefbeefbeefbeefbeefbeef`
-    .   `salt = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff`
-    .   `creationCodeHash = 0xdeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddead`
-    .  Load 32-byte word at free memory pointer: ```let ptr := mload(0x40)```
-    .    -> 0x0000000000000000000000000000000000000000000000000000000000000000
-    .  Store 1-byte create2 constant at 11th index: ```mstore(add(ptr, 0x0b), 0xff)```
-    .    -> 0x0000000000000000000000FF0000000000000000000000000000000000000000
-    .  Store 20-byte address of deployer (this contract) at 12th index: ```mstore(ptr, address(this)) ```
-    .    -> 0x0000000000000000000000FFbeefbeefbeefbeefbeefbeefbeefbeefbeefbeef
-    .  Store 32-byte salt at 32nd index, creating a second word: ```mstore(add(ptr, 0x20), salt)```
-    .    -> 0x0000000000000000000000FFbeefbeefbeefbeefbeefbeefbeefbeefbeefbeef
-    .    -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    .  Store 32-byte creationCodeHash at 64th index, creating a third word: ```mstore(add(ptr, 0x40), creationCodeHash)```
-    .    -> 0x0000000000000000000000FFbeefbeefbeefbeefbeefbeefbeefbeefbeefbeef
-    .    -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    .    -> 0xdeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddeaddead
-    .  Keccak256 hash above memory layout, ignoring the first 11 empty bytes: ```keccak256(add(ptr, 0x0b), 85)```
-    .    -> bytes32(0x...SomeKeccakOutput...)
-    .  Solidity automatically discards the last 12 bytes of the 32-byte Keccak output above, leaving a 20-byte address
-    */
     function _simulateCreate2(
         bytes32 _salt, 
         bytes32 _creationCodeHash

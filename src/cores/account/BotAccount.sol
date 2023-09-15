@@ -84,8 +84,6 @@ contract BotAccount is Account, Ownable, Initializable {
         return true;
     }
 
-
-
     /// @notice This function must be overridden by contracts inheriting `Account` to delineate 
     /// the type of Account: `Bot`, `Member`, or `Group`
     /// @dev Owner stored explicitly using OwnableStorage's ERC7201 namespace
