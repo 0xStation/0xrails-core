@@ -1,43 +1,24 @@
 pragma solidity ^0.8.13;
 
 /// @title ERC-4337 IStakeManager Interface
-/// @author Live ERC-4337 EntryPoint Contract Deployment: 
+/// @author Live ERC-4337 EntryPoint Contract Deployment:
 /// https://etherscan.io/address/0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789#code
 
 /// @dev Interface contract taken from the live ERC-4337 EntryPoint,
 /// used to manage deposits and withdrawals for IEntryPoint interface
 
 interface IStakeManager {
+    event Deposited(address indexed account, uint256 totalDeposit);
 
-    event Deposited(
-        address indexed account,
-        uint256 totalDeposit
-    );
-
-    event Withdrawn(
-        address indexed account,
-        address withdrawAddress,
-        uint256 amount
-    );
+    event Withdrawn(address indexed account, address withdrawAddress, uint256 amount);
 
     /// Emitted when stake or unstake delay are modified
-    event StakeLocked(
-        address indexed account,
-        uint256 totalStaked,
-        uint256 unstakeDelaySec
-    );
+    event StakeLocked(address indexed account, uint256 totalStaked, uint256 unstakeDelaySec);
 
     /// Emitted once a stake is scheduled for withdrawal
-    event StakeUnlocked(
-        address indexed account,
-        uint256 withdrawTime
-    );
+    event StakeUnlocked(address indexed account, uint256 withdrawTime);
 
-    event StakeWithdrawn(
-        address indexed account,
-        address withdrawAddress,
-        uint256 amount
-    );
+    event StakeWithdrawn(address indexed account, address withdrawAddress, uint256 amount);
 
     /**
      * @param deposit the entity's deposit

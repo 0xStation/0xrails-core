@@ -8,12 +8,12 @@ abstract contract TokenMetadataInternal is ITokenMetadataInternal {
     /*===========
         VIEWS
     ===========*/
-    
+
     function name() public view virtual returns (string memory) {
         TokenMetadataStorage.Layout storage layout = TokenMetadataStorage.layout();
         return layout.name;
     }
-    
+
     function symbol() public view virtual returns (string memory) {
         TokenMetadataStorage.Layout storage layout = TokenMetadataStorage.layout();
         return layout.symbol;
@@ -22,12 +22,12 @@ abstract contract TokenMetadataInternal is ITokenMetadataInternal {
     /*=============
         SETTERS
     =============*/
-    
+
     function _setName(string calldata name_) internal {
         TokenMetadataStorage.layout().name = name_;
         emit NameUpdated(name_);
     }
-    
+
     function _setSymbol(string calldata symbol_) internal {
         TokenMetadataStorage.layout().symbol = symbol_;
         emit SymbolUpdated(symbol_);

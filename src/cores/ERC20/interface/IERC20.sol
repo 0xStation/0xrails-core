@@ -14,7 +14,7 @@ interface IERC20 {
     error ERC20InvalidApprover(address approver);
     error ERC20InvalidSpender(address spender);
     error ERC20FailedDecreaseAllowance(address spender, uint256 currentAllowance, uint256 requestedDecrease);
-    
+
     // views
     function name() external view returns (string memory);
     function symbol() external view returns (string memory);

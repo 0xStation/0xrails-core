@@ -19,9 +19,8 @@ import {Initializable} from "../../lib/initializable/Initializable.sol";
 
 /// @notice apply Rails pattern to ERC1155 NFTs
 contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, IERC1155Rails {
-
     constructor() Initializable() {}
-    
+
     // owner stored explicitly
     function owner() public view override(Access, OwnableInternal) returns (address) {
         return OwnableInternal.owner();
@@ -99,12 +98,7 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
         GUARD
     ===========*/
 
-    function _beforeTokenTransfers(
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory values
-    )
+    function _beforeTokenTransfers(address from, address to, uint256[] memory ids, uint256[] memory values)
         internal
         view
         override

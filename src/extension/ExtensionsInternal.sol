@@ -59,12 +59,9 @@ abstract contract ExtensionsInternal is IExtensions {
         } else {
             // add new Extension
             // new length will be `len + 1`, so this extension has index `len`
-            ExtensionsStorage.ExtensionData memory extension = 
-                ExtensionsStorage.ExtensionData(
-                    uint24(layout._selectors.length), 
-                    uint40(block.timestamp), 
-                    implementation
-                ); 
+            ExtensionsStorage.ExtensionData memory extension = ExtensionsStorage.ExtensionData(
+                uint24(layout._selectors.length), uint40(block.timestamp), implementation
+            );
 
             layout._extensions[selector] = extension;
             layout._selectors.push(selector); // set new selector at index and increment length

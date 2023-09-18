@@ -10,10 +10,9 @@ import {Ownable} from "src/access/ownable/Ownable.sol";
 
 /// @dev This AccountFactory contract uses the `CREATE2` opcode to deterministically
 /// deploy a new ERC1271 and ERC4337 compliant Account to a counterfactual address.
-/// Deployments can be precomputed using the deployer address, random salt, and 
+/// Deployments can be precomputed using the deployer address, random salt, and
 /// a keccak hash of the contract's creation code
 abstract contract AccountFactory is Ownable, IAccountFactory {
-
     /*====================
         ACCOUNTFACTORY
     ====================*/
@@ -46,13 +45,14 @@ abstract contract AccountFactory is Ownable, IAccountFactory {
         emit AccountImplUpdated(_newAccountImpl);
     }
 
-    function _simulateCreate2(
-        bytes32 _salt, 
-        bytes32 _creationCodeHash
-    ) internal view returns (address simulatedDeploymentAddress) {
+    function _simulateCreate2(bytes32 _salt, bytes32 _creationCodeHash)
+        internal
+        view
+        returns (address simulatedDeploymentAddress)
+    {
         assembly {
             let ptr := mload(0x40) // instantiate free mem pointer
-            
+
             mstore(add(ptr, 0x0b), 0xff) // insert single byte create2 constant at 11th offset (starting from 0)
             mstore(ptr, address()) // insert 20-byte deployer address at 12th offset
             mstore(add(ptr, 0x20), _salt) // insert 32-byte salt at 32nd offset

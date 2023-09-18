@@ -5,7 +5,6 @@ import {IValidators} from "./interface/IValidators.sol";
 import {ValidatorsStorage} from "./ValidatorsStorage.sol";
 
 abstract contract Validators is IValidators {
-
     /// @dev View function to check whether given address has been added as validator
     function isValidator(address validator) public view virtual returns (bool) {
         ValidatorsStorage.Layout storage layout = ValidatorsStorage.layout();
@@ -60,7 +59,7 @@ abstract contract Validators is IValidators {
         if (!oldValidatorData.exists) {
             revert ValidatorDoesNotExist(validator);
         }
-        
+
         uint256 lastIndex = layout._validators.length - 1;
         // if removing validator not at the end of the array, swap it to last in array
         if (oldValidatorData.index < lastIndex) {

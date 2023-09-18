@@ -8,18 +8,17 @@ import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 import {SignatureChecker} from "openzeppelin-contracts/utils/cryptography/SignatureChecker.sol";
 
 /// @dev Example Validator module that restricts valid signatures to only come from the owner
-/// of the calling Accounts contract 
+/// of the calling Accounts contract
 contract OnlyOwnerValidator is Validator {
-
     constructor(address _entryPointAddress) Validator(_entryPointAddress) {}
 
     /// @dev This example contract would only be forwarded signatures formatted as follows:
     /// `abi.encodePacked(address signer, bytes memory eoaSig)`
-    function validateUserOp(
-        UserOperation calldata userOp, 
-        bytes32 userOpHash, 
-        uint256 /*missingAccountFunds*/
-    ) external virtual returns (uint256 validationData) {
+    function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 /*missingAccountFunds*/ )
+        external
+        virtual
+        returns (uint256 validationData)
+    {
         bytes memory signerData = userOp.signature[:20];
         address signer = address((bytes20(signerData)));
 
@@ -33,13 +32,18 @@ contract OnlyOwnerValidator is Validator {
         validationData = validSigner ? 0 : SIG_VALIDATION_FAILED;
     }
 
-    function isValidSignature(bytes32 msgHash, bytes memory signature) 
-        external view virtual returns (bytes4 magicValue) 
+    function isValidSignature(bytes32 msgHash, bytes memory signature)
+        external
+        view
+        virtual
+        returns (bytes4 magicValue)
     {
         bytes32 signerData;
-        assembly { signerData := mload(add(signature, 0x20)) }
+        assembly {
+            signerData := mload(add(signature, 0x20))
+        }
         address signer = address(bytes20(signerData));
-       
+
         // start is now 20th index since only signer is prepended
         uint256 start = 20;
         uint256 len = signature.length - start;

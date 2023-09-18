@@ -21,7 +21,12 @@ abstract contract Execute {
 
     function _checkCanExecuteCall() internal view virtual;
 
-    function _beforeExecuteCall(address to, uint256 value, bytes calldata data) internal virtual returns (address guard, bytes memory checkBeforeData);
+    function _beforeExecuteCall(address to, uint256 value, bytes calldata data)
+        internal
+        virtual
+        returns (address guard, bytes memory checkBeforeData);
 
-    function _afterExecuteCall(address guard, bytes memory checkBeforeData, bytes memory executeData) internal virtual;
+    function _afterExecuteCall(address guard, bytes memory checkBeforeData, bytes memory executeData)
+        internal
+        virtual;
 }

@@ -10,7 +10,6 @@ import {IERC721Receiver} from "src/cores/ERC721/interface/IERC721.sol";
 import {InterfaceInternal, InterfaceExternal} from "src/lib/ERC7201/Interface.sol";
 
 contract SupportsInterfaceTest is Test, SupportsInterface {
-
     // existing interfaceId examples from this repo
     bytes4 public ierc721ReceiverId;
     bytes4 public interfaceInternalId;
@@ -25,19 +24,19 @@ contract SupportsInterfaceTest is Test, SupportsInterface {
         interfaceExternalId = type(InterfaceExternal).interfaceId;
     }
 
-    /// @dev since `erc165Id` is stored as a constant and checked separately from storage, 
+    /// @dev since `erc165Id` is stored as a constant and checked separately from storage,
     /// it can still be added and removed to the ERC7201 namespace mapping, tested here via fuzzing.
     /// This has no effect on the high-level expected behavior of `supportsInterface(erc165Id)`
     function test_setUp() public {
         // check storage of `erc165Id` constant on deployment
-        bytes4 derivedERC165Id = bytes4(keccak256('supportsInterface(bytes4)'));
+        bytes4 derivedERC165Id = bytes4(keccak256("supportsInterface(bytes4)"));
         assertEq(derivedERC165Id, bytes4(0x01ffc9a7));
         assertEq(derivedERC165Id, erc165Id);
         assertTrue(supportsInterface(erc165Id));
         assertTrue(supportsInterface(derivedERC165Id));
     }
 
-    function test_addInterface(bytes4 someInterfaceId) public  {
+    function test_addInterface(bytes4 someInterfaceId) public {
         vm.assume(someInterfaceId != erc165Id);
         vm.assume(someInterfaceId != ierc721ReceiverId);
         vm.assume(someInterfaceId != interfaceInternalId);
@@ -78,12 +77,12 @@ contract SupportsInterfaceTest is Test, SupportsInterface {
         vm.expectRevert(err);
         _addInterface(ierc721ReceiverId);
         assertTrue(supportsInterface(ierc721ReceiverId));
-        
+
         err = abi.encodeWithSelector(InterfaceAlreadyAdded.selector, interfaceInternalId);
         vm.expectRevert(err);
         _addInterface(interfaceInternalId);
         assertTrue(supportsInterface(interfaceInternalId));
-        
+
         err = abi.encodeWithSelector(InterfaceAlreadyAdded.selector, interfaceExternalId);
         vm.expectRevert(err);
         _addInterface(interfaceExternalId);
@@ -96,7 +95,7 @@ contract SupportsInterfaceTest is Test, SupportsInterface {
         assertTrue(supportsInterface(someInterfaceId));
     }
 
-    function test_removeInterface(bytes4 someInterfaceId) public  {
+    function test_removeInterface(bytes4 someInterfaceId) public {
         vm.assume(someInterfaceId != erc165Id);
         vm.assume(someInterfaceId != ierc721ReceiverId);
         vm.assume(someInterfaceId != interfaceInternalId);
@@ -107,7 +106,6 @@ contract SupportsInterfaceTest is Test, SupportsInterface {
         _addInterface(interfaceInternalId);
         _addInterface(interfaceExternalId);
         _addInterface(someInterfaceId);
-
 
         // test removing existing interfaceIds
         assertTrue(supportsInterface(ierc721ReceiverId));
@@ -128,7 +126,7 @@ contract SupportsInterfaceTest is Test, SupportsInterface {
         assertFalse(supportsInterface(someInterfaceId));
     }
 
-    function test_removeInterfaceRevertInterfaceNotAdded(bytes4 someInterfaceId) public  {
+    function test_removeInterfaceRevertInterfaceNotAdded(bytes4 someInterfaceId) public {
         vm.assume(someInterfaceId != ierc721ReceiverId);
         vm.assume(someInterfaceId != interfaceInternalId);
         vm.assume(someInterfaceId != interfaceExternalId);
@@ -138,12 +136,12 @@ contract SupportsInterfaceTest is Test, SupportsInterface {
         vm.expectRevert(err);
         _removeInterface(ierc721ReceiverId);
         assertFalse(supportsInterface(ierc721ReceiverId));
-        
+
         err = abi.encodeWithSelector(InterfaceNotAdded.selector, interfaceInternalId);
         vm.expectRevert(err);
         _removeInterface(interfaceInternalId);
         assertFalse(supportsInterface(interfaceInternalId));
-        
+
         err = abi.encodeWithSelector(InterfaceNotAdded.selector, interfaceExternalId);
         vm.expectRevert(err);
         _removeInterface(interfaceExternalId);
@@ -162,4 +160,3 @@ contract SupportsInterfaceTest is Test, SupportsInterface {
 
     function _checkCanUpdateInterfaces() internal override {}
 }
-   

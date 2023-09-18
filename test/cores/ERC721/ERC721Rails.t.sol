@@ -18,7 +18,6 @@ import {ERC721ReceiverImplementer} from "test/cores/ERC721/helpers/ERC721Receive
 import {MockAccountDeployer} from "test/lib/MockAccount.sol";
 
 contract ERC721RailsTest is Test, MockAccountDeployer {
-
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
     address public owner;
@@ -46,35 +45,35 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         name = "Station";
         symbol = "STN";
         // include empty init data for setup
-        initData = abi.encodeWithSelector(
-            ERC721Rails.initialize.selector,
-            owner,
-            name,
-            symbol,
-            ''
-        );
+        initData = abi.encodeWithSelector(ERC721Rails.initialize.selector, owner, name, symbol, "");
 
         ERC721RailsImpl = new ERC721Rails();
-        ERC721RailsProxy = ERC721Rails(payable(address(new ERC1967Proxy(
-            address(ERC721RailsImpl), 
-            initData
-        ))));
+        ERC721RailsProxy = ERC721Rails(
+            payable(
+                address(
+                    new ERC1967Proxy(
+                    address(ERC721RailsImpl), 
+                    initData
+                    )
+                )
+            )
+        );
         metadataRouterExtension = new MetadataRouterExtension();
         timeRangeGuard = new TimeRangeGuard();
         erc721Receiver = new ERC721ReceiverImplementer();
     }
-    
+
     function test_setUp() public {
         // assert proxy initialized
         assertEq(ERC721RailsProxy.owner(), owner);
         assertEq(ERC721RailsProxy.name(), name);
         assertEq(ERC721RailsProxy.symbol(), symbol);
         assertTrue(ERC721RailsProxy.initialized());
-        
+
         // assert implementation initialized but did not receive state updates
         assertEq(ERC721RailsImpl.owner(), address(0x0));
-        assertEq(ERC721RailsImpl.name(), '');
-        assertEq(ERC721RailsImpl.symbol(), '');
+        assertEq(ERC721RailsImpl.name(), "");
+        assertEq(ERC721RailsImpl.symbol(), "");
         assertTrue(ERC721RailsImpl.initialized());
     }
 
@@ -82,14 +81,11 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         ERC721Rails newProxy = ERC721Rails(payable(address(new ERC1967Proxy(address(ERC721RailsImpl), ''))));
 
         // configure addPermission() call for metadataOperator
-        bytes memory permissionData = abi.encodeWithSelector(
-            Permissions.addPermission.selector, 
-            Operations.METADATA, 
-            metadataOperator
-        );
-        
-        newProxy.initialize(owner, '', '', permissionData);
-        
+        bytes memory permissionData =
+            abi.encodeWithSelector(Permissions.addPermission.selector, Operations.METADATA, metadataOperator);
+
+        newProxy.initialize(owner, "", "", permissionData);
+
         // assert permission was set with initialize
         assertTrue(newProxy.hasPermission(Operations.METADATA, metadataOperator));
         Permissions.Permission[] memory permissions = newProxy.getAllPermissions();
@@ -104,13 +100,10 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
 
         // configure setExtension() call for metadata extension
         bytes4 uriSelector = MetadataRouterExtension.ext_tokenURI.selector;
-        bytes memory extensionData = abi.encodeWithSelector(
-            Extensions.setExtension.selector,
-            uriSelector,
-            address(metadataRouterExtension)
-        );
-        
-        newProxy.initialize(owner, '', '', extensionData);
+        bytes memory extensionData =
+            abi.encodeWithSelector(Extensions.setExtension.selector, uriSelector, address(metadataRouterExtension));
+
+        newProxy.initialize(owner, "", "", extensionData);
         assertTrue(newProxy.hasExtended(uriSelector));
         assertEq(newProxy.extensionOf(uriSelector), address(metadataRouterExtension));
         Extensions.Extension[] memory extensions = newProxy.getAllExtensions();
@@ -125,13 +118,10 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         ERC721Rails newProxy = ERC721Rails(payable(address(new ERC1967Proxy(address(ERC721RailsImpl), ''))));
 
         // configure setGuard() call for time range guard
-        bytes memory guardData = abi.encodeWithSelector(
-            Guards.setGuard.selector,
-            Operations.MINT,
-            address(timeRangeGuard)
-        );
+        bytes memory guardData =
+            abi.encodeWithSelector(Guards.setGuard.selector, Operations.MINT, address(timeRangeGuard));
 
-        newProxy.initialize(owner, '', '', guardData);
+        newProxy.initialize(owner, "", "", guardData);
         assertEq(newProxy.guardOf(Operations.MINT), address(timeRangeGuard));
         Guards.Guard[] memory guards = newProxy.getAllGuards();
         assertEq(guards.length, 1);
@@ -139,20 +129,23 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         assertEq(guards[0].implementation, address(timeRangeGuard));
         assertEq(guards[0].updatedAt, block.timestamp);
     }
-    
+
     function test_supportsInterface(bytes4 someInterfaceId) public {
         // check storage of `erc165Id`, `ERC721`, `ERC721Metadata` constants on deployment
-        bytes4 derivedERC165Id = bytes4(keccak256('supportsInterface(bytes4)'));
+        bytes4 derivedERC165Id = bytes4(keccak256("supportsInterface(bytes4)"));
         vm.assume(someInterfaceId != derivedERC165Id);
         vm.assume(someInterfaceId != erc721InterfaceId && someInterfaceId != erc721MetadataInterfaceId);
-        vm.assume(someInterfaceId != extensionsInterfaceId && someInterfaceId != guardsInterfaceId && someInterfaceId != permissionsInterfaceId);
+        vm.assume(
+            someInterfaceId != extensionsInterfaceId && someInterfaceId != guardsInterfaceId
+                && someInterfaceId != permissionsInterfaceId
+        );
 
         assertEq(derivedERC165Id, bytes4(0x01ffc9a7));
         assertEq(derivedERC165Id, ERC721RailsProxy.erc165Id());
         assertTrue(ERC721RailsProxy.supportsInterface(derivedERC165Id));
         assertTrue(ERC721RailsProxy.supportsInterface(ERC721RailsProxy.erc165Id()));
-        assertTrue(ERC721RailsProxy.supportsInterface(erc721InterfaceId)); 
-        assertTrue(ERC721RailsProxy.supportsInterface(erc721MetadataInterfaceId)); 
+        assertTrue(ERC721RailsProxy.supportsInterface(erc721InterfaceId));
+        assertTrue(ERC721RailsProxy.supportsInterface(erc721MetadataInterfaceId));
 
         // test adding random interfaceIds
         assertFalse(ERC721RailsProxy.supportsInterface(someInterfaceId));
@@ -163,16 +156,21 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
 
     function test_addInterfaceRevertPermissionDoesNotExist(bytes4 someInterfaceId) public {
         vm.assume(someInterfaceId != erc721InterfaceId && someInterfaceId != erc721MetadataInterfaceId);
-        vm.assume(someInterfaceId != extensionsInterfaceId && someInterfaceId != guardsInterfaceId && someInterfaceId != permissionsInterfaceId);
+        vm.assume(
+            someInterfaceId != extensionsInterfaceId && someInterfaceId != guardsInterfaceId
+                && someInterfaceId != permissionsInterfaceId
+        );
         vm.assume(someInterfaceId != ERC721RailsProxy.erc165Id());
 
         // attempt to addInterface without permission
         assertFalse(ERC721RailsProxy.supportsInterface(someInterfaceId));
-        
-        err = abi.encodeWithSelector(IPermissionsInternal.PermissionDoesNotExist.selector, Operations.INTERFACE, address(this));
+
+        err = abi.encodeWithSelector(
+            IPermissionsInternal.PermissionDoesNotExist.selector, Operations.INTERFACE, address(this)
+        );
         vm.expectRevert(err);
         ERC721RailsProxy.addInterface(someInterfaceId);
-        assertFalse(ERC721RailsProxy.supportsInterface(someInterfaceId));        
+        assertFalse(ERC721RailsProxy.supportsInterface(someInterfaceId));
     }
 
     function test_mintTo(uint8 quantity) public {
@@ -186,7 +184,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         assertEq(ERC721RailsProxy.balanceOf(recipient), quantity);
         assertEq(ERC721RailsProxy.totalSupply(), quantity);
 
-        for (uint32 i; i < quantity; ) {
+        for (uint32 i; i < quantity;) {
             ++i;
             assertEq(ERC721RailsProxy.ownerOf(i), recipient);
         }
@@ -215,7 +213,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
 
     function test_mintToRevertTransferToNonERC721Receiver(uint8 quantity) public {
         vm.assume(quantity > 0);
-        
+
         address to = address(this); // test contract doesn't implement onERC721Received()
         err = abi.encodeWithSelector(IERC721Internal.TransferToNonERC721ReceiverImplementer.selector);
         vm.expectRevert(err);
@@ -248,7 +246,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         assertEq(ERC721RailsProxy.totalBurned(), 0);
 
         err = abi.encodeWithSelector(IERC721Internal.OwnerQueryForNonexistentToken.selector);
-        for (uint32 i; i < quantity; ) {
+        for (uint32 i; i < quantity;) {
             ++i;
             assertEq(ERC721RailsProxy.ownerOf(i), recipient);
 
@@ -263,20 +261,17 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         assertEq(ERC721RailsProxy.totalBurned(), quantity);
     }
 
-    function test_approve(
-        address operator, 
-        uint8 mintQuantity
-    ) public {
+    function test_approve(address operator, uint8 mintQuantity) public {
         address from = createAccount();
         // prevent mint/approve/delegatecalls to address(0x0)
         vm.assume(from != address(0x0) && from != address(ERC721RailsProxy));
-        vm.assume(operator != address(0x0)); 
+        vm.assume(operator != address(0x0));
         vm.assume(mintQuantity > 0);
 
         vm.prank(owner);
         ERC721RailsProxy.mintTo(from, mintQuantity);
 
-        for (uint256 i; i < mintQuantity; ) {
+        for (uint256 i; i < mintQuantity;) {
             ++i;
             // no approvals yet
             assertEq(ERC721RailsProxy.getApproved(i), address(0x0));
@@ -300,7 +295,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         vm.prank(owner);
         ERC721RailsProxy.mintTo(from, mintQuantity);
 
-        for (uint256 i; i < mintQuantity; ) {
+        for (uint256 i; i < mintQuantity;) {
             ++i;
             // no approvals yet
             assertEq(ERC721RailsProxy.getApproved(i), address(0x0));
@@ -318,7 +313,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
     }
 
     function test_approveRevertApprovalCallerNotOwnerNorApproved(
-        address someAddress, 
+        address someAddress,
         address operator,
         uint8 mintQuantity
     ) public {
@@ -330,7 +325,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         vm.prank(owner);
         ERC721RailsProxy.mintTo(from, mintQuantity);
 
-        for (uint256 i; i < mintQuantity; ) {
+        for (uint256 i; i < mintQuantity;) {
             ++i;
             // no approvals yet
             assertEq(ERC721RailsProxy.getApproved(i), address(0x0));
@@ -349,11 +344,11 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
     }
 
     function test_setApprovalForAll(address operator, uint8 mintQuantity) public {
-        vm.assume(operator != address(0x0)); 
+        vm.assume(operator != address(0x0));
         vm.assume(mintQuantity > 0);
 
         address from = address(0xdeadbeef);
-  
+
         vm.prank(owner);
         ERC721RailsProxy.mintTo(from, mintQuantity);
 
@@ -369,10 +364,10 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
 
     function test_setApprovalForAllRevertApprovalInvalidOperator(uint8 mintQuantity) public {
         vm.assume(mintQuantity > 0);
-  
+
         address from = address(0xdeadbeef);
         address badOperator = address(0x0);
-        
+
         vm.prank(owner);
         ERC721RailsProxy.mintTo(from, mintQuantity);
 
@@ -388,15 +383,11 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         assertFalse(ERC721RailsProxy.isApprovedForAll(from, badOperator));
     }
 
-    function test_transferFrom(
-        address operator,
-        uint8 mintQuantity, 
-        uint8 transferQuantity
-    ) public {
+    function test_transferFrom(address operator, uint8 mintQuantity, uint8 transferQuantity) public {
         address from = createAccount();
         address to = createAccount();
         // prevent transfers, approvals, delegatecalls to/from address(0x0)
-        vm.assume(operator != address(0x0)); 
+        vm.assume(operator != address(0x0));
         vm.assume(from != operator && operator != to);
         vm.assume(from != address(ERC721RailsProxy));
         vm.assume(mintQuantity > 0);
@@ -408,7 +399,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         // transferFrom as owner
         vm.startPrank(from);
         uint256 tokenId;
-        for (uint256 i; i < transferQuantity; ) {
+        for (uint256 i; i < transferQuantity;) {
             ++i;
             assertEq(ERC721RailsProxy.balanceOf(from), mintQuantity - (i - 1));
             assertEq(ERC721RailsProxy.balanceOf(to), 0 + (i - 1));
@@ -416,22 +407,22 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
             tokenId = i;
             assertEq(ERC721RailsProxy.ownerOf(tokenId), from);
             ERC721RailsProxy.transferFrom(from, to, tokenId);
-            
+
             assertEq(ERC721RailsProxy.ownerOf(tokenId), to);
             assertEq(ERC721RailsProxy.balanceOf(from), mintQuantity - i);
             assertEq(ERC721RailsProxy.balanceOf(to), i);
         }
         vm.stopPrank();
-        
+
         // w/ explicit approve
-        for (uint256 j; j < transferQuantity; ) {
+        for (uint256 j; j < transferQuantity;) {
             ++j;
             assertEq(ERC721RailsProxy.balanceOf(from), mintQuantity - transferQuantity - (j - 1));
             assertEq(ERC721RailsProxy.balanceOf(to), transferQuantity + (j - 1));
-            
+
             tokenId = transferQuantity + j;
             assertEq(ERC721RailsProxy.ownerOf(tokenId), from);
-            
+
             vm.prank(from);
             ERC721RailsProxy.approve(operator, tokenId);
             assertEq(ERC721RailsProxy.getApproved(tokenId), operator);
@@ -449,11 +440,11 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         vm.prank(from);
         ERC721RailsProxy.setApprovalForAll(operator, true);
 
-        for (uint256 k; k < transferQuantity; ) {
+        for (uint256 k; k < transferQuantity;) {
             ++k;
             assertEq(ERC721RailsProxy.balanceOf(from), mintQuantity - transferQuantity * 2 - (k - 1));
             assertEq(ERC721RailsProxy.balanceOf(to), transferQuantity * 2 + (k - 1));
-            
+
             tokenId = transferQuantity * 2 + k;
             assertEq(ERC721RailsProxy.ownerOf(tokenId), from);
             assertTrue(ERC721RailsProxy.isApprovedForAll(from, operator));
@@ -477,7 +468,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         uint8 mintQuantity
     ) public {
         // prevent transfers, approvals to/from address(0x0)
-        vm.assume(from != address(0x0) && to != address(0x0)); 
+        vm.assume(from != address(0x0) && to != address(0x0));
         vm.assume(from != badOperator && from != to);
         vm.assume(mintQuantity > 0);
         vm.assume(badOperator != address(0));
@@ -487,11 +478,11 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
 
         vm.startPrank(badOperator);
         uint256 tokenId;
-        for (uint256 i; i < mintQuantity; ) {
+        for (uint256 i; i < mintQuantity;) {
             ++i;
             assertEq(ERC721RailsProxy.balanceOf(from), mintQuantity);
             assertEq(ERC721RailsProxy.balanceOf(to), 0);
-            
+
             tokenId = i;
             assertEq(ERC721RailsProxy.ownerOf(tokenId), from);
 
@@ -499,7 +490,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
             err = abi.encodeWithSelector(IERC721Internal.TransferCallerNotOwnerNorApproved.selector);
             vm.expectRevert(err);
             ERC721RailsProxy.transferFrom(from, to, tokenId);
-            
+
             // assert no state changes made
             assertEq(ERC721RailsProxy.ownerOf(tokenId), from);
             assertEq(ERC721RailsProxy.balanceOf(from), mintQuantity);

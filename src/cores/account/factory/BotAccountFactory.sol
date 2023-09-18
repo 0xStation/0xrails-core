@@ -12,17 +12,13 @@ import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.so
 
 /// @dev This BotAccountFactory deploys a BotAccount using `CREATE2` to a counterfactual address.
 contract BotAccountFactory is Initializable, UUPSUpgradeable, AccountFactory {
-
     /*====================
         INITIALIZATION
     ====================*/
 
     constructor() Initializable() {}
 
-    function initialize(
-        address _botAccountImpl,
-        address _owner
-    ) external initializer {
+    function initialize(address _botAccountImpl, address _owner) external initializer {
         _updateAccountImpl(_botAccountImpl);
 
         _transferOwnership(_owner);
@@ -34,9 +30,9 @@ contract BotAccountFactory is Initializable, UUPSUpgradeable, AccountFactory {
 
     /// @dev Function to deploy a new Account using the `CREATE2` opcode
     function createBotAccount(
-        bytes32 salt, 
-        address botAccountOwner, 
-        address callPermitValidator, 
+        bytes32 salt,
+        address botAccountOwner,
+        address callPermitValidator,
         address[] calldata turnkeys
     ) external returns (address newAccount) {
         newAccount = _createBotAccount(salt, botAccountOwner, callPermitValidator, turnkeys);
@@ -56,7 +52,7 @@ contract BotAccountFactory is Initializable, UUPSUpgradeable, AccountFactory {
     ===============*/
 
     function _createBotAccount(
-        bytes32 _salt, 
+        bytes32 _salt,
         address _botAccountOwner,
         address _callPermitValidator,
         address[] memory _turnkeys

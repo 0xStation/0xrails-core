@@ -22,9 +22,8 @@ import {Initializable} from "../../lib/initializable/Initializable.sol";
 /// @notice apply Rails pattern to ERC721 NFTs
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
 contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IERC721Rails {
-
     constructor() Initializable() {}
-    
+
     // owner stored explicitly
     function owner() public view override(Access, OwnableInternal) returns (address) {
         return OwnableInternal.owner();
@@ -55,7 +54,6 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
             _transferOwnership(owner_);
         }
     }
-
 
     // override starting tokenId exposed by ERC721A
     function _startTokenId() internal pure override returns (uint256) {
@@ -100,7 +98,8 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
 
     function burn(uint256 tokenId) external {
         if (!hasPermission(Operations.BURN, msg.sender)) {
-            _checkCanTransfer(ownerOf(tokenId), tokenId); /// @todo resolve gas inefficiency of reading ownerOf twice
+            _checkCanTransfer(ownerOf(tokenId), tokenId);
+            /// @todo resolve gas inefficiency of reading ownerOf twice
         }
         _burn(tokenId);
     }

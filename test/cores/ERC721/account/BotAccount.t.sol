@@ -17,7 +17,6 @@ import {IExtensions} from "src/extension/interface/IExtensions.sol";
 import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract BotAccountTest is Test {
-
     BotAccount public botAccountImpl;
     BotAccount public botAccount;
     CallPermitValidator public callPermitValidator;
@@ -46,46 +45,41 @@ contract BotAccountTest is Test {
         userOp = UserOperation({
             sender: testTurnkey,
             nonce: 0,
-            initCode: '',
-            callData: '',
+            initCode: "",
+            callData: "",
             callGasLimit: 0,
             verificationGasLimit: 0,
             preVerificationGas: 0,
             maxFeePerGas: 0,
             maxPriorityFeePerGas: 0,
-            paymasterAndData: '',
-            signature: ''
+            paymasterAndData: "",
+            signature: ""
         });
         userOpHash = callPermitValidator.getUserOpHash(userOp);
-        salt = bytes32('garlicsalt');
+        salt = bytes32("garlicsalt");
 
         botAccountImpl = new BotAccount(entryPointAddress);
         botAccountFactoryImpl = new BotAccountFactory();
-        botAccountFactoryInitData = abi.encodeWithSelector(
-            BotAccountFactory.initialize.selector, 
-            address(botAccountImpl), 
-            owner 
+        botAccountFactoryInitData =
+            abi.encodeWithSelector(BotAccountFactory.initialize.selector, address(botAccountImpl), owner);
+        botAccountFactoryProxy =
+            BotAccountFactory(address(new ERC1967Proxy(address(botAccountFactoryImpl), botAccountFactoryInitData)));
+        botAccount = BotAccount(
+            payable(botAccountFactoryProxy.createBotAccount(salt, owner, address(callPermitValidator), turnkeyArray))
         );
-        botAccountFactoryProxy = BotAccountFactory(address(new ERC1967Proxy(address(botAccountFactoryImpl), botAccountFactoryInitData)));
-        botAccount = BotAccount(payable(botAccountFactoryProxy.createBotAccount(
-            salt, 
-            owner,
-            address(callPermitValidator), 
-            turnkeyArray
-        )));
     }
 
     function test_setUp() public {
         assertEq(botAccount.entryPoint(), entryPointAddress);
         assertEq(botAccount.owner(), owner);
         assertEq(botAccountFactoryProxy.getAccountImpl(), address(botAccountImpl));
-        
+
         assertTrue(botAccount.supportsInterface(type(IERC1271).interfaceId));
         assertTrue(botAccount.supportsInterface(botAccount.erc165Id()));
         assertTrue(botAccount.supportsInterface(type(IPermissions).interfaceId));
         assertTrue(botAccount.supportsInterface(type(IGuards).interfaceId));
         assertTrue(botAccount.supportsInterface(type(IExtensions).interfaceId));
- 
+
         assertTrue(botAccount.hasPermission(Operations.CALL_PERMIT, testTurnkey));
     }
 
@@ -99,24 +93,25 @@ contract BotAccountTest is Test {
             // private keys must be nonzero and less than the secp256k curve order
             vm.assume(startingPrivateKey != 0);
             vm.assume(startingPrivateKey < 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE_BAAEDCE6_AF48A03B_BFD25E8C_D0364141);
-            
+
             uint256 currentPrivateKey = startingPrivateKey + i;
             currentAddr = vm.addr(currentPrivateKey);
             newTurnkeys[i] = currentAddr;
-            
+
             vm.prank(owner);
             botAccount.addPermission(Operations.CALL_PERMIT, currentAddr);
 
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(currentPrivateKey, userOpHash);
             bytes memory currentRSV = abi.encodePacked(r, s, v);
             assertEq(currentRSV.length, 65);
-            
-            // ModularValidation schema developed by GroupOS requires prepended `validatorFlag` packed with validator address 
+
+            // ModularValidation schema developed by GroupOS requires prepended `validatorFlag` packed with validator address
             // pack 32-byte word using `validatorFlag` OR against `address`
-            bytes32 validatorData = botAccount.VALIDATOR_FLAG() | bytes32(uint256(uint160(address(callPermitValidator))));
+            bytes32 validatorData =
+                botAccount.VALIDATOR_FLAG() | bytes32(uint256(uint160(address(callPermitValidator))));
             // using `abi.encodePacked()`, pack `validatorData` and `signer` address with signature
             bytes memory formattedSig = abi.encodePacked(validatorData, currentAddr, currentRSV);
-            
+
             formattedSignatures[i] = formattedSig;
         }
 
@@ -133,10 +128,10 @@ contract BotAccountTest is Test {
             // private keys must be nonzero and less than the secp256k curve order
             vm.assume(startingPrivateKey != 0);
             vm.assume(startingPrivateKey < 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE_BAAEDCE6_AF48A03B_BFD25E8C_D0364141);
-            
+
             uint256 currentPrivateKey = startingPrivateKey + i;
             currentAddr = vm.addr(currentPrivateKey);
-            
+
             vm.prank(owner);
             botAccount.addPermission(Operations.CALL_PERMIT, currentAddr);
 
@@ -150,7 +145,8 @@ contract BotAccountTest is Test {
 
             // ModularValidation schema developed by GroupOS requires prepended validatorFlag & validator address
             // pack 32-byte word using `VALIDATOR_FLAG` OR against `address`
-            bytes32 validatorData = botAccount.VALIDATOR_FLAG() | bytes32(uint256(uint160(address(callPermitValidator))));
+            bytes32 validatorData =
+                botAccount.VALIDATOR_FLAG() | bytes32(uint256(uint160(address(callPermitValidator))));
             // using `abi.encodePacked()`, pack `validatorData` and `signer` address with signature
             bytes memory formattedSig = abi.encodePacked(validatorData, currentAddr, currentRSV);
             currentUserOp.signature = formattedSig;
@@ -158,7 +154,8 @@ contract BotAccountTest is Test {
             uint256 expectedValidationData = 0;
             uint256 missingAccountFunds = 0;
             vm.prank(entryPointAddress);
-            uint256 returnedValidationData = botAccount.validateUserOp(currentUserOp, currentUserOpHash, missingAccountFunds);
+            uint256 returnedValidationData =
+                botAccount.validateUserOp(currentUserOp, currentUserOpHash, missingAccountFunds);
             assertEq(returnedValidationData, expectedValidationData);
         }
     }
@@ -171,8 +168,11 @@ contract BotAccountTest is Test {
         for (uint8 i; i < numPrivateKeys; ++i) {
             // private keys must be nonzero and less than the secp256k curve order
             vm.assume(startingPrivateKey != 0);
-            vm.assume(startingPrivateKey < 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE_BAAEDCE6_AF48A03B_BFD25E8C_D0364141 - numPrivateKeys);
-            
+            vm.assume(
+                startingPrivateKey
+                    < 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE_BAAEDCE6_AF48A03B_BFD25E8C_D0364141 - numPrivateKeys
+            );
+
             currentAddr = vm.addr(startingPrivateKey + i);
             newTurnkeys[i] = currentAddr;
             vm.prank(owner);
@@ -189,7 +189,9 @@ contract BotAccountTest is Test {
     }
 
     function test_addTurnkeyRevertPermissionDoesNotExist(address someAddress) public {
-        err = abi.encodeWithSelector(IPermissionsInternal.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this));
+        err = abi.encodeWithSelector(
+            IPermissionsInternal.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this)
+        );
         vm.expectRevert(err);
         botAccount.addPermission(Operations.CALL_PERMIT, someAddress);
     }
@@ -202,8 +204,11 @@ contract BotAccountTest is Test {
         for (uint8 i; i < numPrivateKeys; ++i) {
             // private keys must be nonzero and less than the secp256k curve order
             vm.assume(startingPrivateKey != 0);
-            vm.assume(startingPrivateKey < 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE_BAAEDCE6_AF48A03B_BFD25E8C_D0364141 - numPrivateKeys);
-            
+            vm.assume(
+                startingPrivateKey
+                    < 0xFFFFFFFF_FFFFFFFF_FFFFFFFF_FFFFFFFE_BAAEDCE6_AF48A03B_BFD25E8C_D0364141 - numPrivateKeys
+            );
+
             currentAddr = vm.addr(startingPrivateKey + i);
             newTurnkeys[i] = currentAddr;
             vm.prank(owner);
@@ -234,7 +239,9 @@ contract BotAccountTest is Test {
         botAccount.addPermission(op, someAddress);
 
         // attempt removal of added permission without pranking owner
-        err = abi.encodeWithSelector(IPermissionsInternal.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this));
+        err = abi.encodeWithSelector(
+            IPermissionsInternal.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this)
+        );
         vm.expectRevert(err);
         botAccount.removePermission(op, someAddress);
     }
@@ -244,7 +251,7 @@ contract BotAccountTest is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(turnkeyPrivatekey, userOpHash);
         bytes memory sig = abi.encodePacked(r, s, v);
         bytes8 validatorFlag = botAccount.VALIDATOR_FLAG(); // 0xf88284b100000000
-        
+
         // pack 32-byte word using `validatorFlag` OR against `address`
         bytes32 validatorData = validatorFlag | bytes32(uint256(uint160(address(callPermitValidator))));
         // using `abi.encodePacked()`, pack `validatorData` and `signer` address with signature
@@ -269,12 +276,12 @@ contract BotAccountTest is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(turnkeyPrivatekey, userOpHash);
         bytes memory sig = abi.encodePacked(r, s, v);
         bytes8 wrongValidatorFlag = bytes8(uint64(botAccount.VALIDATOR_FLAG()) + 1); // 0xf88284b100000001
-        
+
         // pack 32-byte word using `wrongValidatorFlag` OR against `address`
         bytes32 validatorData = wrongValidatorFlag | bytes32(uint256(uint160(address(callPermitValidator))));
         // using `abi.encodePacked()`, pack `validatorData` and `signer` address with signature
         bytes memory formattedSig = abi.encodePacked(validatorData, sig);
-        
+
         bytes4 retVal = botAccount.isValidSignature(userOpHash, formattedSig);
         bytes4 expectedVal = 0; // expect EIP1271 sig error: bytes4(0)
         assertEq(retVal, expectedVal);
@@ -282,13 +289,13 @@ contract BotAccountTest is Test {
         userOp.signature = formattedSig;
         vm.prank(entryPointAddress);
         uint256 retUint = botAccount.validateUserOp(userOp, userOpHash, 0);
-        assertEq(retUint, 1); // expect EIP4337 sig error: 1 
+        assertEq(retUint, 1); // expect EIP4337 sig error: 1
     }
 
     function test_defaultSignature() public {
         uint256 ownerPrivatekey = 0xbeefEEbabe;
         UserOperation memory newUserOp = userOp;
-        
+
         bytes32 newUserOpHash = callPermitValidator.getUserOpHash(newUserOp);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivatekey, newUserOpHash);
         bytes memory sig = abi.encodePacked(r, s, v);

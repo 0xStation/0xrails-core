@@ -28,13 +28,7 @@ contract InitializableTest is Test {
         name = "BeefEBabe";
         symbol = "BEEF";
         implementation = new ERC721Rails();
-        bytes memory initializeData = abi.encodeWithSelector(
-            ERC721Rails.initialize.selector, 
-            owner, 
-            name, 
-            symbol,
-            ''
-        );
+        bytes memory initializeData = abi.encodeWithSelector(ERC721Rails.initialize.selector, owner, name, symbol, "");
         proxy = ERC721Rails(payable(address(new ERC1967Proxy(address(implementation), initializeData))));
     }
 
@@ -44,25 +38,21 @@ contract InitializableTest is Test {
         assertEq(proxy.name(), name);
         assertEq(proxy.symbol(), symbol);
         assertTrue(proxy.initialized());
-        
+
         // assert implementation initialized but did not receive state updates
         assertEq(implementation.owner(), address(0x0));
-        assertEq(implementation.name(), '');
-        assertEq(implementation.symbol(), '');
+        assertEq(implementation.name(), "");
+        assertEq(implementation.symbol(), "");
         assertTrue(implementation.initialized());
     }
 
     function test_initialize() public {
         // initialize new membership
-        bytes memory newInitializeData = abi.encodeWithSelector(
-            ERC721Rails.initialize.selector, 
-            owner, 
-            name, 
-            symbol,
-            ''
-        );
-        ERC721Rails newProxy = ERC721Rails(payable(address(new ERC1967Proxy(address(implementation), newInitializeData))));
-        
+        bytes memory newInitializeData =
+            abi.encodeWithSelector(ERC721Rails.initialize.selector, owner, name, symbol, "");
+        ERC721Rails newProxy =
+            ERC721Rails(payable(address(new ERC1967Proxy(address(implementation), newInitializeData))));
+
         assertEq(newProxy.owner(), owner);
         assertEq(newProxy.name(), name);
         assertEq(newProxy.symbol(), symbol);
@@ -70,40 +60,41 @@ contract InitializableTest is Test {
     }
 
     function test_initializeRevertAlreadyInitialized() public {
-        // expect AlreadyInitialized() error when calling initialize on already-initialized proxy 
+        // expect AlreadyInitialized() error when calling initialize on already-initialized proxy
         err = abi.encodeWithSelector(AlreadyInitialized.selector);
         vm.expectRevert(err);
-        proxy.initialize(owner, name, symbol, '');
+        proxy.initialize(owner, name, symbol, "");
     }
 
     function test_initializeImplementationRevertDisabled() public {
         bytes memory maliciousMintToCall = abi.encodeWithSelector(ERC721Rails.mintTo.selector, address(this), 42069);
 
         vm.expectRevert();
-        implementation.initialize(address(this), '', '', maliciousMintToCall);
+        implementation.initialize(address(this), "", "", maliciousMintToCall);
         assertEq(proxy.balanceOf(address(this)), 0);
     }
 
-    function test_proxyRevertUnauthorized() public {        
+    function test_proxyRevertUnauthorized() public {
         // attempt unauthorized transferOwnership() call
         err = abi.encodeWithSelector(OwnerUnauthorizedAccount.selector, address(this));
         vm.expectRevert(err);
-        bytes memory transferOwnerCall = abi.encodeWithSignature('transferOwnership(address)', address(this));
-        (bool r, ) = address(proxy).call(transferOwnerCall);
+        bytes memory transferOwnerCall = abi.encodeWithSignature("transferOwnership(address)", address(this));
+        (bool r,) = address(proxy).call(transferOwnerCall);
         assertTrue(r); // returns true, silence compiler
 
         // attempt on impl
         vm.expectRevert();
-        implementation.initialize(address(this), '', '', transferOwnerCall);
+        implementation.initialize(address(this), "", "", transferOwnerCall);
 
         // attempt unauthorized transferOwnership() call nested within UUPS upgradeToAndCall()
         vm.expectRevert();
-        bytes memory upgradeCall = abi.encodeWithSignature('upgradeToAndCall(address,bytes)', address(this), transferOwnerCall);
-        (bool res, ) = address(proxy).call(upgradeCall);
+        bytes memory upgradeCall =
+            abi.encodeWithSignature("upgradeToAndCall(address,bytes)", address(this), transferOwnerCall);
+        (bool res,) = address(proxy).call(upgradeCall);
         assertTrue(res); // returns true, silence compiler
 
         // attempt on impl
         vm.expectRevert();
-        implementation.initialize(address(this), '', '', upgradeCall);
+        implementation.initialize(address(this), "", "", upgradeCall);
     }
 }
