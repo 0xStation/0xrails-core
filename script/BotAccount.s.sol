@@ -12,7 +12,6 @@ import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 /// To deploy a factory enabling permissionless creation of proxy accounts, see BotAccountFactory.s.sol
 contract BotAccountScript is ScriptUtils {
     function run() public {
-
         /*=================
             ENVIRONMENT 
         =================*/
@@ -21,7 +20,7 @@ contract BotAccountScript is ScriptUtils {
         CallPermitValidator callPermitValidator;
         BotAccount botAccountImpl;
         BotAccount botAccountProxy;
-        
+
         // uncomment all instances of `deployerPrivateKey` if using a private key in shell env var
         // uint256 deployerPrivateKey = vm.envUint("PK");
 
@@ -29,7 +28,7 @@ contract BotAccountScript is ScriptUtils {
             BROADCAST 
         ===============*/
 
-        vm.startBroadcast(/*deployerPrivateKey*/);
+        vm.startBroadcast( /*deployerPrivateKey*/ );
 
         address entryPointAddress = ScriptUtils.entryPointAddress;
         string memory saltString = ScriptUtils.readSalt("salt");
@@ -49,11 +48,13 @@ contract BotAccountScript is ScriptUtils {
         // deploy and initialize the botAccountProxy
         botAccountProxy = BotAccount(payable(address(new ERC1967Proxy{salt: salt}(address(botAccountImpl), ''))));
         botAccountProxy.initialize(owner, address(callPermitValidator), turnkeys);
-        
+
         // the two previous calls are external so they are broadcast as separate txs; thus check state externally
         if (!botAccountProxy.initialized()) revert Create2Failure();
 
-        writeUsedSalt(saltString, string.concat("CallPermitValidator @", Strings.toHexString(address(callPermitValidator))));
+        writeUsedSalt(
+            saltString, string.concat("CallPermitValidator @", Strings.toHexString(address(callPermitValidator)))
+        );
         writeUsedSalt(saltString, string.concat("BotAccountImpl @", Strings.toHexString(address(botAccountImpl))));
         writeUsedSalt(saltString, string.concat("BotAccountProxy @", Strings.toHexString(address(botAccountImpl))));
 

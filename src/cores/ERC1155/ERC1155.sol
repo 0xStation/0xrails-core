@@ -6,7 +6,6 @@ import {IERC1155} from "./interface/IERC1155.sol";
 import {ERC1155Storage} from "./ERC1155Storage.sol";
 
 abstract contract ERC1155 is IERC1155 {
-
     /*==============
         METADATA
     ==============*/
@@ -38,10 +37,12 @@ abstract contract ERC1155 is IERC1155 {
         return ERC1155Storage.layout().balances[id][account];
     }
 
-    function balanceOfBatch(
-        address[] memory accounts,
-        uint256[] memory ids
-    ) public view virtual returns (uint256[] memory) {
+    function balanceOfBatch(address[] memory accounts, uint256[] memory ids)
+        public
+        view
+        virtual
+        returns (uint256[] memory)
+    {
         if (accounts.length != ids.length) {
             revert ERC1155InvalidArrayLength(ids.length, accounts.length);
         }
@@ -207,10 +208,11 @@ abstract contract ERC1155 is IERC1155 {
         _afterTokenTransfers(guard, beforeCheckData);
     }
 
-    function _asSingletonArrays(
-        uint256 element1,
-        uint256 element2
-    ) private pure returns (uint256[] memory array1, uint256[] memory array2) {
+    function _asSingletonArrays(uint256 element1, uint256 element2)
+        private
+        pure
+        returns (uint256[] memory array1, uint256[] memory array2)
+    {
         /// @solidity memory-safe-assembly
         assembly {
             // Load the free memory pointer
@@ -239,7 +241,7 @@ abstract contract ERC1155 is IERC1155 {
             revert ERC1155MissingApprovalForAll(msg.sender, from);
         }
     }
-    
+
     function _doSafeTransferAcceptanceCheck(
         address operator,
         address from,
@@ -277,9 +279,8 @@ abstract contract ERC1155 is IERC1155 {
         bytes memory data
     ) private {
         if (to.code.length > 0) {
-            try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, values, data) returns (
-                bytes4 response
-            ) {
+            try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, values, data) returns (bytes4 response)
+            {
                 if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
                     // Tokens rejected
                     revert ERC1155InvalidReceiver(to);
@@ -298,12 +299,10 @@ abstract contract ERC1155 is IERC1155 {
         }
     }
 
-    function _beforeTokenTransfers(
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory values
-    ) internal virtual returns (address guard, bytes memory beforeCheckData);
+    function _beforeTokenTransfers(address from, address to, uint256[] memory ids, uint256[] memory values)
+        internal
+        virtual
+        returns (address guard, bytes memory beforeCheckData);
 
     function _afterTokenTransfers(address guard, bytes memory checkBeforeData) internal virtual;
 }

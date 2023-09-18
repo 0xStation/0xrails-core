@@ -34,7 +34,7 @@ contract ERC721Test is Test {
 
         assertEq(erc721.totalSupply(), quantity);
         assertEq(erc721.balanceOf(to), quantity);
-        for (uint tokenId; tokenId < quantity; tokenId++) {
+        for (uint256 tokenId; tokenId < quantity; tokenId++) {
             assertEq(erc721.ownerOf(tokenId), to);
         }
         assertEq(erc721.totalMinted(), quantity);
@@ -55,13 +55,13 @@ contract ERC721Test is Test {
 
     function test_safeMint(uint8 quantity) public {
         vm.assume(quantity > 0);
-        
+
         address to = address(erc721Receiver);
         erc721.safeMint(to, quantity);
 
         assertEq(erc721.totalSupply(), quantity);
         assertEq(erc721.balanceOf(to), quantity);
-        for (uint tokenId; tokenId < quantity; tokenId++) {
+        for (uint256 tokenId; tokenId < quantity; tokenId++) {
             assertEq(erc721.ownerOf(tokenId), to);
         }
         assertEq(erc721.totalMinted(), quantity);
@@ -69,7 +69,7 @@ contract ERC721Test is Test {
 
     function test_safeMintRevertTransferToNonERC721Receiver(uint8 quantity) public {
         vm.assume(quantity > 0);
-        
+
         address to = address(this); // test contract doesn't implement onERC721Received()
         err = abi.encodeWithSelector(IERC721Internal.TransferToNonERC721ReceiverImplementer.selector);
         vm.expectRevert(err);
@@ -96,7 +96,7 @@ contract ERC721Test is Test {
         erc721.mint(to, mintQuantity);
 
         uint256 preBurnBalance = erc721.balanceOf(to);
-        for (uint i; i < burnQuantity; i++) {
+        for (uint256 i; i < burnQuantity; i++) {
             uint256 tokenId = i;
             erc721.burn(tokenId);
             assertEq(erc721.totalSupply(), preBurnBalance - (i + 1));
@@ -117,7 +117,7 @@ contract ERC721Test is Test {
 
         uint256 preTransferBalanceFrom = erc721.balanceOf(from);
         uint256 preTransferBalanceTo = erc721.balanceOf(to);
-        for (uint i; i < transferQuantity; i++) {
+        for (uint256 i; i < transferQuantity; i++) {
             uint256 tokenId = i;
             erc721.transfer(from, to, tokenId);
             assertEq(erc721.balanceOf(from), preTransferBalanceFrom - (i + 1));
@@ -128,7 +128,7 @@ contract ERC721Test is Test {
     }
 
     function test_transferSelf(address from, uint8 mintQuantity, uint8 transferQuantity) public {
-        vm.assume(from != address(0x0)); // prevent mint to address(0x0) 
+        vm.assume(from != address(0x0)); // prevent mint to address(0x0)
         vm.assume(mintQuantity > 0);
         vm.assume(transferQuantity < mintQuantity);
 
@@ -137,7 +137,7 @@ contract ERC721Test is Test {
         address to = from;
         uint256 preTransferBalanceFrom = erc721.balanceOf(from);
         uint256 preTransferBalanceTo = erc721.balanceOf(to);
-        for (uint i; i < transferQuantity; i++) {
+        for (uint256 i; i < transferQuantity; i++) {
             uint256 tokenId = i;
             erc721.transfer(from, to, tokenId);
             assertEq(erc721.balanceOf(to), preTransferBalanceTo);
@@ -148,7 +148,7 @@ contract ERC721Test is Test {
 
     function test_safeTransfer(address from, uint8 mintQuantity, uint8 transferQuantity) public {
         // prevent balanceOf() revert on address(0x0) and self-safeTransfer
-        vm.assume(from != address(0x0) && from != address(erc721Receiver)); 
+        vm.assume(from != address(0x0) && from != address(erc721Receiver));
         vm.assume(mintQuantity > 0);
         vm.assume(transferQuantity < mintQuantity);
 
@@ -158,9 +158,9 @@ contract ERC721Test is Test {
 
         uint256 preTransferBalanceFrom = erc721.balanceOf(from);
         uint256 preTransferBalanceTo = erc721.balanceOf(to);
-        for (uint i; i < transferQuantity; i++) {
+        for (uint256 i; i < transferQuantity; i++) {
             uint256 tokenId = i;
-            erc721.safeTransfer(from, to, tokenId, '');
+            erc721.safeTransfer(from, to, tokenId, "");
             assertEq(erc721.balanceOf(from), preTransferBalanceFrom - (i + 1));
             assertEq(erc721.balanceOf(to), preTransferBalanceTo + (i + 1));
             assertEq(erc721.ownerOf(tokenId), to);
@@ -169,8 +169,8 @@ contract ERC721Test is Test {
     }
 
     function test_safeTransferRevertTransferToNonERC721ReceiverImplementer(
-        address from, 
-        uint8 mintQuantity, 
+        address from,
+        uint8 mintQuantity,
         uint8 transferQuantity
     ) public {
         vm.assume(from != address(0x0));
@@ -183,10 +183,10 @@ contract ERC721Test is Test {
         uint256 preTransferBalanceTo = erc721.balanceOf(to);
         err = abi.encodeWithSelector(IERC721Internal.TransferToNonERC721ReceiverImplementer.selector);
         // attempt safeTransfers to this address
-        for (uint i; i < transferQuantity; i++) {
+        for (uint256 i; i < transferQuantity; i++) {
             uint256 tokenId = i;
             vm.expectRevert(err);
-            erc721.safeTransfer(from, to, tokenId, '');
+            erc721.safeTransfer(from, to, tokenId, "");
             // assert transfers not completed
             assertEq(erc721.balanceOf(from), preTransferBalanceFrom);
             assertEq(erc721.balanceOf(to), preTransferBalanceTo);
@@ -196,23 +196,19 @@ contract ERC721Test is Test {
         // attempt safeTransfers to another non onERC721Received() implementer
         address to2 = address(new ERC721Harness());
         uint256 preTransferBalanceTo2 = erc721.balanceOf(to2);
-        for (uint i; i < transferQuantity; i++) {
+        for (uint256 i; i < transferQuantity; i++) {
             uint256 tokenId = i;
             vm.expectRevert(err);
-            erc721.safeTransfer(from, to2, tokenId, '');
+            erc721.safeTransfer(from, to2, tokenId, "");
             // assert transfers not completed
             assertEq(erc721.balanceOf(from), preTransferBalanceFrom);
             assertEq(erc721.balanceOf(to2), preTransferBalanceTo2);
             assertEq(erc721.ownerOf(tokenId), from);
         }
-        assertEq(erc721.totalSupply(), preTransferBalanceFrom);        
+        assertEq(erc721.totalSupply(), preTransferBalanceFrom);
     }
 
-    function test_approve(
-        address from, 
-        address operator, 
-        uint8 mintQuantity
-    ) public {
+    function test_approve(address from, address operator, uint8 mintQuantity) public {
         vm.assume(from != address(0x0) && operator != address(0x0)); // prevent mint/approve to address(0x0)
         vm.assume(mintQuantity > 0);
 
@@ -257,8 +253,8 @@ contract ERC721Test is Test {
     }
 
     function test_approveRevertApprovalCallerNotOwnerNorApproved(
-        address from, 
-        address someAddress, 
+        address from,
+        address someAddress,
         address operator,
         uint8 mintQuantity
     ) public {
@@ -288,7 +284,7 @@ contract ERC721Test is Test {
     function test_setApprovalForAll(address from, address operator, uint8 mintQuantity) public {
         vm.assume(from != address(0x0) && operator != address(0x0)); // prevent address(0x0) approvals
         vm.assume(mintQuantity > 0);
-  
+
         erc721.mint(from, mintQuantity);
 
         // no approval yet
@@ -301,13 +297,10 @@ contract ERC721Test is Test {
         assertTrue(erc721.isApprovedForAll(from, operator));
     }
 
-    function test_setApprovalForAllRevertApprovalInvalidOperator(
-        address from, 
-        uint8 mintQuantity
-    ) public {
+    function test_setApprovalForAllRevertApprovalInvalidOperator(address from, uint8 mintQuantity) public {
         vm.assume(from != address(0x0)); // prevent address(0x0) mint
         vm.assume(mintQuantity > 0);
-  
+
         address badOperator = address(0x0);
         erc721.mint(from, mintQuantity);
 
@@ -323,15 +316,11 @@ contract ERC721Test is Test {
         assertFalse(erc721.isApprovedForAll(from, badOperator));
     }
 
-    function test_transferFrom(
-        address from, 
-        address to, 
-        address operator,
-        uint8 mintQuantity, 
-        uint8 transferQuantity
-    ) public {
+    function test_transferFrom(address from, address to, address operator, uint8 mintQuantity, uint8 transferQuantity)
+        public
+    {
         // prevent transfers, approvals to/from address(0x0)
-        vm.assume(from != address(0x0) && to != address(0x0) && operator != address(0x0)); 
+        vm.assume(from != address(0x0) && to != address(0x0) && operator != address(0x0));
         vm.assume(from != operator && from != to);
         vm.assume(mintQuantity > 0);
         vm.assume(transferQuantity < mintQuantity / 3);
@@ -344,17 +333,17 @@ contract ERC721Test is Test {
         for (uint256 i; i < transferQuantity; ++i) {
             assertEq(erc721.balanceOf(from), mintQuantity - i);
             assertEq(erc721.balanceOf(to), 0 + i);
-            
+
             tokenId = i;
             assertEq(erc721.ownerOf(tokenId), from);
             erc721.transferFrom(from, to, tokenId);
-            
+
             assertEq(erc721.ownerOf(tokenId), to);
             assertEq(erc721.balanceOf(from), mintQuantity - (i + 1));
             assertEq(erc721.balanceOf(to), i + 1);
         }
         vm.stopPrank();
-        
+
         // w/ explicit approve
         for (uint256 j; j < transferQuantity; ++j) {
             assertEq(erc721.balanceOf(from), mintQuantity - transferQuantity - j);
@@ -362,7 +351,7 @@ contract ERC721Test is Test {
 
             tokenId = transferQuantity + j;
             assertEq(erc721.ownerOf(tokenId), from);
-            
+
             vm.prank(from);
             erc721.approve(operator, tokenId);
             assertEq(erc721.getApproved(tokenId), operator);
@@ -383,7 +372,7 @@ contract ERC721Test is Test {
         for (uint256 k; k < transferQuantity; ++k) {
             assertEq(erc721.balanceOf(from), mintQuantity - transferQuantity * 2 - k);
             assertEq(erc721.balanceOf(to), transferQuantity * 2 + k);
-            
+
             tokenId = transferQuantity * 2 + k;
             assertEq(erc721.ownerOf(tokenId), from);
             assertTrue(erc721.isApprovedForAll(from, operator));
@@ -399,7 +388,7 @@ contract ERC721Test is Test {
         assertEq(erc721.totalSupply(), mintQuantity);
         assertEq(erc721.totalMinted(), mintQuantity);
     }
-    
+
     function test_transferFromRevertTransferCallerNotOwnerNorApproved(
         address from,
         address to,
@@ -407,7 +396,7 @@ contract ERC721Test is Test {
         uint8 mintQuantity
     ) public {
         // prevent transfers, approvals to/from address(0x0)
-        vm.assume(from != address(0x0) && to != address(0x0)); 
+        vm.assume(from != address(0x0) && to != address(0x0));
         vm.assume(from != badOperator && from != to);
         vm.assume(mintQuantity > 0);
         vm.assume(badOperator != address(0));
@@ -419,7 +408,7 @@ contract ERC721Test is Test {
         for (uint256 i; i < mintQuantity; ++i) {
             assertEq(erc721.balanceOf(from), mintQuantity);
             assertEq(erc721.balanceOf(to), 0);
-            
+
             tokenId = i;
             assertEq(erc721.ownerOf(tokenId), from);
 
@@ -427,7 +416,7 @@ contract ERC721Test is Test {
             err = abi.encodeWithSelector(IERC721Internal.TransferCallerNotOwnerNorApproved.selector);
             vm.expectRevert(err);
             erc721.transferFrom(from, to, tokenId);
-            
+
             // assert no state changes made
             assertEq(erc721.ownerOf(tokenId), from);
             assertEq(erc721.balanceOf(from), mintQuantity);

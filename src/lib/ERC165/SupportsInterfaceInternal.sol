@@ -5,9 +5,8 @@ import {ISupportsInterfaceInternal} from "./ISupportsInterface.sol";
 import {SupportsInterfaceStorage} from "./SupportsInterfaceStorage.sol";
 
 abstract contract SupportsInterfaceInternal is ISupportsInterfaceInternal {
-
     /// @dev For explicit EIP165 compliance, the interfaceId of the standard IERC165 implementation
-    /// which is derived from `bytes4(keccak256('supportsInterface(bytes4)'))` 
+    /// which is derived from `bytes4(keccak256('supportsInterface(bytes4)'))`
     /// is stored directly as a constant in order to preserve Rails's ERC7201 namespace pattern
     bytes4 public constant erc165Id = 0x01ffc9a7;
 
@@ -16,7 +15,7 @@ abstract contract SupportsInterfaceInternal is ISupportsInterfaceInternal {
     ===========*/
 
     /// @dev To remain EIP165 compliant, this function must not be called with `bytes4(type(uint32).max)`
-    /// Setting `0xffffffff` as true by providing it as `interfaceId` will disable support of EIP165 in child contracts 
+    /// Setting `0xffffffff` as true by providing it as `interfaceId` will disable support of EIP165 in child contracts
     function _supportsInterface(bytes4 interfaceId) internal view returns (bool) {
         SupportsInterfaceStorage.Layout storage layout = SupportsInterfaceStorage.layout();
         return interfaceId == erc165Id || layout._supportsInterface[interfaceId];

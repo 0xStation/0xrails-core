@@ -21,7 +21,6 @@ import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 /// created either using the GroupOS modular validation schema or default signatures.
 /// ERC1271 and ERC4337 are supported, in combination with the 0xRails permissions system
 contract BotAccount is Account, Ownable, Initializable {
-
     /*==================
         BOT ACCOUNT
     ==================*/
@@ -33,11 +32,10 @@ contract BotAccount is Account, Ownable, Initializable {
     /// @param _callPermitValidator The initial CallPermitValidator address to handle modular sig verification
     /// @param _trustedCallers The initial trusted caller addresses to support as recognized signers
     /// @notice Permission to execute `Call::call()` on this contract is granted to the EntryPoint in Accounts
-    function initialize(
-        address _owner, 
-        address _callPermitValidator,
-        address[] memory _trustedCallers
-    ) external initializer {
+    function initialize(address _owner, address _callPermitValidator, address[] memory _trustedCallers)
+        external
+        initializer
+    {
         _addValidator(_callPermitValidator);
         _transferOwnership(_owner);
 
@@ -54,11 +52,13 @@ contract BotAccount is Account, Ownable, Initializable {
     ===============*/
 
     /// @dev When evaluating signatures that don't contain the `VALIDATOR_FLAG`, authenticate only the owner
-    function _defaultValidateUserOp(
-        UserOperation calldata userOp, 
-        bytes32 userOpHash, 
-        uint256 /*missingAccountFunds*/
-    ) internal view virtual override returns (bool) {
+    function _defaultValidateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 /*missingAccountFunds*/ )
+        internal
+        view
+        virtual
+        override
+        returns (bool)
+    {
         // recover signer address and any error
         (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(userOpHash, userOp.signature);
         // return if signature is malformed
@@ -70,10 +70,13 @@ contract BotAccount is Account, Ownable, Initializable {
     }
 
     /// @dev When evaluating signatures that don't contain the `VALIDATOR_FLAG`, authenticate only the owner
-    function _defaultIsValidSignature(
-        bytes32 hash, 
-        bytes memory signature
-    ) internal view virtual override returns (bool) {
+    function _defaultIsValidSignature(bytes32 hash, bytes memory signature)
+        internal
+        view
+        virtual
+        override
+        returns (bool)
+    {
         // support non-modular signatures by recovering signer address and reverting malleable or invalid signatures
         (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(hash, signature);
         // return if signature is malformed
@@ -84,7 +87,7 @@ contract BotAccount is Account, Ownable, Initializable {
         return true;
     }
 
-    /// @notice This function must be overridden by contracts inheriting `Account` to delineate 
+    /// @notice This function must be overridden by contracts inheriting `Account` to delineate
     /// the type of Account: `Bot`, `Member`, or `Group`
     /// @dev Owner stored explicitly using OwnableStorage's ERC7201 namespace
     function owner() public view virtual override(Access, OwnableInternal) returns (address) {

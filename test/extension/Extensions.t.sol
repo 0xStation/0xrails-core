@@ -11,7 +11,6 @@ import {MetadataRouterExtension} from "src/extension/examples/metadataRouter/Met
 import {Contract} from "src/lib/Contract.sol";
 
 contract ExtensionsTest is Test, Extensions {
-
     MetadataRouterExtension public exampleExtension;
 
     // to store expected revert errors
@@ -99,7 +98,9 @@ contract ExtensionsTest is Test, Extensions {
         setExtension(selector, address(exampleExtension));
 
         // attempt to update existing extension to same extension
-        err = abi.encodeWithSelector(ExtensionUnchanged.selector, selector, address(exampleExtension), address(exampleExtension));
+        err = abi.encodeWithSelector(
+            ExtensionUnchanged.selector, selector, address(exampleExtension), address(exampleExtension)
+        );
         vm.expectRevert(err);
         setExtension(selector, address(exampleExtension));
 
@@ -124,7 +125,7 @@ contract ExtensionsTest is Test, Extensions {
             bytes4 currentSelector = bytes4(uint32(selector) + i);
             setExtension(currentSelector, address(exampleExtension));
 
-            // assert extension was set 
+            // assert extension was set
             assertTrue(hasExtended(currentSelector));
             assertEq(extensionOf(currentSelector), address(exampleExtension));
         }
@@ -188,7 +189,6 @@ contract ExtensionsTest is Test, Extensions {
 
 // Test for self destructing MaliciousExtension contract extracted into its own scope for cleanliness
 contract MaliciousExtensionsTest is Test, Extensions {
-
     MetadataRouterExtension public exampleExtension;
     MaliciousExtension public maliciousExtension;
 
@@ -209,7 +209,7 @@ contract MaliciousExtensionsTest is Test, Extensions {
         // assert maliciousExtension has been selfdestructed
         uint256 a;
         address addr = address(maliciousExtension);
-        assembly{
+        assembly {
             a := extcodesize(addr)
         }
         assertEq(a, 0);

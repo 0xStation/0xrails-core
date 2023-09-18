@@ -13,11 +13,11 @@ abstract contract TokenMetadata is TokenMetadataInternal, ITokenMetadataExternal
     /*=============
         SETTERS
     =============*/
-    
+
     function setName(string calldata name_) external canUpdateTokenMetadata {
         _setName(name_);
     }
-    
+
     function setSymbol(string calldata symbol_) external canUpdateTokenMetadata {
         _setSymbol(symbol_);
     }

@@ -12,8 +12,12 @@ abstract contract GuardsInternal is IGuards {
         HOOKS
     ===========*/
 
-    function checkGuardBefore(bytes8 operation, bytes memory data) public view returns (address guard, bytes memory checkBeforeData) {
-        guard = guardOf(operation); 
+    function checkGuardBefore(bytes8 operation, bytes memory data)
+        public
+        view
+        returns (address guard, bytes memory checkBeforeData)
+    {
+        guard = guardOf(operation);
         if (guard.autoReject()) {
             revert GuardRejected(operation, guard);
         } else if (guard.autoApprove()) {

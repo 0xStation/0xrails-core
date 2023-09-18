@@ -119,7 +119,6 @@ abstract contract ERC20 is IERC20 {
         _update(account, address(0), value);
     }
 
-
     function _approve(address owner, address spender, uint256 value) internal virtual {
         _approve(owner, spender, value, true);
     }
@@ -168,7 +167,10 @@ abstract contract ERC20 is IERC20 {
 
     // auth
 
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual returns (address guard, bytes memory beforeCheckData);
+    function _beforeTokenTransfer(address from, address to, uint256 amount)
+        internal
+        virtual
+        returns (address guard, bytes memory beforeCheckData);
 
     function _afterTokenTransfer(address guard, bytes memory checkBeforeData) internal virtual;
 }

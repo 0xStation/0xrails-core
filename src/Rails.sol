@@ -25,16 +25,25 @@ abstract contract Rails is Access, Guards, Extensions, SupportsInterface, Execut
         override(Access, Guards, Extensions, SupportsInterface, Execute)
         returns (bool)
     {
-        return Access.supportsInterface(interfaceId) 
-            || Guards.supportsInterface(interfaceId) || Extensions.supportsInterface(interfaceId) 
-            || SupportsInterface.supportsInterface(interfaceId) || Execute.supportsInterface(interfaceId);
+        return Access.supportsInterface(interfaceId) || Guards.supportsInterface(interfaceId)
+            || Extensions.supportsInterface(interfaceId) || SupportsInterface.supportsInterface(interfaceId)
+            || Execute.supportsInterface(interfaceId);
     }
 
-    function _beforeExecuteCall(address to, uint256 value, bytes calldata data) internal view override returns (address guard, bytes memory checkBeforeData) {
+    function _beforeExecuteCall(address to, uint256 value, bytes calldata data)
+        internal
+        view
+        override
+        returns (address guard, bytes memory checkBeforeData)
+    {
         return checkGuardBefore(Operations.CALL, abi.encode(to, value, data));
     }
 
-    function _afterExecuteCall(address guard, bytes memory checkBeforeData, bytes memory executeData) internal view override {
+    function _afterExecuteCall(address guard, bytes memory checkBeforeData, bytes memory executeData)
+        internal
+        view
+        override
+    {
         checkGuardAfter(guard, checkBeforeData, executeData);
     }
 }

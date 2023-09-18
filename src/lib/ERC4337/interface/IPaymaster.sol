@@ -10,11 +10,9 @@ import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 /// @dev Interface contract taken from the EIP-4337 spec,
 /// used to define requirements of a ERC-4337 Paymaster contract
 interface IPaymaster {
-    function validatePaymasterUserOp(
-        UserOperation calldata userOp, 
-        bytes32 userOpHash, 
-        uint256 maxCost
-    ) external returns (bytes memory context, uint256 validationData);
+    function validatePaymasterUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 maxCost)
+        external
+        returns (bytes memory context, uint256 validationData);
 
     function postOp(PostOpMode mode, bytes calldata context, uint256 actualGasCost) external;
 

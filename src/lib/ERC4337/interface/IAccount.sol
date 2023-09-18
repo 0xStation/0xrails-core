@@ -9,10 +9,7 @@ import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 /// @dev Interface contract taken from the original EIP-4337 spec,
 /// used to signify ERC-4337 compliance for smart account wallets inheriting from this contract
 interface IAccount {
-
-    function validateUserOp(
-        UserOperation calldata userOp, 
-        bytes32 userOpHash, 
-        uint256 missingAccountFunds
-    )  external returns (uint256 validationData);
+    function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
+        external
+        returns (uint256 validationData);
 }

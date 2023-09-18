@@ -20,9 +20,8 @@ import {Initializable} from "../../lib/initializable/Initializable.sol";
 
 /// @notice apply Rails pattern to ERC20s
 contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC20Rails {
-
     constructor() Initializable() {}
-    
+
     // owner stored explicitly
     function owner() public view override(Access, OwnableInternal) returns (address) {
         return OwnableInternal.owner();
@@ -81,7 +80,7 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
     }
 
     /// @dev rework allowance to also allow permissioned users burn unconditionally
-    function burnFrom(address from, uint256 amount) external returns(bool) {
+    function burnFrom(address from, uint256 amount) external returns (bool) {
         if (!hasPermission(Operations.BURN, msg.sender)) {
             _spendAllowance(from, msg.sender, amount);
         }

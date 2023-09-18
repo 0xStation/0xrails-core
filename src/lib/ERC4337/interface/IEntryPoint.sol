@@ -13,27 +13,28 @@ import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 interface IEntryPoint is IStakeManager {
     function handleOps(UserOperation[] calldata ops, address payable beneficiary) external;
 
-    function handleAggregatedOps(
-        UserOpsPerAggregator[] calldata opsPerAggregator,
-        address payable beneficiary
-    ) external;
+    function handleAggregatedOps(UserOpsPerAggregator[] calldata opsPerAggregator, address payable beneficiary)
+        external;
 
     function simulateValidation(UserOperation calldata userOp) external;
 
     function getNonce(address sender, uint192 key) external view returns (uint256 nonce);
-        
+
     struct UserOpsPerAggregator {
         UserOperation[] userOps;
         IAggregator aggregator;
         bytes signature;
     }
 
-    error ValidationResult(ReturnInfo returnInfo,
-        StakeInfo senderInfo, StakeInfo factoryInfo, StakeInfo paymasterInfo);
+    error ValidationResult(ReturnInfo returnInfo, StakeInfo senderInfo, StakeInfo factoryInfo, StakeInfo paymasterInfo);
 
-    error ValidationResultWithAggregation(ReturnInfo returnInfo,
-        StakeInfo senderInfo, StakeInfo factoryInfo, StakeInfo paymasterInfo,
-        AggregatorStakeInfo aggregatorInfo);
+    error ValidationResultWithAggregation(
+        ReturnInfo returnInfo,
+        StakeInfo senderInfo,
+        StakeInfo factoryInfo,
+        StakeInfo paymasterInfo,
+        AggregatorStakeInfo aggregatorInfo
+    );
 
     struct ReturnInfo {
         uint256 preOpGas;
@@ -59,11 +60,12 @@ interface IEntryPoint is IStakeManager {
 /// This interface is required only for compiling the spec
 // @todo Look into the benefits and drawbacks (if any) of supporting aggregated signatures
 interface IAggregator {
+    function validateUserOpSignature(UserOperation calldata userOp) external view returns (bytes memory sigForUserOp);
 
-    function validateUserOpSignature(UserOperation calldata userOp)
-        external view returns (bytes memory sigForUserOp);
+    function aggregateSignatures(UserOperation[] calldata userOps)
+        external
+        view
+        returns (bytes memory aggregatesSignature);
 
-  function aggregateSignatures(UserOperation[] calldata userOps) external view returns (bytes memory aggregatesSignature);
-
-  function validateSignatures(UserOperation[] calldata userOps, bytes calldata signature) view external;
+    function validateSignatures(UserOperation[] calldata userOps, bytes calldata signature) external view;
 }

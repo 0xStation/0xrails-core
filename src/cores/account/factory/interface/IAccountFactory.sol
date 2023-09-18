@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 interface IAccountFactory {
-
     event AccountImplUpdated(address indexed accountImpl);
     event AccountCreated(address indexed account);
 

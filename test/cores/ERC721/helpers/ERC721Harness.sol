@@ -5,7 +5,6 @@ import {ERC721} from "src/cores/ERC721/ERC721.sol";
 
 /// @dev Harness contract wrapping ERC721 to publicly expose internal functions for testing purposes
 contract ERC721Harness is ERC721 {
-
     function name() public pure override returns (string memory) {
         return "ERC721";
     }
@@ -13,7 +12,7 @@ contract ERC721Harness is ERC721 {
     function symbol() public pure override returns (string memory) {
         return "ERC721";
     }
-    
+
     function tokenURI(uint256) public pure override returns (string memory) {
         return "uri";
     }
@@ -25,7 +24,7 @@ contract ERC721Harness is ERC721 {
     function mint(address to, uint256 quantity) public {
         _mint(to, quantity);
     }
-    
+
     function burn(uint256 tokenId) public {
         _burn(tokenId);
     }
