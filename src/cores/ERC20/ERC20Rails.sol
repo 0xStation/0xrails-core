@@ -28,7 +28,8 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
         return OwnableInternal.owner();
     }
 
-    /// @dev Cannot call initialize within a proxy constructor, only post-deployment in a factory.
+    /// @dev Initialize the ERC20Rails contract with the given owner, name, symbol, and initialization data.
+    /// @notice Cannot call initialize within a proxy constructor, only post-deployment in a factory.
     /// @param owner_ The initial owner of the contract.
     /// @param name_ The name of the ERC20 token.
     /// @param symbol_ The symbol of the ERC20 token.
@@ -62,17 +63,20 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
     ==============*/
 
     /// @dev Function to return the name of a token implementation
+    /// @return _ The returned ERC20 name string
     function name() public view override(IERC20, TokenMetadataInternal) returns (string memory) {
         return TokenMetadataInternal.name();
     }
 
     /// @dev Function to return the symbol of a token implementation
+    /// @return _ The returned ERC20 symbol string
     function symbol() public view override(IERC20, TokenMetadataInternal) returns (string memory) {
         return TokenMetadataInternal.symbol();
     }
 
     /// @dev Returns the contract URI for this ERC20 token.
     /// @notice Uses extended contract URI logic from the `ContractURIExtension` contract 
+    /// @return _ The returned contractURI string
     function contractURI() public view override returns (string memory) {
         // to avoid clashing selectors, use standardized `ext_` prefix
         return IContractURIExtension(address(this)).ext_contractURI();
