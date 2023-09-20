@@ -19,10 +19,12 @@ abstract contract SupportsInterface is SupportsInterfaceInternal, ISupportsInter
         SETTERS
     =============*/
 
+    /// @inheritdoc ISupportsInterfaceExternal
     function addInterface(bytes4 interfaceId) external virtual canUpdateInterfaces {
         _addInterface(interfaceId);
     }
 
+    /// @inheritdoc ISupportsInterfaceExternal
     function removeInterface(bytes4 interfaceId) external virtual canUpdateInterfaces {
         _removeInterface(interfaceId);
     }
@@ -36,5 +38,7 @@ abstract contract SupportsInterface is SupportsInterfaceInternal, ISupportsInter
         _;
     }
 
+    /// @dev Function to check if caller possesses sufficient permission to set interfaces
+    /// @notice Should revert upon failure.
     function _checkCanUpdateInterfaces() internal virtual;
 }

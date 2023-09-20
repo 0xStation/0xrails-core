@@ -36,8 +36,4 @@ abstract contract SupportsInterfaceInternal is ISupportsInterfaceInternal {
         if (!layout._supportsInterface[interfaceId]) revert InterfaceNotAdded(interfaceId);
         delete layout._supportsInterface[interfaceId];
     }
-
-    /*====================
-        AUTHORIZATION
-    ====================*/
 }

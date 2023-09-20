@@ -16,8 +16,13 @@ interface ISupportsInterfaceExternal {
     /// @param interfaceId The interface identifier to check.
     /// @return _ Boolean indicating whether the contract supports the specified interface.
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
-    // setters
+
+    /// @dev Function to add support for a specific interface.
+    /// @param interfaceId The interface identifier to add support for.
     function addInterface(bytes4 interfaceId) external;
+
+    /// @dev Function to remove support for a specific interface.
+    /// @param interfaceId The interface identifier to remove support for.
     function removeInterface(bytes4 interfaceId) external;
 }
 
