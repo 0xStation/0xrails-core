@@ -12,6 +12,7 @@ abstract contract ExtensionBeacon is Extensions, IExtensionBeacon {
         VIEWS
     ===========*/
 
+    /// @inheritdoc IExtensionBeacon
     function extensionOf(bytes4 selector, uint40 lastValidUpdatedAt)
         public
         view
