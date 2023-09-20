@@ -12,6 +12,7 @@ abstract contract GuardsInternal is IGuards {
         HOOKS
     ===========*/
 
+    /// @inheritdoc IGuards
     function checkGuardBefore(bytes8 operation, bytes memory data)
         public
         view
@@ -29,6 +30,7 @@ abstract contract GuardsInternal is IGuards {
         return (guard, checkBeforeData);
     }
 
+    /// @inheritdoc IGuards
     function checkGuardAfter(address guard, bytes memory checkBeforeData, bytes memory executionData) public view {
         // only check guard if not autoApprove, autoReject will have already reverted
         if (!guard.autoApprove()) {
@@ -40,11 +42,13 @@ abstract contract GuardsInternal is IGuards {
         VIEWS
     ===========*/
 
+    /// @inheritdoc IGuards
     function guardOf(bytes8 operation) public view returns (address implementation) {
         GuardsStorage.Layout storage layout = GuardsStorage.layout();
         return layout._guards[operation].implementation;
     }
 
+    /// @inheritdoc IGuards
     function getAllGuards() public view virtual returns (Guard[] memory guards) {
         GuardsStorage.Layout storage layout = GuardsStorage.layout();
         uint256 len = layout._operations.length;

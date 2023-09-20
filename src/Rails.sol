@@ -17,7 +17,7 @@ import {Operations} from "./lib/Operations.sol";
 abstract contract Rails is Access, Guards, Extensions, SupportsInterface, Execute, Multicall, UUPSUpgradeable {
     /// @dev Function to return the contractURI for child contracts inheriting this one
     /// Unimplemented to abstract away this functionality and render it opt-in
-    /// @return _ The returned contractURI string
+    /// @return uri The returned contractURI string
     function contractURI() public view virtual returns (string memory uri) {}
 
     /// @inheritdoc SupportsInterface

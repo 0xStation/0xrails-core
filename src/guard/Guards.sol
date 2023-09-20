@@ -21,7 +21,7 @@ abstract contract Guards is GuardsInternal {
     =============*/
 
     /// @dev Function to set a guard contract for a given operation.
-    /// @param selector The operation for which to add a guard contract.
+    /// @param operation The operation for which to add a guard contract.
     /// @param implementation The guard contract address containing code to hook before and after operations
     /// @notice Due to EXTCODESIZE check within `_requireContract()`, this function will revert if called
     /// during the constructor of the contract at `implementation`. Deploy `implementation` contract first.

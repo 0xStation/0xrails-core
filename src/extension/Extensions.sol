@@ -13,8 +13,8 @@ abstract contract Extensions is ExtensionsInternal {
     ==================*/
 
     /// @dev Fallback function to delegate calls to extension contracts.
-    /// @param _ The data from which `msg.sig` and `msg.data` are grabbed to craft a delegatecall
-    /// @return _ The return data from using delegatecall on the extension contract.
+    /// @param '' The data from which `msg.sig` and `msg.data` are grabbed to craft a delegatecall
+    /// @return '' The return data from using delegatecall on the extension contract.
     fallback(bytes calldata) external payable virtual returns (bytes memory) {
         // Obtain the implementation address for the function selector.
         address implementation = extensionOf(msg.sig);

@@ -59,7 +59,7 @@ abstract contract Initializable is IInitializableInternal {
         VIEWS
     ===========*/
 
-    /// @inheritdoc IInitializable
+    /// @inheritdoc IInitializableInternal
     function initialized() public view returns (bool) {
         InitializableStorage.Layout storage layout = InitializableStorage.layout();
         return layout._initialized;
