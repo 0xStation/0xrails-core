@@ -10,6 +10,7 @@ abstract contract SupportsInterface is SupportsInterfaceInternal, ISupportsInter
         VIEWS
     ===========*/
 
+    /// @inheritdoc ISupportsInterfaceExternal
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
         return _supportsInterface(interfaceId);
     }

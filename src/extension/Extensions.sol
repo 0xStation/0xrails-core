@@ -21,6 +21,9 @@ abstract contract Extensions is ExtensionsInternal {
         VIEWS
     ===========*/
 
+    /// @dev Function to implement ERC-165 compliance 
+    /// @param interfaceId The interface identifier to check.
+    /// @return _ Boolean indicating whether the contract supports the specified interface.
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
         return interfaceId == type(IExtensions).interfaceId;
     }

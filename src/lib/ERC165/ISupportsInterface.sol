@@ -12,7 +12,9 @@ interface ISupportsInterfaceInternal {
 }
 
 interface ISupportsInterfaceExternal {
-    // views
+    /// @dev Function to implement ERC-165 compliance 
+    /// @param interfaceId The interface identifier to check.
+    /// @return _ Boolean indicating whether the contract supports the specified interface.
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
     // setters
     function addInterface(bytes4 interfaceId) external;
