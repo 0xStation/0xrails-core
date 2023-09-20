@@ -9,7 +9,7 @@ abstract contract Access is Permissions {
     /// @dev Supports multiple owner implementations, e.g. explicit storage vs NFT-owner (ERC-6551)
     function owner() public view virtual returns (address);
 
-    /// @dev Function to check one of 3 permissions conditions is true: owner, admin, or explicit permission 
+    /// @dev Function to check one of 3 permissions criterion is true: owner, admin, or explicit permission 
     /// @param operation The explicit permission to check permission for
     /// @param account The account address whose permission will be checked
     /// @return _ Boolean value declaring whether or not the address possesses permission for the operation

@@ -9,15 +9,18 @@ abstract contract PermissionsInternal is IPermissions {
         VIEWS
     ===========*/
 
+    /// @inheritdoc IPermissions
     function hashOperation(string memory name) public pure returns (bytes8) {
         return Storage._hashOperation(name);
     }
 
+    /// @inheritdoc IPermissions
     function hasPermission(bytes8 operation, address account) public view virtual returns (bool) {
         Storage.PermissionData memory permission = Storage.layout()._permissions[Storage._packKey(operation, account)];
         return permission.exists;
     }
 
+    /// @inheritdoc IPermissions
     function getAllPermissions() public view returns (Permission[] memory permissions) {
         Storage.Layout storage layout = Storage.layout();
         uint256 len = layout._permissionKeys.length;
@@ -83,6 +86,7 @@ abstract contract PermissionsInternal is IPermissions {
         _;
     }
 
+    /// @dev Function to ensure `account` has permission to carry out `operation`
     function _checkPermission(bytes8 operation, address account) internal view {
         if (!hasPermission(operation, account)) revert PermissionDoesNotExist(operation, account);
     }

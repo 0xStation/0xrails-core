@@ -14,7 +14,8 @@ abstract contract ExtensionBeaconFollower is Extensions, IExtensionBeaconFollowe
         VIEWS
     ===========*/
 
-    /// @inheritdoc IExtensionBeacon
+    /// @dev Function to get the extension contract address extending a specific func selector.
+    /// @param selector The function selector to query for its extension.
     function extensionOf(bytes4 selector) public view override returns (address implementation) {
         implementation = super.extensionOf(selector);
         if (implementation != address(0)) return implementation;
@@ -74,17 +75,17 @@ abstract contract ExtensionBeaconFollower is Extensions, IExtensionBeaconFollowe
         SETTERS
     =============*/
 
-    /// @inheritdoc IExtensionBeacon
+    /// @inheritdoc IExtensionBeaconFollower
     function removeExtensionBeacon() public virtual canUpdateExtensions {
         TVBF.remove(extensionBeacon);
     }
 
-    /// @inheritdoc IExtensionBeacon
+    /// @inheritdoc IExtensionBeaconFollower
     function refreshExtensionBeacon(uint40 lastValidUpdatedAt) public virtual canUpdateExtensions {
         TVBF.refresh(extensionBeacon, lastValidUpdatedAt);
     }
 
-    /// @inheritdoc IExtensionBeacon
+    /// @inheritdoc IExtensionBeaconFollower
     function updateExtensionBeacon(address implementation, uint40 lastValidUpdatedAt)
         public
         virtual

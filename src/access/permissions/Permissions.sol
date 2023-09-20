@@ -21,17 +21,13 @@ abstract contract Permissions is PermissionsInternal {
         SETTERS
     =============*/
 
-    /// @dev Function to add permission for an address to carry out an operation
-    /// @param operation The operation to permit
-    /// @param account The account address to be granted permission for the operation
+    /// @inheritdoc IPermissions
     function addPermission(bytes8 operation, address account) public virtual {
         _checkCanUpdatePermissions();
         _addPermission(operation, account);
     }
 
-    /// @dev Function to remove permission for an address to carry out an operation
-    /// @param operation The operation to restrict
-    /// @param account The account address whose permission to remove
+    /// @inheritdoc IPermissions
     function removePermission(bytes8 operation, address account) public virtual {
         if (account != msg.sender) {
             _checkCanUpdatePermissions();

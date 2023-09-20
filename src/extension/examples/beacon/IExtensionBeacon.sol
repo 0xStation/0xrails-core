@@ -6,7 +6,8 @@ interface IExtensionBeacon {
 
     /// @dev Function to get the extension contract address extending a specific func selector.
     /// @param selector The function selector to query for its extension.
-    /// @return updatedBefore The uint40 timestamp of update
+    /// @param updatedBefore The uint40 timestamp of update
+    /// @return implementation The extension contract address for `selector`
     function extensionOf(bytes4 selector, uint40 updatedBefore) external view returns (address implementation);
 }
 
