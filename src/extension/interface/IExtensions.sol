@@ -24,7 +24,7 @@ interface IExtensions is IExtensionsInternal {
     /// @dev Function to check whether the given selector is mapped to an extension contract
     /// @param selector The function selector to query
     /// @return '' Boolean value identifying if the given selector is extended or not
-    function hasExtended(bytes4 selector) external view virtual returns (bool);
+    function hasExtended(bytes4 selector) external view returns (bool);
 
     /// @dev Function to get the extension contract address extending a specific func selector.
     /// @param selector The function selector to query for its extension.

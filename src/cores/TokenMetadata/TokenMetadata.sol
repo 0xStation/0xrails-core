@@ -6,18 +6,19 @@ import {TokenMetadataInternal} from "./TokenMetadataInternal.sol";
 import {TokenMetadataStorage} from "./TokenMetadataStorage.sol";
 
 abstract contract TokenMetadata is TokenMetadataInternal, ITokenMetadataExternal {
-    /*===========
-        VIEWS
-    ===========*/
 
     /*=============
         SETTERS
     =============*/
 
+    /// @dev Function to set the name for a token implementation
+    /// @param name_ The name string to set
     function setName(string calldata name_) external canUpdateTokenMetadata {
         _setName(name_);
     }
 
+    /// @dev Function to set the symbol for a token implementation
+    /// @param symbol_ The symbol string to set
     function setSymbol(string calldata symbol_) external canUpdateTokenMetadata {
         _setSymbol(symbol_);
     }

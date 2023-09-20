@@ -8,9 +8,13 @@ abstract contract Extension is IExtension {
         getAllSignatures(); // verify selectors properly synced
     }
 
+    /// @inheritdoc IExtension
     function signatureOf(bytes4 selector) public pure virtual returns (string memory signature) {}
+
+    /// @inheritdoc IExtension
     function getAllSelectors() public pure virtual returns (bytes4[] memory selectors) {}
 
+    /// @inheritdoc IExtension
     function getAllSignatures() public pure returns (string[] memory signatures) {
         bytes4[] memory selectors = getAllSelectors();
         uint256 len = selectors.length;
