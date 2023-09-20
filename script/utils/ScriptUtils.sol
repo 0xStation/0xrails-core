@@ -13,6 +13,8 @@ abstract contract ScriptUtils is Script {
     // most recent version across goerli, polygon, optimism, arbitrum, mainnet as of 09/14/23
     address public constant entryPointAddress = 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789;
 
+    // Station multisig (SafeProxy.sol)
+    address public constant stationFounderSafe = 0x0f95a7b50eaeEFc08eb10Be44Dd48409b46372b2;
     // valid as of 09/14/23
     address public constant turnkey = 0xBb942519A1339992630b13c3252F04fCB09D4841;
 

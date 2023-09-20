@@ -34,7 +34,7 @@ contract BotAccountScript is ScriptUtils {
         string memory saltString = ScriptUtils.readSalt("salt");
         bytes32 salt = bytes32(bytes(saltString));
 
-        address owner = ScriptUtils.symmetry;
+        address owner = ScriptUtils.stationFounderSafe;
         address turnkey = ScriptUtils.turnkey;
         address[] memory turnkeys = new address[](1);
         turnkeys[0] = turnkey;
