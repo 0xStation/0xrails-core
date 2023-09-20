@@ -10,6 +10,8 @@ abstract contract Permissions is PermissionsInternal {
         VIEWS
     ===========*/
 
+    /// @dev Function to implement ERC-165 compliance 
+    /// and signal support for the `IPermissions` interface
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
         return interfaceId == type(IPermissions).interfaceId;
     }
@@ -18,11 +20,13 @@ abstract contract Permissions is PermissionsInternal {
         SETTERS
     =============*/
 
+    //todo
     function addPermission(bytes8 operation, address account) public virtual {
         _checkCanUpdatePermissions();
         _addPermission(operation, account);
     }
 
+    //todo
     function removePermission(bytes8 operation, address account) public virtual {
         if (account != msg.sender) {
             _checkCanUpdatePermissions();
@@ -34,5 +38,6 @@ abstract contract Permissions is PermissionsInternal {
         AUTHORIZATION
     ===================*/
 
+    /// @dev Function to implement access control restricting setter functions
     function _checkCanUpdatePermissions() internal virtual;
 }

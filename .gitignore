@@ -11,5 +11,7 @@ out/
 # Ignore all script inputs such as CREATE2 salts
 script/input
 
+# Ignore documentation
+docs/
 # Dotenv file
 .env*

@@ -16,8 +16,11 @@ import {Operations} from "./lib/Operations.sol";
  * All Rails-inherited contracts receive a batteries-included contract development kit.
  */
 abstract contract Rails is Access, Guards, Extensions, SupportsInterface, Execute, Multicall, UUPSUpgradeable {
+    /// @dev Function to return the contractURI for child contracts inheriting this one
+    /// Unimplemented to abstract away this functionality and render it opt-in
     function contractURI() public view virtual returns (string memory uri) {}
 
+    /// @inheritdoc SupportsInterface
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -30,6 +33,7 @@ abstract contract Rails is Access, Guards, Extensions, SupportsInterface, Execut
             || Execute.supportsInterface(interfaceId);
     }
 
+    /// @inheritdoc Execute
     function _beforeExecuteCall(address to, uint256 value, bytes calldata data)
         internal
         view
@@ -39,6 +43,7 @@ abstract contract Rails is Access, Guards, Extensions, SupportsInterface, Execut
         return checkGuardBefore(Operations.CALL, abi.encode(to, value, data));
     }
 
+    /// @inheritdoc Execute
     function _afterExecuteCall(address guard, bytes memory checkBeforeData, bytes memory executeData)
         internal
         view

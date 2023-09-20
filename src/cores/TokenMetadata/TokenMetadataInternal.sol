@@ -9,11 +9,13 @@ abstract contract TokenMetadataInternal is ITokenMetadataInternal {
         VIEWS
     ===========*/
 
+    /// @dev Function to return the name of a token implementation
     function name() public view virtual returns (string memory) {
         TokenMetadataStorage.Layout storage layout = TokenMetadataStorage.layout();
         return layout.name;
     }
 
+    /// @dev Function to return the symbol of a token implementation
     function symbol() public view virtual returns (string memory) {
         TokenMetadataStorage.Layout storage layout = TokenMetadataStorage.layout();
         return layout.symbol;
@@ -32,8 +34,4 @@ abstract contract TokenMetadataInternal is ITokenMetadataInternal {
         TokenMetadataStorage.layout().symbol = symbol_;
         emit SymbolUpdated(symbol_);
     }
-
-    /*====================
-        AUTHORIZATION
-    ====================*/
 }

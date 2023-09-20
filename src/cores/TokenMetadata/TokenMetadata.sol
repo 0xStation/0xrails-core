@@ -31,5 +31,6 @@ abstract contract TokenMetadata is TokenMetadataInternal, ITokenMetadataExternal
         _;
     }
 
+    /// @dev Function to implement access control restricting setter functions
     function _checkCanUpdateTokenMetadata() internal view virtual;
 }
