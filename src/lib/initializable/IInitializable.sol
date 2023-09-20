@@ -10,7 +10,7 @@ interface IInitializableInternal {
     error NotInitializing();
     error CannotInitializeWhileConstructing();
 
-    // views
+    /// @dev View function to return whether a proxy contract has been initialized.
     function initialized() external view returns (bool);
 }
 

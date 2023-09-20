@@ -20,12 +20,17 @@ abstract contract Guards is GuardsInternal {
         SETTERS
     =============*/
 
+    /// @dev Function to set a guard contract for a given operation.
+    /// @param selector The operation for which to add a guard contract.
+    /// @param implementation The guard contract address containing code to hook before and after operations
     /// @notice Due to EXTCODESIZE check within `_requireContract()`, this function will revert if called
     /// during the constructor of the contract at `implementation`. Deploy `implementation` contract first.
     function setGuard(bytes8 operation, address implementation) public virtual canUpdateGuards {
         _setGuard(operation, implementation);
     }
 
+    /// @dev Function to remove a guard for a given operation.
+    /// @param operation The operation for which to remove its guard contract.
     function removeGuard(bytes8 operation) public virtual canUpdateGuards {
         _removeGuard(operation);
     }
@@ -39,5 +44,7 @@ abstract contract Guards is GuardsInternal {
         _;
     }
 
+    /// @dev Function to check if caller possesses sufficient permission to set Guards
+    /// @notice Should revert upon failure.
     function _checkCanUpdateGuards() internal virtual;
 }
