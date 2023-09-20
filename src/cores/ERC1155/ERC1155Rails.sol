@@ -17,16 +17,19 @@ import {PermissionsStorage} from "../../access/permissions/PermissionsStorage.so
 import {IERC1155Rails} from "./interface/IERC1155Rails.sol";
 import {Initializable} from "../../lib/initializable/Initializable.sol";
 
-/// @notice apply Rails pattern to ERC1155 NFTs
+/// @notice This contract implements the Rails pattern to provide enhanced functionality for ERC1155 tokens.
 contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, IERC1155Rails {
+    /// @notice Declaring this contract `Initializable()` invokes `_disableInitializers()`,
+    /// in order to preemptively mitigate proxy privilege escalation attack vectors
     constructor() Initializable() {}
 
-    // owner stored explicitly
+    /// @dev Owner address is implemented using the `OwnableInternal` contract's function
     function owner() public view override(Access, OwnableInternal) returns (address) {
         return OwnableInternal.owner();
     }
 
-    /// @dev cannot call initialize within a proxy constructor, only post-deployment in a factory
+    /// @notice Cannot call initialize within a proxy constructor, only post-deployment in a factory
+    /// @inheritdoc IERC1155Rails
     function initialize(address owner_, string calldata name_, string calldata symbol_, bytes calldata initData)
         external
         initializer
@@ -55,25 +58,36 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
         METADATA
     ==============*/
 
+    /// @dev Function to return the name of a token implementation
+    /// @return _ The returned ERC1155 name string
     function name() public view override(ERC1155, TokenMetadataInternal) returns (string memory) {
         return TokenMetadataInternal.name();
     }
 
+    /// @dev Function to return the symbol of a token implementation
+    /// @return _ The returned ERC1155 symbol string
     function symbol() public view override(ERC1155, TokenMetadataInternal) returns (string memory) {
         return TokenMetadataInternal.symbol();
     }
 
+    /// @inheritdoc Rails
     function supportsInterface(bytes4 interfaceId) public view override(Rails, ERC1155) returns (bool) {
         return Rails.supportsInterface(interfaceId) || ERC1155.supportsInterface(interfaceId);
     }
 
-    // must override ERC1155 implementation
+    /// @notice Contracts inheriting ERC1155 are required to implement `uri()`
+    /// @dev Function to return the ERC1155 uri using extended tokenURI logic
+    /// from the `TokenURIExtension` contract
+    /// @param tokenId The token ID for which to query a URI
+    /// @return _ The returned tokenURI string
     function uri(uint256 tokenId) public view override returns (string memory) {
         // to avoid clashing selectors, use standardized `ext_` prefix
         return ITokenURIExtension(address(this)).ext_tokenURI(tokenId);
     }
 
-    // include contractURI as modern standard for NFTs
+    /// @dev Returns the contract URI for this ERC20 token, a modern standard for NFTs
+    /// @notice Uses extended contract URI logic from the `ContractURIExtension` contract 
+    /// @return _ The returned contractURI string
     function contractURI() public view override returns (string memory) {
         // to avoid clashing selectors, use standardized `ext_` prefix
         return IContractURIExtension(address(this)).ext_contractURI();
@@ -83,10 +97,12 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
         SETTERS
     =============*/
 
+    /// @inheritdoc IERC1155Rails
     function mintTo(address recipient, uint256 tokenId, uint256 value) external onlyPermission(Operations.MINT) {
         _mint(recipient, tokenId, value, "");
     }
 
+    /// @inheritdoc IERC1155Rails
     function burnFrom(address from, uint256 tokenId, uint256 value) external {
         if (!hasPermission(Operations.BURN, msg.sender)) {
             _checkCanTransfer(from);
@@ -98,6 +114,8 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
         GUARD
     ===========*/
 
+    /// @dev Hook called before token transfers. Calls into the given guard.
+    /// Provides one of three token operations and its accompanying data to the guard.
     function _beforeTokenTransfers(address from, address to, uint256[] memory ids, uint256[] memory values)
         internal
         view
@@ -117,6 +135,7 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
         return checkGuardBefore(operation, data);
     }
 
+    /// @dev Hook called after token transfers. Calls into the given guard.
     function _afterTokenTransfers(address guard, bytes memory checkBeforeData) internal view override {
         checkGuardAfter(guard, checkBeforeData, ""); // no execution data
     }
@@ -125,32 +144,40 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
         AUTHORIZATION
     ===================*/
 
+    /// @dev Restrict Permissions write access to the `Operations.PERMISSIONS` permission
     function _checkCanUpdatePermissions() internal view override {
         _checkPermission(Operations.PERMISSIONS, msg.sender);
     }
 
+    /// @dev Restrict Guards write access to the `Operations.GUARDS` permission
     function _checkCanUpdateGuards() internal view override {
         _checkPermission(Operations.GUARDS, msg.sender);
     }
 
+    /// @dev Restrict calls via Execute to the `Operations.EXECUTE` permission
     function _checkCanExecuteCall() internal view override {
         _checkPermission(Operations.CALL, msg.sender);
     }
 
+    /// @dev Restrict ERC-165 write access to the `Operations.INTERFACE` permission
     function _checkCanUpdateInterfaces() internal view override {
         _checkPermission(Operations.INTERFACE, msg.sender);
     }
 
+    /// @dev Restrict TokenMetadata write access to the `Operations.METADATA` permission
     function _checkCanUpdateTokenMetadata() internal view override {
         _checkPermission(Operations.METADATA, msg.sender);
     }
 
-    // changes to core functionality must be restricted to owners to protect admins overthrowing
+    /// @dev Only the `owner` possesses Extensions write access
     function _checkCanUpdateExtensions() internal view override {
+        // changes to core functionality must be restricted to owners to protect admins overthrowing
         _checkOwner();
     }
 
+    /// @dev Only the `owner` possesses UUPS upgrade rights
     function _authorizeUpgrade(address) internal view override {
+        // changes to core functionality must be restricted to owners to protect admins overthrowing
         _checkOwner();
     }
 }
