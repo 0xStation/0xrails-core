@@ -15,6 +15,7 @@ contract MetadataRouterExtension is
         EXTENSION
     ===============*/
 
+    /// @inheritdoc Extension
     function getAllSelectors() public pure override returns (bytes4[] memory selectors) {
         selectors = new bytes4[](2);
         selectors[0] = this.ext_tokenURI.selector;
@@ -22,6 +23,7 @@ contract MetadataRouterExtension is
         return selectors;
     }
 
+    /// @inheritdoc Extension
     function signatureOf(bytes4 selector) public pure override returns (string memory) {
         if (selector == this.ext_tokenURI.selector) {
             return "ext_tokenURI(uint256)";
@@ -32,6 +34,8 @@ contract MetadataRouterExtension is
         }
     }
 
+    /// @dev Returns the contract URI for this contract, a modern standard for NFTs
+    /// @notice The returned contractURI string is empty in this case.
     function contractURI() external pure returns (string memory uri) {
         return "";
     }
@@ -40,10 +44,12 @@ contract MetadataRouterExtension is
         FUNCTIONS
     ===============*/
 
+    /// @inheritdoc ITokenURIExtension
     function ext_tokenURI(uint256 tokenId) external view returns (string memory) {
         return IMetadataRouter(_getMetadataRouter()).tokenURI(address(this), tokenId);
     }
 
+    /// @inheritdoc IContractURIExtension
     function ext_contractURI() external view returns (string memory) {
         return IMetadataRouter(_getMetadataRouter()).contractURI(address(this));
     }

@@ -14,6 +14,7 @@ abstract contract ExtensionBeaconFollower is Extensions, IExtensionBeaconFollowe
         VIEWS
     ===========*/
 
+    /// @inheritdoc IExtensionBeacon
     function extensionOf(bytes4 selector) public view override returns (address implementation) {
         implementation = super.extensionOf(selector);
         if (implementation != address(0)) return implementation;
@@ -27,6 +28,8 @@ abstract contract ExtensionBeaconFollower is Extensions, IExtensionBeaconFollowe
         return implementation;
     }
 
+    /// @dev Function to get an array of all registered extension contracts.
+    /// @return extensions An array containing information about all registered extensions.
     function getAllExtensions() public view override returns (Extension[] memory extensions) {
         Extension[] memory beaconExtensions = IExtensions(extensionBeacon.implementation).getAllExtensions();
         Extension[] memory localExtensions = super.getAllExtensions();
@@ -71,14 +74,17 @@ abstract contract ExtensionBeaconFollower is Extensions, IExtensionBeaconFollowe
         SETTERS
     =============*/
 
+    /// @inheritdoc IExtensionBeacon
     function removeExtensionBeacon() public virtual canUpdateExtensions {
         TVBF.remove(extensionBeacon);
     }
 
+    /// @inheritdoc IExtensionBeacon
     function refreshExtensionBeacon(uint40 lastValidUpdatedAt) public virtual canUpdateExtensions {
         TVBF.refresh(extensionBeacon, lastValidUpdatedAt);
     }
 
+    /// @inheritdoc IExtensionBeacon
     function updateExtensionBeacon(address implementation, uint40 lastValidUpdatedAt)
         public
         virtual
