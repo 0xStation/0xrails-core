@@ -5,25 +5,25 @@ import {IValidators} from "./interface/IValidators.sol";
 import {ValidatorsStorage} from "./ValidatorsStorage.sol";
 
 abstract contract Validators is IValidators {
-    /// @dev View function to check whether given address has been added as validator
+    /// @inheritdoc IValidators
     function isValidator(address validator) public view virtual returns (bool) {
         ValidatorsStorage.Layout storage layout = ValidatorsStorage.layout();
         return layout._validatorData[validator].exists;
     }
 
-    /// @dev View function to retrieve all validators from storage
+    /// @inheritdoc IValidators
     function getAllValidators() public view returns (address[] memory validators) {
         ValidatorsStorage.Layout storage layout = ValidatorsStorage.layout();
         return layout._validators;
     }
 
-    /// @dev Function to add the address of a Validator module to storage
+    /// @inheritdoc IValidators
     function addValidator(address validator) external {
         _checkCanUpdateValidators();
         _addValidator(validator);
     }
 
-    /// @dev Function to remove the address of a Validator module from storage
+    /// @inheritdoc IValidators
     function removeValidator(address validator) external {
         _checkCanUpdateValidators();
         _removeValidator(validator);
