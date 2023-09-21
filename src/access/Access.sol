@@ -6,9 +6,13 @@ import {PermissionsStorage} from "./permissions/PermissionsStorage.sol";
 import {Operations} from "../lib/Operations.sol";
 
 abstract contract Access is Permissions {
-    // support multiple owner implementations, e.g. explicit storage vs NFT-owner (ERC-6551)
+    /// @dev Supports multiple owner implementations, e.g. explicit storage vs NFT-owner (ERC-6551)
     function owner() public view virtual returns (address);
 
+    /// @dev Function to check one of 3 permissions criterion is true: owner, admin, or explicit permission 
+    /// @param operation The explicit permission to check permission for
+    /// @param account The account address whose permission will be checked
+    /// @return _ Boolean value declaring whether or not the address possesses permission for the operation
     function hasPermission(bytes8 operation, address account) public view override returns (bool) {
         // 3 tiers: has operation permission, has admin permission, or is owner
         if (super.hasPermission(operation, account)) {
@@ -20,7 +24,15 @@ abstract contract Access is Permissions {
         return account == owner();
     }
 
+    /// @inheritdoc Permissions
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return super.supportsInterface(interfaceId);
     }
+
+    /*===============
+        OVERRIDES
+    ===============*/
+
+    /// @inheritdoc Permissions
+    function _checkCanUpdatePermissions() internal view virtual override;
 }

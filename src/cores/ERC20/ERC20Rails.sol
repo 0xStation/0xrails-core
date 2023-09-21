@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
-
 import {Rails} from "../../Rails.sol";
 import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
@@ -18,16 +17,23 @@ import {PermissionsStorage} from "../../access/permissions/PermissionsStorage.so
 import {IERC20Rails} from "./interface/IERC20Rails.sol";
 import {Initializable} from "../../lib/initializable/Initializable.sol";
 
-/// @notice apply Rails pattern to ERC20s
+/// @notice This contract implements the Rails pattern to provide enhanced functionality for ERC20 tokens.
 contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC20Rails {
+    /// @notice Declaring this contract `Initializable()` invokes `_disableInitializers()`,
+    /// in order to preemptively mitigate proxy privilege escalation attack vectors
     constructor() Initializable() {}
 
-    // owner stored explicitly
+    /// @dev Owner address is implemented using the `OwnableInternal` contract's function
     function owner() public view override(Access, OwnableInternal) returns (address) {
         return OwnableInternal.owner();
     }
 
-    /// @dev cannot call initialize within a proxy constructor, only post-deployment in a factory
+    /// @dev Initialize the ERC20Rails contract with the given owner, name, symbol, and initialization data.
+    /// @notice Cannot call initialize within a proxy constructor, only post-deployment in a factory.
+    /// @param owner_ The initial owner of the contract.
+    /// @param name_ The name of the ERC20 token.
+    /// @param symbol_ The symbol of the ERC20 token.
+    /// @param initData The initialization data.
     function initialize(address owner_, string calldata name_, string calldata symbol_, bytes calldata initData)
         external
         initializer
@@ -56,15 +62,21 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
         METADATA
     ==============*/
 
+    /// @dev Function to return the name of a token implementation
+    /// @return _ The returned ERC20 name string
     function name() public view override(IERC20, TokenMetadataInternal) returns (string memory) {
         return TokenMetadataInternal.name();
     }
 
+    /// @dev Function to return the symbol of a token implementation
+    /// @return _ The returned ERC20 symbol string
     function symbol() public view override(IERC20, TokenMetadataInternal) returns (string memory) {
         return TokenMetadataInternal.symbol();
     }
 
-    // include contractURI as modern standard for NFTs
+    /// @dev Returns the contract URI for this ERC20 token.
+    /// @notice Uses extended contract URI logic from the `ContractURIExtension` contract 
+    /// @return _ The returned contractURI string
     function contractURI() public view override returns (string memory) {
         // to avoid clashing selectors, use standardized `ext_` prefix
         return IContractURIExtension(address(this)).ext_contractURI();
@@ -74,12 +86,14 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
         SETTERS
     =============*/
 
+    /// @inheritdoc IERC20Rails
     function mintTo(address recipient, uint256 amount) external onlyPermission(Operations.MINT) returns (bool) {
         _mint(recipient, amount);
         return true;
     }
 
-    /// @dev rework allowance to also allow permissioned users burn unconditionally
+    /// @inheritdoc IERC20Rails
+    /// @dev Rework allowance to also allow permissioned users burn unconditionally
     function burnFrom(address from, uint256 amount) external returns (bool) {
         if (!hasPermission(Operations.BURN, msg.sender)) {
             _spendAllowance(from, msg.sender, amount);
@@ -92,6 +106,8 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
         GUARD
     ===========*/
 
+    /// @dev Hook called before token transfers. Calls into the given guard.
+    /// Provides one of three token operations and its accompanying data to the guard.
     function _beforeTokenTransfer(address from, address to, uint256 amount)
         internal
         view
@@ -111,6 +127,7 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
         return checkGuardBefore(operation, data);
     }
 
+    /// @dev Hook called after token transfers. Calls into the given guard.
     function _afterTokenTransfer(address guard, bytes memory checkBeforeData) internal view override {
         checkGuardAfter(guard, checkBeforeData, ""); // no execution data
     }
@@ -119,32 +136,40 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
         AUTHORIZATION
     ===================*/
 
+    /// @dev Restrict Permissions write access to the `Operations.PERMISSIONS` permission
     function _checkCanUpdatePermissions() internal view override {
         _checkPermission(Operations.PERMISSIONS, msg.sender);
     }
 
+    /// @dev Restrict Guards write access to the `Operations.GUARDS` permission
     function _checkCanUpdateGuards() internal view override {
         _checkPermission(Operations.GUARDS, msg.sender);
     }
 
+    /// @dev Restrict calls via Execute to the `Operations.EXECUTE` permission
     function _checkCanExecuteCall() internal view override {
         _checkPermission(Operations.CALL, msg.sender);
     }
 
+    /// @dev Restrict ERC-165 write access to the `Operations.INTERFACE` permission
     function _checkCanUpdateInterfaces() internal view override {
         _checkPermission(Operations.INTERFACE, msg.sender);
     }
 
+    /// @dev Restrict TokenMetadata write access to the `Operations.METADATA` permission
     function _checkCanUpdateTokenMetadata() internal view override {
         _checkPermission(Operations.METADATA, msg.sender);
     }
 
-    // changes to core functionality must be restricted to owners to protect admins overthrowing
+    /// @dev Only the `owner` possesses Extensions write access
     function _checkCanUpdateExtensions() internal view override {
+        // changes to core functionality must be restricted to owners to protect admins overthrowing
         _checkOwner();
     }
-
+    
+    /// @dev Only the `owner` possesses UUPS upgrade rights
     function _authorizeUpgrade(address) internal view override {
+        // changes to core functionality must be restricted to owners to protect admins overthrowing
         _checkOwner();
     }
 }

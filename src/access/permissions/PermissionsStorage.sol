@@ -23,6 +23,18 @@ library PermissionsStorage {
         }
     }
 
+    /* 
+    .  Here is a rundown demonstrating the packing mechanic for `_packKey(adminOp, address(type(uint160).max))`:
+    .  ```return (uint256(uint64(operation)) | uint256(uint160(account)) << 64);```     
+    .  Left-pack account by typecasting to uint256: 
+    .  ```addressToUint == 0x000000000000000000000000ffffffffffffffffffffffffffffffffffffffff```
+    .  Shift left 64 bits, ie 8 bytes, which in hex is 16 digits: 
+    .  ```leftShift64 == 0x00000000ffffffffffffffffffffffffffffffffffffffff0000000000000000```
+    .  Left-pack operation by typecasting to uint256: 
+    .  ```op == 0x000000000000000000000000000000000000000000000000df8b4c520ffe197c```
+    .  Or packed operation against packed + shifted account: 
+    .  ```_packedKey == 0x00000000ffffffffffffffffffffffffffffffffffffffffdf8b4c520ffe197c```
+    */
     function _packKey(bytes8 operation, address account) internal pure returns (uint256) {
         // `operation` cast to uint64 to keep it on the small Endian side, packed with account to its left; leftmost 4 bytes remain empty
         return (uint256(uint64(operation)) | uint256(uint160(account)) << 64);

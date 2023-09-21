@@ -14,6 +14,8 @@ abstract contract ExtensionBeaconFollower is Extensions, IExtensionBeaconFollowe
         VIEWS
     ===========*/
 
+    /// @dev Function to get the extension contract address extending a specific func selector.
+    /// @param selector The function selector to query for its extension.
     function extensionOf(bytes4 selector) public view override returns (address implementation) {
         implementation = super.extensionOf(selector);
         if (implementation != address(0)) return implementation;
@@ -27,6 +29,8 @@ abstract contract ExtensionBeaconFollower is Extensions, IExtensionBeaconFollowe
         return implementation;
     }
 
+    /// @dev Function to get an array of all registered extension contracts.
+    /// @return extensions An array containing information about all registered extensions.
     function getAllExtensions() public view override returns (Extension[] memory extensions) {
         Extension[] memory beaconExtensions = IExtensions(extensionBeacon.implementation).getAllExtensions();
         Extension[] memory localExtensions = super.getAllExtensions();
@@ -60,6 +64,9 @@ abstract contract ExtensionBeaconFollower is Extensions, IExtensionBeaconFollowe
         return extensions;
     }
 
+    /// @dev Function to implement ERC-165 compliance 
+    /// @param interfaceId The interface identifier to check.
+    /// @return _ Boolean indicating whether the contract supports the specified interface.
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IExtensions).interfaceId || interfaceId == type(IExtensionBeaconFollower).interfaceId;
     }
@@ -68,14 +75,17 @@ abstract contract ExtensionBeaconFollower is Extensions, IExtensionBeaconFollowe
         SETTERS
     =============*/
 
+    /// @inheritdoc IExtensionBeaconFollower
     function removeExtensionBeacon() public virtual canUpdateExtensions {
         TVBF.remove(extensionBeacon);
     }
 
+    /// @inheritdoc IExtensionBeaconFollower
     function refreshExtensionBeacon(uint40 lastValidUpdatedAt) public virtual canUpdateExtensions {
         TVBF.refresh(extensionBeacon, lastValidUpdatedAt);
     }
 
+    /// @inheritdoc IExtensionBeaconFollower
     function updateExtensionBeacon(address implementation, uint40 lastValidUpdatedAt)
         public
         virtual

@@ -17,17 +17,17 @@ abstract contract AccountFactory is Ownable, IAccountFactory {
         ACCOUNTFACTORY
     ====================*/
 
-    /// @dev Function to set the implementation address whose logic will be used by deployed account proxies
+    /// @inheritdoc IAccountFactory
     function setAccountImpl(address newAccountImpl) external onlyOwner {
         _updateAccountImpl(newAccountImpl);
     }
 
-    /// @dev Function to get the implementation address whose logic is used by deployed account  proxies
+    /// @inheritdoc IAccountFactory
     function getAccountImpl() public view returns (address) {
         return AccountFactoryStorage.layout().accountImpl;
     }
 
-    /// @dev Function to simulate a `CREATE2` deployment using a given salt and desired AccountType
+    /// @inheritdoc IAccountFactory
     function simulateCreate2(bytes32 salt, bytes32 creationCodeHash) public view returns (address) {
         return _simulateCreate2(salt, creationCodeHash);
     }

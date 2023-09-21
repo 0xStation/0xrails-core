@@ -21,10 +21,26 @@ interface IExtensionsInternal {
 /// @notice Since the Solidity compiler ignores inherited functions, function declarations are made
 /// at the top level so their selectors are properly XORed into a nonzero `interfaceId`
 interface IExtensions is IExtensionsInternal {
-    // IExtensionsInternal views
+    /// @dev Function to check whether the given selector is mapped to an extension contract
+    /// @param selector The function selector to query
+    /// @return '' Boolean value identifying if the given selector is extended or not
+    function hasExtended(bytes4 selector) external view returns (bool);
+
+    /// @dev Function to get the extension contract address extending a specific func selector.
+    /// @param selector The function selector to query for its extension.
+    /// @return implementation The address of the extension contract for the function.
     function extensionOf(bytes4 selector) external view returns (address implementation);
+    
+    /// @dev Function to get an array of all registered extension contracts.
+    /// @return extensions An array containing information about all registered extensions.
     function getAllExtensions() external view returns (Extension[] memory extensions);
-    // external setters
+    
+    /// @dev Function to set a extension contract for a specific function selector.
+    /// @param selector The function selector for which to set an extension contract.
+    /// @param implementation The address of the extension contract to map to a function.
     function setExtension(bytes4 selector, address implementation) external;
+    
+    /// @dev Function to remove the extension contract for a function.
+    /// @param selector The function selector for which to remove its extension.
     function removeExtension(bytes4 selector) external;
 }

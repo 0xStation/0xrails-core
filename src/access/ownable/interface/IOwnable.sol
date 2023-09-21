@@ -11,15 +11,23 @@ interface IOwnableInternal {
     error OwnerUnauthorizedAccount(address account);
     error OwnerInvalidOwner(address owner);
 
-    // views
+    /// @dev Function to return the address of the current owner
     function owner() external view returns (address);
+    /// @dev Function to return the address of the pending owner, in queued state
     function pendingOwner() external view returns (address);
 }
 
 interface IOwnableExternal {
-    // setters
+    /// @dev Function to renounce all potential for ownership of the contract 
+    /// by assigning it to the zero address, which has no known private key.
     function renounceOwnership() external;
+    
+    /// @dev Function to commence ownership transfer by setting `newOwner` as pending
+    /// @param newOwner The intended new owner to be set as pending, awaiting acceptance
     function transferOwnership(address newOwner) external;
+    
+    /// @dev Function to accept an offer of ownership, intended to be called
+    /// only by the address that is currently set as `pendingOwner`
     function acceptOwnership() external;
 }
 

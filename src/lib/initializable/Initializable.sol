@@ -11,6 +11,7 @@ abstract contract Initializable is IInitializableInternal {
 
     /// @dev Logic implementation contract disables `initialize()` from being called
     /// to prevent privilege escalation and 'exploding kitten' attacks
+    /// @notice This applies to all child contracts inheriting from this one and use its constructor
     constructor() {
         _disableInitializers();
     }
@@ -58,6 +59,7 @@ abstract contract Initializable is IInitializableInternal {
         VIEWS
     ===========*/
 
+    /// @inheritdoc IInitializableInternal
     function initialized() public view returns (bool) {
         InitializableStorage.Layout storage layout = InitializableStorage.layout();
         return layout._initialized;

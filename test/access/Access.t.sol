@@ -65,5 +65,5 @@ contract AccessTest is Test, Access {
 
     // returns address(0x0)
     function owner() public view override returns (address) {}
-    function _checkCanUpdatePermissions() internal override {}
+    function _checkCanUpdatePermissions() internal view override {}
 }

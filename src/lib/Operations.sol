@@ -21,6 +21,8 @@ library Operations {
     bytes8 constant TRANSFER_PERMIT = 0xa994951607abf93b; // hashOperation("TRANSFER_PERMIT");
     bytes8 constant CALL_PERMIT = 0xc8d1733b0840734c; // hashOperation("CALL_PERMIT");
 
+    /// @dev Function to provide the signature string corresponding to an 8-byte operation
+    /// @param name The signature string for an 8-byte operation. Empty for unrecognized operations.
     function nameOperation(bytes8 operation) public pure returns (string memory name) {
         if (operation == ADMIN) {
             return "ADMIN";

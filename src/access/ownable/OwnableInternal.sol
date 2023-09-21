@@ -9,10 +9,12 @@ abstract contract OwnableInternal is IOwnableInternal {
         VIEWS
     ===========*/
 
+    /// @inheritdoc IOwnableInternal
     function owner() public view virtual returns (address) {
         return OwnableStorage.layout().owner;
     }
 
+    /// @inheritdoc IOwnableInternal
     function pendingOwner() public view virtual returns (address) {
         return OwnableStorage.layout().pendingOwner;
     }

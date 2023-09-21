@@ -11,16 +11,19 @@ abstract contract ExtensionsInternal is IExtensions {
         VIEWS
     ===========*/
 
-    function hasExtended(bytes4 selector) public view virtual returns (bool) {
+    /// @inheritdoc IExtensions
+    function hasExtended(bytes4 selector) public view virtual override returns (bool) {
         ExtensionsStorage.Layout storage layout = ExtensionsStorage.layout();
         return layout._extensions[selector].implementation != address(0);
     }
 
+    /// @inheritdoc IExtensions
     function extensionOf(bytes4 selector) public view virtual returns (address implementation) {
         ExtensionsStorage.Layout storage layout = ExtensionsStorage.layout();
         return layout._extensions[selector].implementation;
     }
 
+    /// @inheritdoc IExtensions
     function getAllExtensions() public view virtual returns (Extension[] memory extensions) {
         ExtensionsStorage.Layout storage layout = ExtensionsStorage.layout();
         uint256 len = layout._selectors.length;

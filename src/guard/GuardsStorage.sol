@@ -30,10 +30,14 @@ library GuardsStorage {
         }
     }
 
+    /// @dev Function to check for guards that have been set to the max address,
+    /// signaling automatic rejection of an operation
     function autoReject(address guard) internal pure returns (bool) {
         return guard == MAX_ADDRESS;
     }
 
+    /// @dev Function to check for guards that have been set to the zero address,
+    /// signaling automatic approval of an operation
     function autoApprove(address guard) internal pure returns (bool) {
         return guard == address(0);
     }

@@ -14,7 +14,13 @@ import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 contract CallPermitValidator is Validator {
     constructor(address _entryPointAddress) Validator(_entryPointAddress) {}
 
-    /// @dev This example contract would be forwarded regular ECDSA signatures
+    /// @dev Function to enable user operations and comply with `IAccount` interface defined in the EIP-4337 spec
+    /// @dev This contract expects signatures in this function's call context to contain a `signer` address
+    /// prepended to the ECDSA `nestedSignature`, ie: `abi.encodePacked(address signer, bytes memory nestedSig)`
+    /// @param userOp The ERC-4337 user operation, including a `signature` to be recovered and verified
+    /// @param userOpHash The hash of the user operation that was signed
+    /// @notice The top level call context to an `Account` implementation must prepend
+    /// an additional 32-byte word packed with the `VALIDATOR_FLAG` and this address
     function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 /*missingAccountFunds*/ )
         external
         virtual
@@ -44,10 +50,13 @@ contract CallPermitValidator is Validator {
         }
     }
 
+    /// @dev Function to enable smart contract signature verification and comply with the EIP-1271 spec
     /// @dev This example contract expects signatures in this function's call context
     /// to contain a `signer` address prepended to the ECDSA `nestedSignature`
-    /// @notice The top level call context to an `Account` implementation would need
-    /// to prepend an additional 32-byte word packed with the `VALIDATOR_FLAG` and this address
+    /// @param msgHash The hash of the message signed
+    /// @param signature The signature to be recovered and verified
+    /// @notice The top level call context to an `Account` implementation must prepend
+    /// an additional 32-byte word packed with the `VALIDATOR_FLAG` and this address
     function isValidSignature(bytes32 msgHash, bytes memory signature)
         external
         view
