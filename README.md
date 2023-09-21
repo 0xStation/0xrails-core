@@ -2,10 +2,15 @@
 
 _A Solidity framework for creating complex and evolving onchain structures._
 
-Rails is an acronym for the architecture pattern's four layers: **Module**, **Access**, **Guard**, and **Extension**.
+Rails is a modular smart contract system leveraging cutting edge blockchain technology like **ERC4337 account abstraction** and **ERC6551 token bound accounts** in combination with more familiar patterns like **EIP712 signature validation** as well as **Modules**, **Access**, **Guards**, and **Extensions** to provide a comprehensive suite of onchain mechanisms for any organization.
+
+[Get started with our documentation](https://docs.groupos.xyz/contract-architecture/framework/modules)
 
 Rails's intuition began cultivating in mid-2021 in response to designing for modular token design and vault management problems.
 Currently, Rails is being developed and applied in production for [GroupOS](https://groupos.xyz/), a protocol and product for creating autonomous networks.
+
+## Smart Contract Architecture
+For more information about the GroupOS protocol as well as our technical docs, [check out the GroupOS smart contract documentation!](https://docs.groupos.xyz/contract-architecture/overview/framework)
 
 <img width="566" alt="image" src="https://github.com/0xStation/mage/assets/38736612/f20a4d8b-4b42-4607-ba03-fd635ff1ea94">
 
