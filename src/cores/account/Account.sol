@@ -181,10 +181,10 @@ abstract contract Account is Rails, BaseAccount, IERC1271, Validators {
     /// @dev Declare explicit ERC165 support for ERC1271 interface in addition to existing interfaces
     /// @param interfaceId The interfaceId to check for support
     /// @return _ Boolean indicating whether the contract supports the specified interface.
-    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(Rails, Validators) returns (bool) {
         return (
             interfaceId == type(IERC1271).interfaceId || interfaceId == type(IAccount).interfaceId
-                || super.supportsInterface(interfaceId)
+                || Rails.supportsInterface(interfaceId) || Validators.supportsInterface(interfaceId)
         );
     }
 
