@@ -62,6 +62,11 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
         METADATA
     ==============*/
 
+    /// @inheritdoc Rails
+    function supportsInterface(bytes4 interfaceId) public view override(Rails, ERC20) returns (bool) {
+        return Rails.supportsInterface(interfaceId) || ERC20.supportsInterface(interfaceId);
+    }
+
     /// @dev Function to return the name of a token implementation
     /// @return _ The returned ERC20 name string
     function name() public view override(IERC20, TokenMetadataInternal) returns (string memory) {
