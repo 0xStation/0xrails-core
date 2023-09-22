@@ -55,6 +55,15 @@ abstract contract ERC20 is IERC20 {
         return true;
     }
 
+    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
+        // The interface IDs are constants representing the first 4 bytes
+        // of the XOR of all function selectors in the interface.
+        // See: [ERC165](https://eips.ethereum.org/EIPS/eip-165)
+        // (e.g. `bytes4(i.functionA.selector ^ i.functionB.selector ^ ...)`)
+        return interfaceId == 0x01ffc9a7 // ERC165 interface ID for ERC165.
+            || interfaceId == type(IERC20).interfaceId; // ERC165 interface ID for ERC20.
+    }
+
     function _transfer(address from, address to, uint256 value) internal {
         if (from == address(0)) {
             revert ERC20InvalidSender(address(0));
