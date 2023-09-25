@@ -22,6 +22,16 @@ abstract contract Execute {
         return executeData;
     }
 
+    /// @notice Temporary backwards compatibility with offchain API
+    function execute(address to, uint256 value, bytes calldata data) public returns (bytes memory executeData) {
+        _checkCanExecuteCall();
+        (address guard, bytes memory checkBeforeData) = _beforeExecuteCall(to, value, data);
+        executeData = Address.functionCallWithValue(to, data, value); // library checks for contract existence
+        _afterExecuteCall(guard, checkBeforeData, executeData);
+        emit Executed(msg.sender, to, value, data);
+        return executeData;
+    }
+
     /// @dev Function to implement ERC-165 compliance 
     /// @param interfaceId The interface identifier to check.
     /// @return _ Boolean indicating whether the contract supports the specified interface.
