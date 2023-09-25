@@ -56,7 +56,7 @@ contract BotAccountScript is ScriptUtils {
             saltString, string.concat("CallPermitValidator @", Strings.toHexString(address(callPermitValidator)))
         );
         writeUsedSalt(saltString, string.concat("BotAccountImpl @", Strings.toHexString(address(botAccountImpl))));
-        writeUsedSalt(saltString, string.concat("BotAccountProxy @", Strings.toHexString(address(botAccountImpl))));
+        writeUsedSalt(saltString, string.concat("BotAccountProxy @", Strings.toHexString(address(botAccountProxy))));
 
         vm.stopBroadcast();
     }
