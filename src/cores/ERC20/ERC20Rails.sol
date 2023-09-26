@@ -14,6 +14,7 @@ import {
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
 import {Operations} from "../../lib/Operations.sol";
 import {PermissionsStorage} from "../../access/permissions/PermissionsStorage.sol";
+import {PermissionsInternal} from "../../access/permissions/PermissionsInternal.sol";
 import {IERC20Rails} from "./interface/IERC20Rails.sol";
 import {Initializable} from "../../lib/initializable/Initializable.sol";
 
@@ -107,6 +108,13 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
         return true;
     }
 
+    /// @inheritdoc IERC20Rails
+    function transferFrom(address from, address to, uint256 value) public virtual override(ERC20, IERC20Rails) returns (bool) {
+        _checkCanTransfer(from, msg.sender, value);
+        _transfer(from, to, value);
+        return true;
+    }
+
     /*===========
         GUARD
     ===========*/
@@ -140,6 +148,15 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
     /*===================
         AUTHORIZATION
     ===================*/
+
+    /// @dev Check for `Operations.TRANSFER` permission before ownership and approval
+    /// @notice Slightly different implementation than 721 and 1155 Rails contracts since this function doesn't
+    /// already exist as a default virtual one. Wraps `_spendAllowance()` and replaces it in `transferFrom()`
+    function _checkCanTransfer(address _owner, address _spender, uint256 _value) internal virtual {
+        if (!PermissionsInternal.hasPermission(Operations.TRANSFER, _spender)) {
+            _spendAllowance(_owner, _spender, _value);
+        }
+    }
 
     /// @dev Restrict Permissions write access to the `Operations.PERMISSIONS` permission
     function _checkCanUpdatePermissions() internal view override {

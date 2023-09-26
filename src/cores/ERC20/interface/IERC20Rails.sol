@@ -15,6 +15,13 @@ interface IERC20Rails {
     /// @return _ Boolean indicating whether the burning was successful.
     function burnFrom(address from, uint256 amount) external returns (bool);
 
+    /// @dev Transfer ERC20Rails tokens from one address to another.
+    /// @param from The address from which the tokens will be sent.
+    /// @param to The addres to which the tokens will be delivered.
+    /// @param value The amount of tokens to transfer.
+    /// @return _ Boolean indicating whether the transfer was successful.
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
+
     /// @dev Initialize the ERC20Rails contract with the given owner, name, symbol, and initialization data.
     /// @param owner The initial owner of the contract.
     /// @param name The name of the ERC20 token.
