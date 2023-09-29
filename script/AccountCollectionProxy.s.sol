@@ -16,9 +16,11 @@ contract AccountCollectionProxyScript is ScriptUtils {
 
         /// @dev The following contracts will be deployed and initialized by this script
         AccountCollectionProxy accountCollectionProxy;
-        address accountCollectionImpl = 0x59f11667608Fe802eE3Ed9F0806B72113bCb2249;
+        // address accountCollectionImpl = 0x59f11667608Fe802eE3Ed9F0806B72113bCb2249; // goerli
+        address accountCollectionImpl = 0x6ffA79181094C3BAa049Ed50d58f19705a1B69DC; // polygon
         // address accountInitializerImpl = 0xa75C030274a59c3C10761587737823044EE79eb4; // rails
-        address accountInitializerImpl = 0xF0315735879845512946Cf0ef7E4fe84294C7112; // simple
+        // address accountInitializerImpl = 0xF0315735879845512946Cf0ef7E4fe84294C7112; // simple goerli
+        address accountInitializerImpl = 0xEe3565F8D053F9578DD60351349B791D756DcAAd; // simple polygon
 
         /*===============
             BROADCAST 

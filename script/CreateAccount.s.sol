@@ -17,13 +17,16 @@ contract CreateAccountScript is ScriptUtils {
         /// @dev The following contracts will be deployed and initialized by this script
         address erc6551Registry = 0x02101dfB77FDE026414827Fdc604ddAF224F0921;
         // address accountCollectionProxy = 0xcB5F5408f5b82e51a0A5A5E58CF65575349a19d8;
-        address accountCollectionProxy = 0xbB597f8993E777222e74fcCdc2F28d7D96c89784; // self, no assembly
+        address accountCollectionProxy = 0x1142e4d0a3dB7b472ecF105880DA0359e0426766; // self, no assembly
         // address accountProxy = 0x2641e5d41F02B597e4E5C027252FF9C6D38AF023; // normal AccountProxy
         // address accountImpl = 0x1a0E97Dae78590b7E967E725a5c848eD034f5510; // FP v1/v2
-        address accountImpl = 0x6EB5334721197f0E48fef598C23b567bf87C2bc2; // MemberAccount
-        uint256 tokenChainId = 5;
-        address tokenContractAddress = 0x60faE809799DE4555213990eAac6b67EC020b0ff;
-        uint256 tokenId = 1;
+        // address accountImpl = 0x6EB5334721197f0E48fef598C23b567bf87C2bc2; // MemberAccount
+        // address accountImpl = 0x95e66fCE25C1c34635795C1059db9d29e9600d47; // MemberAccount with execute fix
+        address accountImpl = 0xF672847Ec1666AFcBFAcA038f314C20A2B33D53D; // MemberAccount polygon
+        uint256 tokenChainId = 137;
+        address tokenContractAddress = 0x92E4277401A0eA0F4C78e059496c386013B1E662;
+        uint256 tokenId = 3;
+        uint256 counter = 0;
 
         /*===============
             BROADCAST 
@@ -37,7 +40,7 @@ contract CreateAccountScript is ScriptUtils {
         bytes memory initData =
             abi.encodeWithSelector(IAccountInitializer.initializeAccount.selector, accountImpl, accountInitData);
         IERC6551Registry(erc6551Registry).createAccount(
-            accountCollectionProxy, tokenChainId, tokenContractAddress, tokenId, 1, initData
+            accountCollectionProxy, tokenChainId, tokenContractAddress, tokenId, counter, initData
         );
 
         // ScriptUtils.writeUsedSalt(
