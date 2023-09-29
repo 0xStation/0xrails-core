@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {IERC20} from "./interface/IERC20.sol";
+import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol"
+import {IERC20 as IERC20Custom} from "./interface/IERC20.sol";
 import {ERC20Storage} from "./ERC20Storage.sol";
 
 /// @dev Rewrite of OpenZeppelin's ERC20, but with ERC7201 namespaced storage layout and guard hooks
@@ -61,7 +62,8 @@ abstract contract ERC20 is IERC20 {
         // See: [ERC165](https://eips.ethereum.org/EIPS/eip-165)
         // (e.g. `bytes4(i.functionA.selector ^ i.functionB.selector ^ ...)`)
         return interfaceId == 0x01ffc9a7 // ERC165 interface ID for ERC165.
-            || interfaceId == type(IERC20).interfaceId; // ERC165 interface ID for ERC20.
+            || interfaceId == type(IERC20).interfaceId // ERC165 interface ID for standard ERC20.
+            || interfaceId == type(IERC20Custom).interfaceId; // ERC165 interface ID for non-standard ERC20.
     }
 
     function _transfer(address from, address to, uint256 value) internal {
