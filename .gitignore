@@ -3,10 +3,10 @@ cache/
 out/
 
 # Ignores development broadcast logs
-!/broadcast
-/broadcast/*
-/broadcast/*/31337/
-/broadcast/**/dry-run/
+# !/broadcast
+# /broadcast/*
+# /broadcast/*/31337/
+# /broadcast/**/dry-run/
 
 # Ignore all script inputs such as CREATE2 salts
 script/input
