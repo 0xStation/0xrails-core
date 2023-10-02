@@ -14,7 +14,6 @@ import {
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
 import {Operations} from "../../lib/Operations.sol";
 import {PermissionsStorage} from "../../access/permissions/PermissionsStorage.sol";
-import {PermissionsInternal} from "../../access/permissions/PermissionsInternal.sol";
 import {IERC1155Rails} from "./interface/IERC1155Rails.sol";
 import {Initializable} from "../../lib/initializable/Initializable.sol";
 
@@ -147,7 +146,7 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
 
     /// @dev Check for `Operations.TRANSFER` permission before ownership and approval
     function _checkCanTransfer(address from) internal virtual override {
-        if (!PermissionsInternal.hasPermission(Operations.TRANSFER, msg.sender)) {
+        if (!hasPermission(Operations.TRANSFER, msg.sender)) {
             super._checkCanTransfer(from);
         }
     }

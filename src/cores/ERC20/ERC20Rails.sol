@@ -14,7 +14,6 @@ import {
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
 import {Operations} from "../../lib/Operations.sol";
 import {PermissionsStorage} from "../../access/permissions/PermissionsStorage.sol";
-import {PermissionsInternal} from "../../access/permissions/PermissionsInternal.sol";
 import {IERC20Rails} from "./interface/IERC20Rails.sol";
 import {Initializable} from "../../lib/initializable/Initializable.sol";
 
@@ -153,7 +152,7 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
     /// @notice Slightly different implementation than 721 and 1155 Rails contracts since this function doesn't
     /// already exist as a default virtual one. Wraps `_spendAllowance()` and replaces it in `transferFrom()`
     function _checkCanTransfer(address _owner, address _spender, uint256 _value) internal virtual {
-        if (!PermissionsInternal.hasPermission(Operations.TRANSFER, _spender)) {
+        if (!hasPermission(Operations.TRANSFER, _spender)) {
             _spendAllowance(_owner, _spender, _value);
         }
     }
