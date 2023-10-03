@@ -144,6 +144,13 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
         AUTHORIZATION
     ===================*/
 
+    /// @dev Check for `Operations.TRANSFER` permission before ownership and approval
+    function _checkCanTransfer(address from) internal virtual override {
+        if (!hasPermission(Operations.TRANSFER, msg.sender)) {
+            super._checkCanTransfer(from);
+        }
+    }
+
     /// @dev Restrict Permissions write access to the `Operations.PERMISSIONS` permission
     function _checkCanUpdatePermissions() internal view override {
         _checkPermission(Operations.PERMISSIONS, msg.sender);

@@ -154,6 +154,13 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
         AUTHORIZATION
     ===================*/
 
+    /// @dev Check for `Operations.TRANSFER` permission before ownership and approval
+    function _checkCanTransfer(address account, uint256 tokenId) internal virtual override {
+        if (!hasPermission(Operations.TRANSFER, msg.sender)) {
+            super._checkCanTransfer(account, tokenId);
+        }
+    }
+
     /// @dev Restrict Permissions write access to the `Operations.PERMISSIONS` permission
     function _checkCanUpdatePermissions() internal view override {
         _checkPermission(Operations.PERMISSIONS, msg.sender);

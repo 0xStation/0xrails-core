@@ -462,11 +462,11 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
     }
 
     function test_transferFromRevertTransferCallerNotOwnerNorApproved(
-        address from,
-        address to,
         address badOperator,
         uint8 mintQuantity
     ) public {
+        address from = createAccount();
+        address to = createAccount();
         // prevent transfers, approvals to/from address(0x0)
         vm.assume(from != address(0x0) && to != address(0x0));
         vm.assume(from != badOperator && from != to);
