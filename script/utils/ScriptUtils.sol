@@ -14,7 +14,7 @@ abstract contract ScriptUtils is Script {
     address public constant entryPointAddress = 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789;
 
     // Station multisig (SafeProxy.sol)
-    address public constant stationFounderSafe = 0x0f95a7b50eaeEFc08eb10Be44Dd48409b46372b2;
+    address public constant stationFounderSafe = 0x5d347E9b0e348a10327F4368a90286b3d1E7FB15;
     // valid as of 09/14/23
     address public constant turnkey = 0xBb942519A1339992630b13c3252F04fCB09D4841;
 
