@@ -3,7 +3,8 @@
     "ERC4337": {
       "TurnkeyValidator": "0xCC4Ca1B0a8e379F7dB5c0Ce01cdBA26B3Ea71A14",
       "BotAccount": "0x761128EF277d439Cb05E6D605822b8F4ba9C9e87"
-    }
+    },
+    "ERC721AccountRails": "0x0Be252e48e4bEEeAF739736ed93225491FF814e8"
   },
   "59144": {
     "CallPermitValidator": "0x234fe47240fbd6f0aa4573c16a0571969a735b13",
@@ -12,5 +13,8 @@
     "ERC721Rails": "0x3f4f3680c80dba28ae43fbe160420d4ad8ca50e4",
     "ERC20Rails": "0xe0dd2f320290d04dce5432e6ec2312d66d6f84c1",
     "ERC1155Rails": "0x7a391860cf812e8151d9c578ca4cf36a015ddb79"
+  },
+  "137": {
+    "ERC721AccountRails": "0x0Be252e48e4bEEeAF739736ed93225491FF814e8"
   }
 }
