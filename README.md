@@ -16,17 +16,7 @@ For more information about the GroupOS protocol as well as our technical docs, [
 
 ## Deployments
 
-| EVM Network | ERC721Rails Address                                                                                                           |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Goerli      | [0x1fc83981028ca43ed0a95d166b7d201abe6e8195](https://goerli.etherscan.io/address/0x1fc83981028ca43ed0a95d166b7d201abe6e8195) |
-| Polygon | [0x1fc83981028ca43ed0a95d166b7d201abe6e8195](https://polygonscan.com/address/0x1fc83981028ca43ed0a95d166b7d201abe6e8195) |
-| Linea | [0xa03a52b4c8d0c8c64c540183447494c25f590e20](https://lineascan.build/address/0xa03a52b4c8d0c8c64c540183447494c25f590e20)
-
-To deploy and verify [ERC721Rails](./src/cores/ERC721/ERC721Rails.sol), run:
-
-```
-forge create --private-key $PRIVATE_KEY --verify --chain-id 5 --rpc-url $GOERLI_RPC_URL --api-key $ETHERSCAN_API_KEY src/cores/ERC721/ERC721Rails.sol:ERC721Rails
-```
+### View contract addresses of live deployments using 0xRails [at the GroupOS repository](https://github.com/0xStation/groupos#onchain-deployments)
 
 ## Contributing
 
