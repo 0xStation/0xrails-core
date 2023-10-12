@@ -12,7 +12,7 @@ Currently, Rails is being developed and applied in production for [GroupOS](http
 ## Smart Contract Architecture
 For more information about the GroupOS protocol as well as our technical docs, [check out the GroupOS smart contract documentation!](https://docs.groupos.xyz/contract-architecture/overview/framework)
 
-<img width="566" alt="image" src="https://github.com/0xStation/mage/assets/38736612/f20a4d8b-4b42-4607-ba03-fd635ff1ea94">
+<img width="566" alt="image" src="https://github.com/0xStation/0xrails/assets/80549215/7db86237-7c3d-4577-9c11-1a8e3ce986ff">
 
 ## Deployments
 
