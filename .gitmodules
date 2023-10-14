@@ -2,10 +2,6 @@
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
 	branch = v4.9.3
-[submodule "lib/ERC721A"]
-	path = lib/ERC721A
-	url = https://github.com/chiru-labs/ERC721A
-	branch = v4.2.3
 [submodule "lib/protocol-ops"]
 	path = lib/protocol-ops
 	url = git@github.com:0xStation/Protocol-Ops.git
