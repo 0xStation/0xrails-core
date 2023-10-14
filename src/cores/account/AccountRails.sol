@@ -21,7 +21,7 @@ import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 /// @dev This abstract contract provides scaffolding for Station's Account signature validation
 /// ERC1271 and ERC4337 compliance in combination with Rails's Permissions system
 /// to provide convenient and modular private key management on an infrastructural level
-abstract contract Account is Rails, BaseAccount, IERC1271, Validators {
+abstract contract AccountRails is Rails, BaseAccount, IERC1271, Validators {
     /*=============
         ACCOUNT
     ==============*/

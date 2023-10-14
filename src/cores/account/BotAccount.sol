@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.13;
 
-import {Account} from "src/cores/account/Account.sol";
+import {AccountRails} from "src/cores/account/AccountRails.sol";
 import {BaseAccount} from "src/cores/account/BaseAccount.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
@@ -20,7 +20,7 @@ import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 /// @dev This contract provides a single hub for managing and verifying signatures
 /// created either using the GroupOS modular validation schema or default signatures.
 /// ERC1271 and ERC4337 are supported, in combination with the 0xRails permissions system
-contract BotAccount is Account, Ownable, Initializable {
+contract BotAccount is AccountRails, Ownable, Initializable {
     /*==================
         BOT ACCOUNT
     ==================*/
