@@ -5,7 +5,7 @@ import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.so
 
 import {IERC6551AccountInitializer} from "./interface/IERC6551AccountInitializer.sol";
 import {IERC6551AccountGroup} from "./interface/IERC6551AccountGroup.sol";
-import {ERC6551AccountLib} from "src/lib/ERC6551/ERC6551AccountLib.sol";
+import {ERC6551AccountLib} from "erc6551/lib/ERC6551AccountLib.sol";
 
 contract AccountProxy is ERC1967Proxy, IERC6551AccountInitializer {
     constructor() ERC1967Proxy(address(0), "") {}
