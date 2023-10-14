@@ -16,7 +16,7 @@ import {OwnableInternal} from "src/access/ownable/OwnableInternal.sol";
 import {Access} from "src/access/Access.sol";
 import {Extensions} from "src/extension/Extensions.sol";
 import {Operations} from "src/lib/Operations.sol";
-import {ERC6551AccountLib} from "src/lib/ERC6551/ERC6551AccountLib.sol";
+import {ERC6551AccountLib} from "erc6551/lib/ERC6551AccountLib.sol";
 import {IERC721} from "../ERC721/interface/IERC721.sol";
 import {IERC721AccountRails} from "./interface/IERC721AccountRails.sol";
 import {ERC6551Account, IERC6551Account} from "src/lib/ERC6551/ERC6551Account.sol";
