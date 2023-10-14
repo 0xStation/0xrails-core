@@ -5,7 +5,7 @@ import "src/lib/ERC4337/interface/IAccount.sol";
 import "src/lib/ERC4337/interface/IEntryPoint.sol";
 
 /// @dev This contract provides the basic logic for implementing the IAccount interface - validateUserOp
-abstract contract BaseAccount is IAccount {
+abstract contract Account is IAccount {
     /// @dev This chain's EntryPoint contract address
     address public immutable entryPoint;
 

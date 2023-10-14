@@ -3,7 +3,7 @@
 pragma solidity ^0.8.13;
 
 import {Rails} from "src/Rails.sol";
-import {BaseAccount} from "src/cores/account/BaseAccount.sol";
+import {Account} from "src/cores/account/Account.sol";
 import {IAccount} from "src/lib/ERC4337/interface/IAccount.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
@@ -21,7 +21,7 @@ import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 /// @dev This abstract contract provides scaffolding for Station's Account signature validation
 /// ERC1271 and ERC4337 compliance in combination with Rails's Permissions system
 /// to provide convenient and modular private key management on an infrastructural level
-abstract contract AccountRails is Rails, BaseAccount, IERC1271, Validators {
+abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
     /*=============
         ACCOUNT
     ==============*/
@@ -181,7 +181,7 @@ abstract contract AccountRails is Rails, BaseAccount, IERC1271, Validators {
     /// @dev Declare explicit ERC165 support for ERC1271 interface in addition to existing interfaces
     /// @param interfaceId The interfaceId to check for support
     /// @return _ Boolean indicating whether the contract supports the specified interface.
-    function supportsInterface(bytes4 interfaceId) public view override(Rails, Validators) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(Rails, Validators) returns (bool) {
         return (
             interfaceId == type(IERC1271).interfaceId || interfaceId == type(IAccount).interfaceId
                 || Rails.supportsInterface(interfaceId) || Validators.supportsInterface(interfaceId)

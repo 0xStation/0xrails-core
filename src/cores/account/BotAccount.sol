@@ -3,7 +3,7 @@
 pragma solidity ^0.8.13;
 
 import {AccountRails} from "src/cores/account/AccountRails.sol";
-import {BaseAccount} from "src/cores/account/BaseAccount.sol";
+import {Account} from "src/cores/account/Account.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {ValidatorsStorage} from "src/validator/ValidatorsStorage.sol";
@@ -26,7 +26,7 @@ contract BotAccount is AccountRails, Ownable, Initializable {
     ==================*/
 
     /// @param _entryPointAddress The contract address for this chain's ERC-4337 EntryPoint contract
-    constructor(address _entryPointAddress) BaseAccount(_entryPointAddress) Initializable() {}
+    constructor(address _entryPointAddress) Account(_entryPointAddress) Initializable() {}
 
     /// @param _owner The owner address of this contract which retains call permissions management rights
     /// @param _callPermitValidator The initial CallPermitValidator address to handle modular sig verification
