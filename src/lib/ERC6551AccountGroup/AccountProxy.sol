@@ -7,6 +7,8 @@ import {IERC6551AccountInitializer} from "./interface/IERC6551AccountInitializer
 import {IERC6551AccountGroup} from "./interface/IERC6551AccountGroup.sol";
 import {ERC6551AccountLib} from "erc6551/lib/ERC6551AccountLib.sol";
 
+/// @notice Global Account Proxy to establish if an ERC6551 Account is using the Account Group pattern.
+/// This contract is meant to be a permissionless singleton.
 contract AccountProxy is ERC1967Proxy, IERC6551AccountInitializer {
     constructor() ERC1967Proxy(address(0), "") {}
 

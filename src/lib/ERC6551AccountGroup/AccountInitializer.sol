@@ -2,10 +2,10 @@
 pragma solidity ^0.8.13;
 
 import {ERC1967Upgrade} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Upgrade.sol";
-
 import {IERC6551AccountInitializer} from "./interface/IERC6551AccountInitializer.sol";
 
-// Only initialize accounts with an implementation
+// Default account initializer pattern to prevent re-initialization and modularize
+// authentication on initialization data
 abstract contract AccountInitializer is IERC6551AccountInitializer, ERC1967Upgrade {
     error AlreadyInitialized();
 
