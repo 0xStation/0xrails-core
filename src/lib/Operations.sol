@@ -12,6 +12,7 @@ library Operations {
     bytes8 constant VALIDATOR = 0xa95257aebefccffa; // hashOperation("VALIDATOR");
     bytes8 constant CALL = 0x706a455ca44ffc9f; // hashOperation("CALL");
     bytes8 constant INTERFACE = 0x4a9bf2931aa5eae4; // hashOperation("INTERFACE");
+    bytes8 constant INITIALIZE_ACCOUNT = 0x18b11501aca1cd5e; // hashOperation("INITIALIZE_ACCOUNT");
 
     // TODO: deprecate and find another way versus anti-pattern
     // permits are enabling the permission, but only through set up modules/extension logic
