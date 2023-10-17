@@ -31,7 +31,7 @@ contract BotAccountScript is ScriptUtils {
         vm.startBroadcast( /*deployerPrivateKey*/ );
 
         address entryPointAddress = ScriptUtils.entryPointAddress;
-        string memory saltString = ScriptUtils.readSalt("salt");
+        string memory saltString = ScriptUtils.readSalt("salt"); // "station"
         bytes32 salt = bytes32(bytes(saltString));
 
         address owner = ScriptUtils.stationFounderSafe;

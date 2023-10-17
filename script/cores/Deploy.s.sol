@@ -25,7 +25,7 @@ contract Deploy is ScriptUtils {
         ===============*/
 
         vm.startBroadcast();
-        string memory saltString = ScriptUtils.readSalt("salt");
+        string memory saltString = ScriptUtils.readSalt("salt"); // "station"
         bytes32 salt = bytes32(bytes(saltString));
         
         membershipImpl = new ERC721Rails{salt: salt}();
