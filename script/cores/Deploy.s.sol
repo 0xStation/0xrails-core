@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {ScriptUtils} from "script/utils/ScriptUtils.sol";
+import {ScriptUtils} from "lib/protocol-ops/script/ScriptUtils.sol";
 import {ERC721Rails} from "src/cores/ERC721/ERC721Rails.sol";
 import {ERC20Rails} from "src/cores/ERC20/ERC20Rails.sol";
 import {ERC1155Rails} from "src/cores/ERC1155/ERC1155Rails.sol";

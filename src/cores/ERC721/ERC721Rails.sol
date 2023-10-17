@@ -6,7 +6,6 @@ import {Address} from "openzeppelin-contracts/utils/Address.sol";
 import {Rails} from "../../Rails.sol";
 import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
-import {ERC721AUpgradeable} from "./ERC721AUpgradeable.sol";
 import {ERC721} from "./ERC721.sol";
 import {ERC721Internal} from "./ERC721Internal.sol";
 import {TokenMetadata} from "../TokenMetadata/TokenMetadata.sol";
@@ -95,7 +94,7 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
     }
 
     /// @dev Returns the contract URI for this ERC20 token, a modern standard for NFTs
-    /// @notice Uses extended contract URI logic from the `ContractURIExtension` contract 
+    /// @notice Uses extended contract URI logic from the `ContractURIExtension` contract
     /// @return _ The returned contractURI string
     function contractURI() public view override returns (string memory) {
         // to avoid clashing selectors, use standardized `ext_` prefix

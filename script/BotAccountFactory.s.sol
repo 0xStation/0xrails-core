@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {ScriptUtils} from "script/utils/ScriptUtils.sol";
+import {ScriptUtils} from "lib/protocol-ops/script/ScriptUtils.sol";
 import {CallPermitValidator} from "src/validator/CallPermitValidator.sol";
 import {BotAccount} from "src/cores/account/BotAccount.sol";
 import {BotAccountFactory} from "src/cores/account/factory/BotAccountFactory.sol";

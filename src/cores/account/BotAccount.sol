@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.13;
 
+import {AccountRails} from "src/cores/account/AccountRails.sol";
 import {Account} from "src/cores/account/Account.sol";
-import {BaseAccount} from "src/cores/account/BaseAccount.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {ValidatorsStorage} from "src/validator/ValidatorsStorage.sol";
@@ -20,13 +20,13 @@ import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 /// @dev This contract provides a single hub for managing and verifying signatures
 /// created either using the GroupOS modular validation schema or default signatures.
 /// ERC1271 and ERC4337 are supported, in combination with the 0xRails permissions system
-contract BotAccount is Account, Ownable, Initializable {
+contract BotAccount is AccountRails, Ownable, Initializable {
     /*==================
         BOT ACCOUNT
     ==================*/
 
     /// @param _entryPointAddress The contract address for this chain's ERC-4337 EntryPoint contract
-    constructor(address _entryPointAddress) BaseAccount(_entryPointAddress) Initializable() {}
+    constructor(address _entryPointAddress) Account(_entryPointAddress) Initializable() {}
 
     /// @param _owner The owner address of this contract which retains call permissions management rights
     /// @param _callPermitValidator The initial CallPermitValidator address to handle modular sig verification
