@@ -3,9 +3,10 @@ pragma solidity ^0.8.13;
 
 import "src/lib/ERC4337/interface/IAccount.sol";
 import "src/lib/ERC4337/interface/IEntryPoint.sol";
+import "openzeppelin-contracts/token/ERC721/utils/ERC721Holder.sol";
 
 /// @dev This contract provides the basic logic for implementing the IAccount interface - validateUserOp
-abstract contract Account is IAccount {
+abstract contract Account is IAccount, ERC721Holder {
     /// @dev This chain's EntryPoint contract address
     address public immutable entryPoint;
 
