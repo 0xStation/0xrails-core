@@ -13,6 +13,8 @@ import {Access} from "src/access/Access.sol";
 import {SupportsInterface} from "src/lib/ERC165/SupportsInterface.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
+import {ERC1155Receiver} from "openzeppelin-contracts/token/ERC1155/utils/ERC1155Receiver.sol";
+import {IERC1155Receiver} from "openzeppelin-contracts/token/ERC1155/IERC1155Receiver.sol";
 
 /// @title Station Network Account Abstract Contract
 /// @author 👦🏻👦🏻.eth
@@ -180,9 +182,10 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
     /// @dev Declare explicit ERC165 support for ERC1271 interface in addition to existing interfaces
     /// @param interfaceId The interfaceId to check for support
     /// @return _ Boolean indicating whether the contract supports the specified interface.
-    function supportsInterface(bytes4 interfaceId) public view virtual override(Rails, Validators) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(Rails, Validators, ERC1155Receiver) returns (bool) {
         return (
-            interfaceId == type(IERC1271).interfaceId || interfaceId == type(IAccount).interfaceId
+            interfaceId == type(IERC1271).interfaceId || interfaceId == type(IAccount).interfaceId 
+                || interfaceId == type(IERC1155Receiver).interfaceId
                 || Rails.supportsInterface(interfaceId) || Validators.supportsInterface(interfaceId)
         );
     }
