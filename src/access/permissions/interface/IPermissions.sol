@@ -42,4 +42,9 @@ interface IPermissions is IPermissionsInternal {
     /// @param operation The operation to restrict
     /// @param account The account address whose permission to remove
     function removePermission(bytes8 operation, address account) external;
+
+    /// @dev Function to provide reverts when checks for `hasPermission()` fails
+    /// @param operation The operation to check
+    /// @param account The account address whose permission to check
+    function checkPermission(bytes8 operation, address account) external view;
 }
