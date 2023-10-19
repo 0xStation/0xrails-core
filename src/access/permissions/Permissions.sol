@@ -12,7 +12,7 @@ abstract contract Permissions is PermissionsInternal {
 
     /// @inheritdoc IPermissions
     function checkPermission(bytes8 operation, address account) public view {
-        if (!hasPermission(operation, account)) revert PermissionDoesNotExist(operation, account);
+        _checkPermission(operation, account);
     }
 
     /// @dev Function to implement ERC-165 compliance 
