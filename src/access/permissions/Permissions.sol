@@ -10,6 +10,11 @@ abstract contract Permissions is PermissionsInternal {
         VIEWS
     ===========*/
 
+    /// @inheritdoc IPermissions
+    function checkPermission(bytes8 operation, address account) public view {
+        _checkPermission(operation, account);
+    }
+
     /// @dev Function to implement ERC-165 compliance 
     /// @param interfaceId The interface identifier to check.
     /// @return _ Boolean indicating whether the contract supports the specified interface.
