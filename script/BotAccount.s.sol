@@ -50,11 +50,9 @@ contract BotAccountScript is ScriptUtils {
         // the two previous calls are external so they are broadcast as separate txs; thus check state externally
         if (!botAccountProxy.initialized()) revert Create2Failure();
 
-        writeUsedSalt(
-            saltString, string.concat("CallPermitValidator @", Strings.toHexString(address(callPermitValidator)))
-        );
-        writeUsedSalt(saltString, string.concat("BotAccountImpl @", Strings.toHexString(address(botAccountImpl))));
-        writeUsedSalt(saltString, string.concat("BotAccountProxy @", Strings.toHexString(address(botAccountProxy))));
+        logAddress("CallPermitValidator @", Strings.toHexString(address(callPermitValidator)));
+        logAddress("BotAccountImpl @", Strings.toHexString(address(botAccountImpl)));
+        logAddress("BotAccountProxy @", Strings.toHexString(address(botAccountProxy)));
 
         vm.stopBroadcast();
     }

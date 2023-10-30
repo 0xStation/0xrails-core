@@ -63,16 +63,10 @@ contract BotAccountFactoryScript is ScriptUtils {
         //     turnkeys
         // )));
 
-        writeUsedSalt(
-            saltString, string.concat("BotAccountFactoryImpl @", Strings.toHexString(address(botAccountFactoryImpl)))
-        );
-        writeUsedSalt(
-            saltString, string.concat("BotAccountFactoryProxy @", Strings.toHexString(address(botAccountFactoryProxy)))
-        );
-        writeUsedSalt(
-            saltString, string.concat("CallPermitValidator @", Strings.toHexString(address(callPermitValidator)))
-        );
-        writeUsedSalt(saltString, string.concat("BotAccountImpl @", Strings.toHexString(address(botAccountImpl))));
+        logAddress("BotAccountFactoryImpl @", Strings.toHexString(address(botAccountFactoryImpl)));
+        logAddress("BotAccountFactoryProxy @", Strings.toHexString(address(botAccountFactoryProxy)));
+        logAddress("CallPermitValidator @", Strings.toHexString(address(callPermitValidator)));
+        logAddress("BotAccountImpl @", Strings.toHexString(address(botAccountImpl)));
 
         vm.stopBroadcast();
     }
