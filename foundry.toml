@@ -6,7 +6,6 @@ solc = "0.8.19"
 
 # Configures permissions for cheatcodes that touch the filesystem like `vm.readFile`
 fs_permissions = [
-    { access = "read-write", path = "./script/input" },
     { access = "read", path = "./lib/protocol-ops/deploys.json" }
 ]
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
