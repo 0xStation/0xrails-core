@@ -25,16 +25,17 @@ contract Deploy is ScriptUtils {
         ===============*/
 
         vm.startBroadcast();
-        string memory saltString = ScriptUtils.readSalt("salt");
-        bytes32 salt = bytes32(bytes(saltString));
+
+        bytes32 salt = ScriptUtils.create2Salt;
+        string memory saltString = Strings.toHexString(uint256(salt), 32);
         
         membershipImpl = new ERC721Rails{salt: salt}();
         pointsImpl = new ERC20Rails{salt: salt}();
         badgeImpl = new ERC1155Rails{salt: salt}();
 
-        ScriptUtils.writeUsedSalt(saltString, string.concat("ERC721RailsImpl @", Strings.toHexString(address(membershipImpl))));
-        ScriptUtils.writeUsedSalt(saltString, string.concat("ERC20RailsImpl @", Strings.toHexString(address(pointsImpl))));
-        ScriptUtils.writeUsedSalt(saltString, string.concat("ERC1155RailsImpl @", Strings.toHexString(address(badgeImpl))));
+        logAddress("ERC721RailsImpl @", Strings.toHexString(address(membershipImpl)));
+        logAddress("ERC20RailsImpl @", Strings.toHexString(address(pointsImpl)));
+        logAddress("ERC1155RailsImpl @", Strings.toHexString(address(badgeImpl)));
         vm.stopBroadcast();
     }
 }

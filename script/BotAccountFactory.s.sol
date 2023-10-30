@@ -23,18 +23,16 @@ contract BotAccountFactoryScript is ScriptUtils {
         CallPermitValidator callPermitValidator;
         BotAccount botAccountImpl;
 
-        // uncomment all instances of `deployerPrivateKey` if using a private key in shell env var
-        // uint256 deployerPrivateKey = vm.envUint("PK");
-
         /*===============
             BROADCAST 
         ===============*/
 
-        vm.startBroadcast( /*deployerPrivateKey*/ );
+        vm.startBroadcast();
 
         address entryPointAddress = ScriptUtils.entryPointAddress;
-        string memory saltString = ScriptUtils.readSalt("salt");
-        bytes32 salt = bytes32(bytes(saltString));
+
+        bytes32 salt = ScriptUtils.create2Salt;
+        string memory saltString = Strings.toHexString(uint256(salt), 32);
 
         address owner = ScriptUtils.symmetry;
         address turnkey = ScriptUtils.turnkey;
@@ -65,16 +63,10 @@ contract BotAccountFactoryScript is ScriptUtils {
         //     turnkeys
         // )));
 
-        writeUsedSalt(
-            saltString, string.concat("BotAccountFactoryImpl @", Strings.toHexString(address(botAccountFactoryImpl)))
-        );
-        writeUsedSalt(
-            saltString, string.concat("BotAccountFactoryProxy @", Strings.toHexString(address(botAccountFactoryProxy)))
-        );
-        writeUsedSalt(
-            saltString, string.concat("CallPermitValidator @", Strings.toHexString(address(callPermitValidator)))
-        );
-        writeUsedSalt(saltString, string.concat("BotAccountImpl @", Strings.toHexString(address(botAccountImpl))));
+        logAddress("BotAccountFactoryImpl @", Strings.toHexString(address(botAccountFactoryImpl)));
+        logAddress("BotAccountFactoryProxy @", Strings.toHexString(address(botAccountFactoryProxy)));
+        logAddress("CallPermitValidator @", Strings.toHexString(address(callPermitValidator)));
+        logAddress("BotAccountImpl @", Strings.toHexString(address(botAccountImpl)));
 
         vm.stopBroadcast();
     }
