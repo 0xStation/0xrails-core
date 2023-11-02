@@ -18,6 +18,7 @@ import {ERC6551AccountLib} from "erc6551/lib/ERC6551AccountLib.sol";
 import {IERC721} from "../ERC721/interface/IERC721.sol";
 import {IERC721AccountRails} from "./interface/IERC721AccountRails.sol";
 import {ERC6551Account, IERC6551Account} from "src/lib/ERC6551/ERC6551Account.sol";
+import {ERC6551AccountStorage} from "src/lib/ERC6551/ERC6551AccountStorage.sol";
 import {IERC6551AccountGroup} from "src/lib/ERC6551AccountGroup/interface/IERC6551AccountGroup.sol";
 
 /// @notice An ERC-4337 Account bound to an ERC-721 token via ERC-6551
@@ -94,6 +95,16 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
 
     function _isValidSigner(address signer, bytes memory) internal view override returns (bool) {
         return hasPermission(Operations.CALL, signer);
+    }
+
+    /// @dev According to ERC6551, functions that modify state must alter the `uint256 state` variable
+    function _beforeExecuteCall(address to, uint256 value, bytes calldata data) 
+        internal
+        virtual override
+        returns (address guard, bytes memory checkBeforeData)
+    {
+        ERC6551AccountStorage.layout().state++;
+        super._beforeExecuteCall(to, value, data);
     }
 
     /*===================
