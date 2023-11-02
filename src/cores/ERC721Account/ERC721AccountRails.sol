@@ -15,14 +15,15 @@ import {Access} from "src/access/Access.sol";
 import {Extensions} from "src/extension/Extensions.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {ERC6551AccountLib} from "erc6551/lib/ERC6551AccountLib.sol";
-import {IERC721} from "../ERC721/interface/IERC721.sol";
+import {IERC721, IERC721Internal} from "../ERC721/interface/IERC721.sol";
 import {IERC721AccountRails} from "./interface/IERC721AccountRails.sol";
 import {ERC6551Account, IERC6551Account} from "src/lib/ERC6551/ERC6551Account.sol";
 import {ERC6551AccountStorage} from "src/lib/ERC6551/ERC6551AccountStorage.sol";
 import {IERC6551AccountGroup} from "src/lib/ERC6551AccountGroup/interface/IERC6551AccountGroup.sol";
+import {OracleHandler} from "src/lib/multichain/OracleHandler.sol";
 
 /// @notice An ERC-4337 Account bound to an ERC-721 token via ERC-6551
-contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC721AccountRails {
+contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC721AccountRails, OracleHandler {
     /*====================
         INITIALIZATION
     ====================*/
@@ -32,14 +33,13 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
 
     /// @inheritdoc IERC721AccountRails
     /// @notice Important that it is assumed the caller of this function is trusted by the Account Group
-    function initialize(bytes memory initData) external initializer {
-        if (initData.length > 0) {
-            // make msg.sender an ADMIN to ensure they have all permissions for further initialization
-            _addPermission(Operations.ADMIN, msg.sender);
-            Address.functionDelegateCall(address(this), initData);
-            // remove sender ADMIN permissions
-            _removePermission(Operations.ADMIN, msg.sender);
-        }
+    function initialize(address _oracle, bytes memory _initData) external initializer {
+        // make msg.sender an ADMIN to ensure they have all permissions for further initialization
+        _addPermission(Operations.ADMIN, msg.sender);
+        _setOracle(_oracle);
+        Address.functionDelegateCall(address(this), _initData);
+        // remove sender ADMIN permissions
+        _removePermission(Operations.ADMIN, msg.sender);
     }
 
     receive() external payable override(Extensions, IERC6551Account) {}
@@ -101,7 +101,7 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
     function _beforeExecuteCall(address to, uint256 value, bytes calldata data) 
         internal
         virtual override
-        returns (address guard, bytes memory checkBeforeData)
+        returns (address, bytes memory)
     {
         ERC6551AccountStorage.layout().state++;
         super._beforeExecuteCall(to, value, data);
@@ -120,13 +120,25 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         return _tokenOwner(chainId, tokenContract, tokenId);
     }
 
+    function ownerMultichain() public override returns (address) {
+        (uint256 chainId, address tokenContract, uint256 tokenId) = ERC6551AccountLib.token();
+        if (uint256 chainId == block.chainid) = return _tokenOwner(chainId, tokenContract, tokenId);
+        
+        _callOracle(
+            tokenContract,
+            abi.encodeWithSelector(IERC721Internal.ownerOf.selector, tokenId)
+        ); // todo where to find the oracle address? how does the callback complete in a single transaction?
+    }
+
     function _tokenOwner(uint256 chainId, address tokenContract, uint256 tokenId)
         internal
         view
         virtual
         returns (address)
     {
-        if (chainId != block.chainid) return address(0);
+        if (chainId != block.chainid) {
+            return address(0);
+        }
         if (tokenContract.code.length == 0) return address(0);
 
         try IERC721(tokenContract).ownerOf(tokenId) returns (address _owner) {
@@ -163,5 +175,11 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         }
 
         revert ImplementationNotApproved(newImplementation);
+    }
+
+    function _handleOracleResponse(uint256 _nonce, bytes memory _responseData, bool _responseSuccess) 
+        internal virtual override 
+    {
+        //todo
     }
 }

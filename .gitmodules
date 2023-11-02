@@ -10,3 +10,6 @@
 	path = lib/erc6551
 	url = https://github.com/erc6551/reference
 	branch = main
+[submodule "lib/telepathy-contracts"]
+	path = lib/telepathy-contracts
+	url = https://github.com/succinctlabs/telepathy-contracts

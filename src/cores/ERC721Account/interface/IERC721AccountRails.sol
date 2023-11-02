@@ -6,6 +6,7 @@ interface IERC721AccountRails {
     error ImplementationNotApproved(address implementation);
     
     /// @dev Initialize the ERC721AccountRails contract with the initialization data.
+    /// @param oracle The TelepathyOracle contract for this chain, set on initialization
     /// @param initData Additional initialization data if required by the contract.
-    function initialize(bytes calldata initData) external;
+    function initialize(address oracle, bytes calldata initData) external;
 }
