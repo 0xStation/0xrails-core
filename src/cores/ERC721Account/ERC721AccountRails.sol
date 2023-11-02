@@ -11,8 +11,6 @@ import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {ValidatorsStorage} from "src/validator/ValidatorsStorage.sol";
 import {Initializable} from "src/lib/initializable/Initializable.sol";
-import {Ownable} from "src/access/ownable/Ownable.sol";
-import {OwnableInternal} from "src/access/ownable/OwnableInternal.sol";
 import {Access} from "src/access/Access.sol";
 import {Extensions} from "src/extension/Extensions.sol";
 import {Operations} from "src/lib/Operations.sol";
@@ -20,6 +18,7 @@ import {ERC6551AccountLib} from "erc6551/lib/ERC6551AccountLib.sol";
 import {IERC721} from "../ERC721/interface/IERC721.sol";
 import {IERC721AccountRails} from "./interface/IERC721AccountRails.sol";
 import {ERC6551Account, IERC6551Account} from "src/lib/ERC6551/ERC6551Account.sol";
+import {IERC6551AccountGroup} from "src/lib/ERC6551AccountGroup/interface/IERC6551AccountGroup.sol";
 
 /// @notice An ERC-4337 Account bound to an ERC-721 token via ERC-6551
 contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC721AccountRails {
@@ -32,7 +31,7 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
 
     /// @inheritdoc IERC721AccountRails
     /// @notice Important that it is assumed the caller of this function is trusted by the Account Group
-    function initialize(bytes calldata initData) external initializer {
+    function initialize(bytes memory initData) external initializer {
         if (initData.length > 0) {
             // make msg.sender an ADMIN to ensure they have all permissions for further initialization
             _addPermission(Operations.ADMIN, msg.sender);
@@ -139,7 +138,19 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         _checkOwner();
     }
 
-    function _authorizeUpgrade(address) internal view override {
-        _checkOwner();
+    function _authorizeUpgrade(address newImplementation) internal view override {
+        // fetch GroupAccount from contract bytecode in the context of delegatecall
+        bytes32 bytecodeSalt = ERC6551AccountLib.salt(address(this));
+        address accountGroup = address(bytes20(bytecodeSalt));
+        
+        // check for approved upgrade implementation match
+        address[] memory upgradeOptions = IERC6551AccountGroup(accountGroup).getApprovedImplementations(address(this));
+        unchecked {
+            for (uint256 i; i < upgradeOptions.length; ++i) {
+                if (upgradeOptions[i] == newImplementation) return;
+            }
+        }
+
+        revert ImplementationNotApproved(newImplementation);
     }
 }
