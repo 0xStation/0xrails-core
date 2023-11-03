@@ -33,6 +33,7 @@ abstract contract OracleHandler is IOracleCallbackReceiver, IOracleHandler {
 
     function _setOracle(address _oracle) internal {
         oracle = _oracle;
+        emit OracleSet(_oracle);
     }
 
     function _callOracle(address target, bytes memory data) internal returns (uint256 nonce) {
