@@ -112,7 +112,12 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
     ===================*/
 
     function _checkOwner() internal view {
-        require(msg.sender == owner(), "NOT OWNER");
+        (uint256 chainId,,) = ERC6551AccountLib.token();
+        if (chainId == block.chainid) {
+            require(msg.sender == owner(), "NOT OWNER");
+        } else {
+            require(msg.sender == ownerMultichain(), "NOT OWNER");
+        }
     }
 
     function owner() public view override returns (address) {
@@ -127,7 +132,7 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         _callOracle(
             tokenContract,
             abi.encodeWithSelector(IERC721Internal.ownerOf.selector, tokenId)
-        ); // todo where to find the oracle address? how does the callback complete in a single transaction?
+        );
     }
 
     function _tokenOwner(uint256 chainId, address tokenContract, uint256 tokenId)
