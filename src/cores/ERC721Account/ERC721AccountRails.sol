@@ -150,16 +150,40 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
     /// @param recipient The address to receive from the EntryPoint balance
     /// @param amount The amount of funds to withdraw from the EntryPoint
     function withdrawFromEntryPoint(address payable recipient, uint256 amount) public virtual override {
-        _checkOwner();
-        IEntryPoint(entryPoint).withdrawTo(recipient, amount);
+        ERC6551AccountStorage.layout().state++;
+
+        // if delegatecall is reached, auth checks have already passed
+        if (msg.sender == address(this)) {
+            IEntryPoint(entryPoint).withdrawTo(recipient, amount);
+            return;
+        }
+
+        if (chainId == block.chainid) {
+            _checkOwner();
+            IEntryPoint(entryPoint).withdrawTo(recipient, amount);
+        } else {
+            _setPendingMultichainCall(msg.sender, msg.data);
+        }
     }
 
     // changes to core functionality must be restricted to owners to protect admins overthrowing
     function _checkCanUpdateExtensions() internal view override {
-        _checkOwner();
+        ERC6551AccountStorage.layout().state++;
+
+        // if delegatecall is reached, auth checks have already passed
+        if (msg.sender == address(this)) return;
+        (uint256 chainId,,) = ERC6551AccountLib.token();
+
+        if (chainId == block.chainid) {
+            _checkOwner();
+        } else {
+            _setPendingMultichainCall(msg.sender, msg.data);
+        }
     }
 
     function _authorizeUpgrade(address newImplementation) internal override {
+        ERC6551AccountStorage.layout().state++;
+
         // if delegatecall is reached, auth checks have already passed
         if (msg.sender == address(this)) return;
 
@@ -167,12 +191,8 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         if (chainId == block.chainid) {
             _checkOwner();
         } else {
-            uint256 nonce = _callOracle(
-                tokenContract,
-                abi.encodeWithSelector(IERC721Internal.ownerOf.selector, tokenId)
-            );
             // state stored is reverted if approved implementation check fails
-            pendingCalls[nonce] = MultichainCall({sender: msg.sender, data: msg.data});
+            _setPendingMultichainCall(msg.sender, msg.data);
         }
 
         // fetch GroupAccount from contract bytecode in the context of delegatecall
@@ -190,12 +210,21 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         revert ImplementationNotApproved(newImplementation);
     }
 
-    function _handleOracleResponse(uint256 _nonce, bytes memory _responseData, bool _responseSuccess) 
+    function _setPendingMultichainCall(address _sender, bytes memory _data) internal {
+        uint256 nonce = _callOracle(
+            tokenContract,
+            abi.encodeWithSelector(IERC721Internal.ownerOf.selector, tokenId)
+        );
+        pendingCalls[nonce] = MultichainCall({sender: _sender, data: _data});
+    }
+
+    function _handleOracleResponse(uint256 _nonce, bytes memory _responseData, bool) 
         internal virtual override 
     {
         MultichainCall memory pendingCall = pendingCalls[_nonce];
         address tokenOwner = abi.decode(_responseData, (address));
 
+        // if the original sender was indeed the owner, perform the call
         if (tokenOwner == pendingCall.sender) {
             Address.functionDelegateCall(address(this), pendingCall.data);
         }
