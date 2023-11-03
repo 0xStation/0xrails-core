@@ -24,6 +24,14 @@ import {OracleHandler} from "src/lib/multichain/OracleHandler.sol";
 
 /// @notice An ERC-4337 Account bound to an ERC-721 token via ERC-6551
 contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC721AccountRails, OracleHandler {
+
+    struct MultichainCall {
+        address sender;
+        bytes data;
+    }
+
+    mapping(uint256 => MultichainCall) pendingCalls;
+
     /*====================
         INITIALIZATION
     ====================*/
@@ -112,27 +120,12 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
     ===================*/
 
     function _checkOwner() internal view {
-        (uint256 chainId,,) = ERC6551AccountLib.token();
-        if (chainId == block.chainid) {
-            require(msg.sender == owner(), "NOT OWNER");
-        } else {
-            require(msg.sender == ownerMultichain(), "NOT OWNER");
-        }
+        require(msg.sender == owner(), "NOT OWNER");
     }
 
     function owner() public view override returns (address) {
         (uint256 chainId, address tokenContract, uint256 tokenId) = ERC6551AccountLib.token();
         return _tokenOwner(chainId, tokenContract, tokenId);
-    }
-
-    function ownerMultichain() public override returns (address) {
-        (uint256 chainId, address tokenContract, uint256 tokenId) = ERC6551AccountLib.token();
-        if (uint256 chainId == block.chainid) = return _tokenOwner(chainId, tokenContract, tokenId);
-        
-        _callOracle(
-            tokenContract,
-            abi.encodeWithSelector(IERC721Internal.ownerOf.selector, tokenId)
-        );
     }
 
     function _tokenOwner(uint256 chainId, address tokenContract, uint256 tokenId)
@@ -166,7 +159,22 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         _checkOwner();
     }
 
-    function _authorizeUpgrade(address newImplementation) internal view override {
+    function _authorizeUpgrade(address newImplementation) internal override {
+        // if delegatecall is reached, auth checks have already passed
+        if (msg.sender == address(this)) return;
+
+        (uint256 chainId, address tokenContract, uint256 tokenId) = ERC6551AccountLib.token();
+        if (chainId == block.chainid) {
+            _checkOwner();
+        } else {
+            uint256 nonce = _callOracle(
+                tokenContract,
+                abi.encodeWithSelector(IERC721Internal.ownerOf.selector, tokenId)
+            );
+            // state stored is reverted if approved implementation check fails
+            pendingCalls[nonce] = MultichainCall({sender: msg.sender, data: msg.data});
+        }
+
         // fetch GroupAccount from contract bytecode in the context of delegatecall
         bytes32 bytecodeSalt = ERC6551AccountLib.salt(address(this));
         address accountGroup = address(bytes20(bytecodeSalt));
@@ -185,6 +193,14 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
     function _handleOracleResponse(uint256 _nonce, bytes memory _responseData, bool _responseSuccess) 
         internal virtual override 
     {
-        //todo
+        MultichainCall memory pendingCall = pendingCalls[_nonce];
+        address tokenOwner = abi.decode(_responseData, (address));
+
+        if (tokenOwner == pendingCall.sender) {
+            Address.functionDelegateCall(address(this), pendingCall.data);
+        }
+
+        // clear pending state in case of future oracle malfunction
+        delete pendingCalls[_nonce];
     }
 }
