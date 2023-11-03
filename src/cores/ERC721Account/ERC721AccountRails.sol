@@ -150,6 +150,8 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
     }
 
     function _authorizeUpgrade(address newImplementation) internal view override {
+        _checkOwner();
+        
         // fetch GroupAccount from contract bytecode in the context of delegatecall
         bytes32 bytecodeSalt = ERC6551AccountLib.salt(address(this));
         address accountGroup = address(bytes20(bytecodeSalt));
