@@ -140,13 +140,32 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
     /// @param recipient The address to receive from the EntryPoint balance
     /// @param amount The amount of funds to withdraw from the EntryPoint
     function withdrawFromEntryPoint(address payable recipient, uint256 amount) public virtual override {
-        _checkOwner();
+        (uint256 chainId,,) = ERC6551AccountLib.token();
+        if (chainId == block.chainid) {
+            _checkOwner();
+        } else {
+            // fetch GroupAccount from contract bytecode
+            bytes32 bytecodeSalt = ERC6551AccountLib.salt(address(this));
+            address accountGroup = address(bytes20(bytecodeSalt));
+            
+            IPermissions(accountGroup).checkPermission(Operations.ADMIN, msg.sender);
+        }
+
         IEntryPoint(entryPoint).withdrawTo(recipient, amount);
     }
 
     // changes to core functionality must be restricted to owners to protect admins overthrowing
     function _checkCanUpdateExtensions() internal view override {
-        _checkOwner();
+        (uint256 chainId,,) = ERC6551AccountLib.token();
+        if (chainId == block.chainid) {
+            _checkOwner();
+        } else {
+            // fetch GroupAccount from contract bytecode
+            bytes32 bytecodeSalt = ERC6551AccountLib.salt(address(this));
+            address accountGroup = address(bytes20(bytecodeSalt));
+            
+            IPermissions(accountGroup).checkPermission(Operations.ADMIN, msg.sender);
+        }
     }
 
     function _authorizeUpgrade(address newImplementation) internal view override {        
