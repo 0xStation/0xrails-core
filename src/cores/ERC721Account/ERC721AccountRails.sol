@@ -149,21 +149,11 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         _checkOwner();
     }
 
-    function _authorizeUpgrade(address newImplementation) internal view override {
-        _checkOwner();
-        
+    function _authorizeUpgrade(address newImplementation) internal view override {        
         // fetch GroupAccount from contract bytecode in the context of delegatecall
         bytes32 bytecodeSalt = ERC6551AccountLib.salt(address(this));
         address accountGroup = address(bytes20(bytecodeSalt));
         
-        // check for approved upgrade implementation match
-        address[] memory upgradeOptions = IERC6551AccountGroup(accountGroup).getApprovedImplementations(address(this));
-        unchecked {
-            for (uint256 i; i < upgradeOptions.length; ++i) {
-                if (upgradeOptions[i] == newImplementation) return;
-            }
-        }
-
-        revert ImplementationNotApproved(newImplementation);
+        IERC6551AccountGroup(accountGroup).checkValidAccountUpgrade(msg.sender, address(this), newImplementation);
     }
 }
