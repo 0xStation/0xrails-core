@@ -12,6 +12,7 @@ import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {ValidatorsStorage} from "src/validator/ValidatorsStorage.sol";
 import {Initializable} from "src/lib/initializable/Initializable.sol";
 import {Access} from "src/access/Access.sol";
+import {IPermissions} from "src/access/permissions/interface/IPermissions.sol";
 import {Extensions} from "src/extension/Extensions.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {ERC6551AccountLib} from "erc6551/lib/ERC6551AccountLib.sol";
