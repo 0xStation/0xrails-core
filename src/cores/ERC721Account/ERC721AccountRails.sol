@@ -12,7 +12,7 @@ import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {ValidatorsStorage} from "src/validator/ValidatorsStorage.sol";
 import {Initializable} from "src/lib/initializable/Initializable.sol";
 import {Access} from "src/access/Access.sol";
-import {IPermissions} from "src/access/permissions/interface/IPermissions.sol";
+import {IPermissions, IPermissionsInternal} from "src/access/permissions/interface/IPermissions.sol";
 import {Extensions} from "src/extension/Extensions.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {ERC6551AccountLib} from "erc6551/lib/ERC6551AccountLib.sol";
@@ -60,7 +60,9 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
 
     /// @inheritdoc Account
     function withdrawFromEntryPoint(address payable recipient, uint256 amount) public virtual override {
-        _checkAuth(Operations.ADMIN);
+        if (!_isAuthorized(Operations.ADMIN, msg.sender)) {
+            revert IPermissionsInternal.PermissionDoesNotExist(Operations.ADMIN, msg.sender);
+        }
 
         _updateState();
         IEntryPoint(entryPoint).withdrawTo(recipient, amount);
@@ -83,10 +85,9 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(userOpHash, userOp.signature);
         // return if signature is malformed
         if (err != ECDSA.RecoverError.NoError) return false;
-        // return if signer is not owner
-        if (signer != owner()) return false;
 
-        return true;
+        // return true only if signer is owner, owner-delegated, or AccountGroup admin
+        return _isAuthorized(Operations.ADMIN, signer);
     }
 
     /// @dev When evaluating signatures that don't contain the `VALIDATOR_FLAG`, authenticate only the owner
@@ -101,10 +102,9 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(hash, signature);
         // return if signature is malformed
         if (err != ECDSA.RecoverError.NoError) return false;
-        // return if signer is not owner
-        if (signer != owner()) return false;
-
-        return true;
+        
+        // return true only if signer is owner, owner-delegated, or AccountGroup admin
+        return _isAuthorized(Operations.ADMIN, signer);
     }
 
     function _isValidSigner(address signer, bytes memory) internal view override returns (bool) {
@@ -153,39 +153,47 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
     /// @dev Sensitive account operations restricted to three tiered authorization hierarchy: 
     ///   TBA owner || TBA permission || AccountGroup admin
     /// This provides owner autonomy, owner-delegated permissions, and multichain AccountGroup management
-    function _checkAuth(bytes8 _operation) internal view {
+    function _isAuthorized(bytes8 _operation, address _sender) internal view returns (bool) {
         // check sender is TBA owner or has been granted relevant permission (or admin) on this account
-        if (msg.sender == owner() || hasPermission(_operation, msg.sender)) return;
+        if (hasPermission(_operation, _sender)) return true;
 
         // allow AccountGroup admins to manage accounts on non-origin chains
-        _checkAccountGroupAdmin();
+        return _isAccountGroupAdmin(_sender);
     }
 
     /// @dev On non-origin chains, `owner()` returns the zero address, so multichain upgrades 
     /// are enabled by permitting trusted AccountGroup admins
-    function _checkAccountGroupAdmin() internal view {
+    function _isAccountGroupAdmin(address _sender) internal view returns (bool) {
         // fetch GroupAccount from contract bytecode
         bytes32 bytecodeSalt = ERC6551AccountLib.salt(address(this));
         address accountGroup = address(bytes20(bytecodeSalt));
         
-        IPermissions(accountGroup).checkPermission(Operations.ADMIN, msg.sender);
+        return IPermissions(accountGroup).hasPermission(Operations.ADMIN, _sender);
     }
 
     function _checkCanUpdateValidators() internal virtual override {
         _updateState();
-        _checkAuth(Operations.VALIDATOR);
+        if (!_isAuthorized(Operations.VALIDATOR, msg.sender)) {
+            revert IPermissionsInternal.PermissionDoesNotExist(Operations.VALIDATOR, msg.sender);
+        }
     }
     function _checkCanUpdatePermissions() internal override {
         _updateState();
-        _checkAuth(Operations.PERMISSIONS);
+        if (!_isAuthorized(Operations.PERMISSIONS, msg.sender)) {
+            revert IPermissionsInternal.PermissionDoesNotExist(Operations.PERMISSIONS, msg.sender);
+        }
     }
     function _checkCanUpdateGuards() internal override {
         _updateState();
-        _checkAuth(Operations.GUARDS);
+        if (!_isAuthorized(Operations.GUARDS, msg.sender)) {
+            revert IPermissionsInternal.PermissionDoesNotExist(Operations.GUARDS, msg.sender);
+        }
     }
     function _checkCanUpdateInterfaces() internal override {
         _updateState();
-        _checkAuth(Operations.INTERFACE);
+        if (!_isAuthorized(Operations.INTERFACE, msg.sender)) {
+            revert IPermissionsInternal.PermissionDoesNotExist(Operations.INTERFACE, msg.sender);
+        }
     }
 
 
@@ -193,11 +201,12 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
     function _checkCanUpdateExtensions() internal override {
         _updateState();
 
+        // revert if sender is neither owner nor AccountGroup admin, exclude permissions on this account
         (uint256 chainId,,) = ERC6551AccountLib.token();
         if (chainId == block.chainid) {
             require(msg.sender == owner(), "NOT_OWNER");
-        } else {
-            _checkAccountGroupAdmin();
+        } else if (!_isAccountGroupAdmin(msg.sender)) {
+            revert IPermissionsInternal.PermissionDoesNotExist(Operations.ADMIN, msg.sender);
         }
     }
 
