@@ -28,11 +28,4 @@ abstract contract Access is Permissions {
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return super.supportsInterface(interfaceId);
     }
-
-    /*===============
-        OVERRIDES
-    ===============*/
-
-    /// @inheritdoc Permissions
-    function _checkCanUpdatePermissions() internal view virtual override;
 }

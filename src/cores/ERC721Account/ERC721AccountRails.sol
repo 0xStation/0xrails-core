@@ -58,6 +58,19 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         OVERRIDES
     ===============*/
 
+    /// @inheritdoc Account
+    function withdrawFromEntryPoint(address payable recipient, uint256 amount) public virtual override {
+        _checkAuth(Operations.ADMIN);
+
+        _updateState();
+        IEntryPoint(entryPoint).withdrawTo(recipient, amount);
+    }
+
+    function _checkSenderIsEntryPoint() internal virtual override {
+        _updateState();
+        super._checkSenderIsEntryPoint();
+    }
+
     /// @dev When evaluating signatures that don't contain the `VALIDATOR_FLAG`, authenticate only the owner
     function _defaultValidateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 /*missingAccountFunds*/ )
         internal
@@ -98,23 +111,23 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         return hasPermission(Operations.CALL, signer);
     }
 
+    function _updateState() internal virtual override {
+        ERC6551AccountStorage.layout().state++;
+    }
+
     /// @dev According to ERC6551, functions that modify state must alter the `uint256 state` variable
     function _beforeExecuteCall(address to, uint256 value, bytes calldata data) 
         internal
         virtual override
         returns (address guard, bytes memory checkBeforeData)
     {
-        ERC6551AccountStorage.layout().state++;
+        _updateState();
         super._beforeExecuteCall(to, value, data);
     }
 
     /*===================
         AUTHORIZATION
     ===================*/
-
-    function _checkOwner() internal view {
-        require(msg.sender == owner(), "NOT OWNER");
-    }
 
     function owner() public view override returns (address) {
         (uint256 chainId, address tokenContract, uint256 tokenId) = ERC6551AccountLib.token();
@@ -137,43 +150,63 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         }
     }
 
-    /// @dev Function to withdraw funds using the EntryPoint's `withdrawTo()` function
-    /// @param recipient The address to receive from the EntryPoint balance
-    /// @param amount The amount of funds to withdraw from the EntryPoint
-    function withdrawFromEntryPoint(address payable recipient, uint256 amount) public virtual override {
-        (uint256 chainId,,) = ERC6551AccountLib.token();
-        if (chainId == block.chainid) {
-            _checkOwner();
-        } else {
-            // fetch GroupAccount from contract bytecode
-            bytes32 bytecodeSalt = ERC6551AccountLib.salt(address(this));
-            address accountGroup = address(bytes20(bytecodeSalt));
-            
-            IPermissions(accountGroup).checkPermission(Operations.ADMIN, msg.sender);
-        }
+    /// @dev Sensitive account operations restricted to three tiered authorization hierarchy: 
+    ///   TBA owner || TBA permission || AccountGroup admin
+    /// This provides owner autonomy, owner-delegated permissions, and multichain AccountGroup management
+    function _checkAuth(bytes8 _operation) internal view {
+        // check sender is TBA owner or has been granted relevant permission (or admin) on this account
+        if (msg.sender == owner() || hasPermission(_operation, msg.sender)) return;
 
-        IEntryPoint(entryPoint).withdrawTo(recipient, amount);
+        // allow AccountGroup admins to manage accounts on non-origin chains
+        _checkAccountGroupAdmin();
     }
 
-    // changes to core functionality must be restricted to owners to protect admins overthrowing
-    function _checkCanUpdateExtensions() internal view override {
+    /// @dev On non-origin chains, `owner()` returns the zero address, so multichain upgrades 
+    /// are enabled by permitting trusted AccountGroup admins
+    function _checkAccountGroupAdmin() internal view {
+        // fetch GroupAccount from contract bytecode
+        bytes32 bytecodeSalt = ERC6551AccountLib.salt(address(this));
+        address accountGroup = address(bytes20(bytecodeSalt));
+        
+        IPermissions(accountGroup).checkPermission(Operations.ADMIN, msg.sender);
+    }
+
+    function _checkCanUpdateValidators() internal virtual override {
+        _updateState();
+        _checkAuth(Operations.VALIDATOR);
+    }
+    function _checkCanUpdatePermissions() internal override {
+        _updateState();
+        _checkAuth(Operations.PERMISSIONS);
+    }
+    function _checkCanUpdateGuards() internal override {
+        _updateState();
+        _checkAuth(Operations.GUARDS);
+    }
+    function _checkCanUpdateInterfaces() internal override {
+        _updateState();
+        _checkAuth(Operations.INTERFACE);
+    }
+
+
+    /// @dev Changes to extensions restricted to TBA owner or AccountGroupAdmin to prevent mutiny
+    function _checkCanUpdateExtensions() internal override {
+        _updateState();
+
         (uint256 chainId,,) = ERC6551AccountLib.token();
         if (chainId == block.chainid) {
-            _checkOwner();
+            require(msg.sender == owner(), "NOT_OWNER");
         } else {
-            // fetch GroupAccount from contract bytecode
-            bytes32 bytecodeSalt = ERC6551AccountLib.salt(address(this));
-            address accountGroup = address(bytes20(bytecodeSalt));
-            
-            IPermissions(accountGroup).checkPermission(Operations.ADMIN, msg.sender);
+            _checkAccountGroupAdmin();
         }
     }
 
-    function _authorizeUpgrade(address newImplementation) internal view override {        
+    function _authorizeUpgrade(address newImplementation) internal override {        
         // fetch GroupAccount from contract bytecode in the context of delegatecall
         bytes32 bytecodeSalt = ERC6551AccountLib.salt(address(this));
         address accountGroup = address(bytes20(bytecodeSalt));
         
+        _updateState();
         IERC6551AccountGroup(accountGroup).checkValidAccountUpgrade(msg.sender, address(this), newImplementation);
     }
 }
