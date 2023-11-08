@@ -158,7 +158,7 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
         returns (bool);
 
     /// @dev View function to limit callers to only the EntryPoint contract of this chain
-    function _checkSenderIsEntryPoint() internal view {
+    function _checkSenderIsEntryPoint() internal virtual {
         if (msg.sender != entryPoint) revert NotEntryPoint(msg.sender);
     }
 
@@ -193,7 +193,7 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
     /// @dev Provides control over adding and removing recognized validator contracts
     /// only to either the owner or entities possessing `ADMIN` or `VALIDATOR` permissions
     /// @notice Can be overridden for more restrictive access if desired
-    function _checkCanUpdateValidators() internal view virtual override {
+    function _checkCanUpdateValidators() internal virtual override {
         _checkPermission(Operations.VALIDATOR, msg.sender);
     }
 
@@ -201,24 +201,24 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
     /// @notice Permission to `addPermission(Operations.CALL_PERMIT)`, which is the intended
     /// function call to be called by the owner for adding valid signer accounts such as Turnkeys,
     /// is restricted to only the owner
-    function _checkCanUpdatePermissions() internal view override {
+    function _checkCanUpdatePermissions() internal virtual override {
         _checkPermission(Operations.PERMISSIONS, msg.sender);
     }
 
-    function _checkCanUpdateGuards() internal view override {
+    function _checkCanUpdateGuards() internal virtual override {
         _checkPermission(Operations.GUARDS, msg.sender);
     }
 
     /// @dev Permission to `Call::call()` via signature validation is restricted to either
     /// the EntryPoint, the owner, or entities possessing the `CALL`or `ADMIN` permissions
     /// @notice Mutiny by Turnkeys is prevented by granting them only the `CALL_PERMIT` permission
-    function _checkCanExecuteCall() internal view override {
+    function _checkCanExecuteCall() internal view virtual override {
         bool auth = (msg.sender == entryPoint || hasPermission(Operations.CALL, msg.sender));
         if (!auth) revert PermissionDoesNotExist(Operations.CALL, msg.sender);
     }
 
     /// @dev Provides control over ERC165 layout to addresses with `INTERFACE` permission
-    function _checkCanUpdateInterfaces() internal view override {
+    function _checkCanUpdateInterfaces() internal virtual override {
         _checkPermission(Operations.INTERFACE, msg.sender);
     }
 }
