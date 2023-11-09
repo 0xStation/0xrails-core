@@ -51,6 +51,8 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
         // only EntryPoint should call this function to prevent frontrunning of valid signatures
         _checkSenderIsEntryPoint();
 
+        bytes32 ethSignedUserOpHash = ECDSA.toEthSignedMessageHash(userOpHash);
+
         // extract validator address using cheap calldata slicing before decoding
         bytes8 flag = bytes8(userOp.signature[:8]);
         address validator = address(bytes20(userOp.signature[12:32]));
@@ -62,14 +64,14 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
             UserOperation memory formattedUserOp = userOp;
             formattedUserOp.signature = formattedSig;
 
-            uint256 ret = IValidator(validator).validateUserOp(formattedUserOp, userOpHash, missingAccountFunds);
+            uint256 ret = IValidator(validator).validateUserOp(formattedUserOp, ethSignedUserOpHash, missingAccountFunds);
 
             // if validator rejects sig, terminate early with status code 1
             if (ret != 0) return ret;
         } else {
             // support non-modular signatures by default
             // authenticate signer, terminating early with status code 1 on failure
-            bool validSigner = _defaultValidateUserOp(userOp, userOpHash, missingAccountFunds);
+            bool validSigner = _defaultValidateUserOp(userOp, ethSignedUserOpHash, missingAccountFunds);
             if (!validSigner) return 1;
         }
 
