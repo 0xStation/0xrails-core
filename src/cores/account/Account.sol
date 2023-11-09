@@ -35,5 +35,8 @@ abstract contract Account is IAccount, ERC721Holder, ERC1155Holder {
         IEntryPoint(entryPoint).depositTo{value: totalFunds}(address(this));
     }
 
+    /// @dev Function to withdraw funds using the EntryPoint's `withdrawTo()` function
+    /// @param recipient The address to receive from the EntryPoint balance
+    /// @param amount The amount of funds to withdraw from the EntryPoint
     function withdrawFromEntryPoint(address payable recipient, uint256 amount) public virtual;
 }
