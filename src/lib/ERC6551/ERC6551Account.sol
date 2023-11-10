@@ -22,10 +22,11 @@ abstract contract ERC6551Account is IERC6551Account {
         return ERC6551AccountLib.token();
     }
 
-    /// todo: add pattern for updating state whenever contract state changes
     function state() public view returns (uint256) {
         return ERC6551AccountStorage.layout().state;
     }
+
+    function _updateState() internal virtual;
 
     function _isValidSigner(address signer, bytes memory) internal view virtual returns (bool);
 }

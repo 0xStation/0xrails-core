@@ -10,6 +10,7 @@ import {IAccountFactory} from "src/cores/account/factory/interface/IAccountFacto
 import {Operations} from "src/lib/Operations.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
+import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 import {IOwnableInternal} from "src/access/ownable/interface/IOwnable.sol";
 import {IPermissions, IPermissionsInternal} from "src/access/permissions/interface/IPermissions.sol";
 import {IGuards} from "src/guard/interface/IGuards.sol";
@@ -28,6 +29,7 @@ contract BotAccountTest is Test {
     address public testTurnkey;
     UserOperation public userOp;
     bytes32 public userOpHash;
+    bytes32 public ethSignedUserOpHash;
     bytes32 public salt;
     bytes public botAccountFactoryInitData;
 
@@ -56,6 +58,7 @@ contract BotAccountTest is Test {
             signature: ""
         });
         userOpHash = callPermitValidator.getUserOpHash(userOp);
+        ethSignedUserOpHash = ECDSA.toEthSignedMessageHash(userOpHash);
         salt = bytes32("garlicsalt");
 
         botAccountImpl = new BotAccount(entryPointAddress);
@@ -84,7 +87,6 @@ contract BotAccountTest is Test {
     }
 
     function test_isValidSignature(uint256 startingPrivateKey, uint8 numPrivateKeys) public {
-        userOpHash = callPermitValidator.getUserOpHash(userOp);
         address[] memory newTurnkeys = new address[](numPrivateKeys);
 
         address currentAddr;
@@ -138,8 +140,9 @@ contract BotAccountTest is Test {
             // populate preexisting UserOperation `userOp` with formatted signature to be validated
             UserOperation memory currentUserOp = userOp;
             bytes32 currentUserOpHash = callPermitValidator.getUserOpHash(currentUserOp);
+            bytes32 ethSignedCurrentUserOpHash = ECDSA.toEthSignedMessageHash(currentUserOpHash);
 
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(currentPrivateKey, currentUserOpHash);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(currentPrivateKey, ethSignedCurrentUserOpHash);
             bytes memory currentRSV = abi.encodePacked(r, s, v);
             assertEq(currentRSV.length, 65);
 
@@ -155,7 +158,7 @@ contract BotAccountTest is Test {
             uint256 missingAccountFunds = 0;
             vm.prank(entryPointAddress);
             uint256 returnedValidationData =
-                botAccount.validateUserOp(currentUserOp, currentUserOpHash, missingAccountFunds);
+                botAccount.validateUserOp(currentUserOp, userOpHash, missingAccountFunds);
             assertEq(returnedValidationData, expectedValidationData);
         }
     }
@@ -246,7 +249,7 @@ contract BotAccountTest is Test {
         botAccount.removePermission(op, someAddress);
     }
 
-    function test_validatorFlag() public {
+    function test_validatorFlag1271() public {
         uint256 turnkeyPrivatekey = 0xc0ffEEbabe;
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(turnkeyPrivatekey, userOpHash);
         bytes memory sig = abi.encodePacked(r, s, v);
@@ -264,6 +267,18 @@ contract BotAccountTest is Test {
         bytes4 retVal = botAccount.isValidSignature(userOpHash, formattedSig);
         bytes4 expectedVal = botAccount.isValidSignature.selector;
         assertEq(retVal, expectedVal);
+    }
+
+    function test_validatorFlag4337() public {
+        uint256 turnkeyPrivatekey = 0xc0ffEEbabe;
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(turnkeyPrivatekey, ethSignedUserOpHash);
+        bytes memory sig = abi.encodePacked(r, s, v);
+        bytes8 validatorFlag = botAccount.VALIDATOR_FLAG(); // 0xf88284b100000000
+
+        // pack 32-byte word using `validatorFlag` OR against `address`
+        bytes32 validatorData = validatorFlag | bytes32(uint256(uint160(address(callPermitValidator))));
+        // using `abi.encodePacked()`, pack `validatorData` and `signer` address with signature
+        bytes memory formattedSig = abi.encodePacked(validatorData, testTurnkey, sig);
 
         userOp.signature = formattedSig;
         vm.prank(entryPointAddress);
@@ -271,7 +286,7 @@ contract BotAccountTest is Test {
         assertEq(retUint, 0);
     }
 
-    function test_invalidValidatorFlag() public {
+    function test_invalidValidatorFlag1271() public {
         uint256 turnkeyPrivatekey = 0xc0ffEEbabe;
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(turnkeyPrivatekey, userOpHash);
         bytes memory sig = abi.encodePacked(r, s, v);
@@ -285,6 +300,18 @@ contract BotAccountTest is Test {
         bytes4 retVal = botAccount.isValidSignature(userOpHash, formattedSig);
         bytes4 expectedVal = 0; // expect EIP1271 sig error: bytes4(0)
         assertEq(retVal, expectedVal);
+    }
+
+    function test_invalidValidatorFlag4337() public {
+        uint256 turnkeyPrivatekey = 0xc0ffEEbabe;
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(turnkeyPrivatekey, ethSignedUserOpHash);
+        bytes memory sig = abi.encodePacked(r, s, v);
+        bytes8 wrongValidatorFlag = bytes8(uint64(botAccount.VALIDATOR_FLAG()) + 1); // 0xf88284b100000001
+
+        // pack 32-byte word using `wrongValidatorFlag` OR against `address`
+        bytes32 validatorData = wrongValidatorFlag | bytes32(uint256(uint160(address(callPermitValidator))));
+        // using `abi.encodePacked()`, pack `validatorData` and `signer` address with signature
+        bytes memory formattedSig = abi.encodePacked(validatorData, sig);
 
         userOp.signature = formattedSig;
         vm.prank(entryPointAddress);
@@ -292,7 +319,7 @@ contract BotAccountTest is Test {
         assertEq(retUint, 1); // expect EIP4337 sig error: 1
     }
 
-    function test_defaultSignature() public {
+    function test_defaultSignature1271() public {
         uint256 ownerPrivatekey = 0xbeefEEbabe;
         UserOperation memory newUserOp = userOp;
 
@@ -303,6 +330,15 @@ contract BotAccountTest is Test {
         bytes4 retVal = botAccount.isValidSignature(newUserOpHash, sig);
         bytes4 expectedVal = botAccount.isValidSignature.selector;
         assertEq(retVal, expectedVal);
+    }
+
+    function test_defaultSignature4337() public {
+        uint256 ownerPrivatekey = 0xbeefEEbabe;
+        UserOperation memory newUserOp = userOp;
+
+        bytes32 newUserOpHash = callPermitValidator.getUserOpHash(newUserOp);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivatekey, ECDSA.toEthSignedMessageHash(newUserOpHash));
+        bytes memory sig = abi.encodePacked(r, s, v);
 
         newUserOp.signature = sig;
         vm.prank(entryPointAddress);
@@ -310,7 +346,7 @@ contract BotAccountTest is Test {
         assertEq(retUint, 0); // expect 4337 success code: 0
     }
 
-    function test_invalidDefaultSignature() public {
+    function test_invalidDefaultSignature1271() public {
         uint256 notOwnerPrivatekey = 0xdead;
         UserOperation memory newUserOp = userOp;
 
@@ -321,6 +357,15 @@ contract BotAccountTest is Test {
         bytes4 retVal = botAccount.isValidSignature(newUserOpHash, sig);
         bytes4 expectedVal = bytes4(0); // expect default signature error code: bytes4(0)
         assertEq(retVal, expectedVal);
+    }
+
+    function test_invalidDefaultSignature4337() public {
+        uint256 notOwnerPrivatekey = 0xdead;
+        UserOperation memory newUserOp = userOp;
+
+        bytes32 newUserOpHash = callPermitValidator.getUserOpHash(newUserOp);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(notOwnerPrivatekey, ECDSA.toEthSignedMessageHash(newUserOpHash));
+        bytes memory sig = abi.encodePacked(r, s, v);
 
         newUserOp.signature = sig;
         vm.prank(entryPointAddress);

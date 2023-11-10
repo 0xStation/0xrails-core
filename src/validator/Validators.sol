@@ -83,5 +83,5 @@ abstract contract Validators is IValidators {
     }
 
     /// @dev Function to be implemented with desired access control
-    function _checkCanUpdateValidators() internal view virtual;
+    function _checkCanUpdateValidators() internal virtual;
 }
