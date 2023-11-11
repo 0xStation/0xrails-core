@@ -9,6 +9,7 @@ interface IRoles {
     struct GrantedRole {
         bytes32 role;
         address account;
+        uint40 updatedAt;
     }
 
     error RolePrefixCollision(bytes32 role1, bytes32 role2);

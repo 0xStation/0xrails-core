@@ -11,8 +11,9 @@ abstract contract Roles is IRoles {
 
     /// @inheritdoc IRoles
     function hasRole(bytes32 role, address account) public view virtual returns (bool) {
-        Storage.GrantedRoleData memory grantedRole = Storage.layout()._grantedRoles[Storage._packKey(account, role)];
-        return grantedRole.exists && grantedRole.roleSuffix == bytes20(uint160(uint256(role)));
+        (bytes32 grantedRoleKey, bytes20 roleSuffix) = Storage._packKey(account, role);
+        Storage.GrantedRoleData memory grantedRole = Storage.layout()._grantedRoles[grantedRoleKey];
+        return grantedRole.exists && grantedRole.roleSuffix == roleSuffix;
     }
 
     /// @inheritdoc IRoles
@@ -25,7 +26,7 @@ abstract contract Roles is IRoles {
             (address account, bytes12 rolePrefix) = Storage._unpackKey(grantedRoleKey);
             Storage.GrantedRoleData memory grantedRole = layout._grantedRoles[grantedRoleKey];
             grantedRoles[i] =
-                GrantedRole(bytes32(uint256(bytes32(rolePrefix)) | uint256(uint160(grantedRole.roleSuffix))), account);
+                GrantedRole(Storage._stitchRole(rolePrefix, grantedRole.roleSuffix), account, uint40(block.timestamp));
         }
         return grantedRoles;
     }
@@ -70,8 +71,7 @@ abstract contract Roles is IRoles {
 
     function _grantRole(bytes32 role, address account) internal {
         Storage.Layout storage layout = Storage.layout();
-        bytes32 grantedRoleKey = Storage._packKey(account, role);
-        bytes20 roleSuffix = bytes20(uint160(uint256(role)));
+        (bytes32 grantedRoleKey, bytes20 roleSuffix) = Storage._packKey(account, role);
         if (layout._grantedRoles[grantedRoleKey].exists) {
             if (layout._grantedRoles[grantedRoleKey].roleSuffix == roleSuffix) {
                 bytes12 rolePrefix = bytes12(role);
@@ -94,8 +94,7 @@ abstract contract Roles is IRoles {
 
     function _revokeRole(bytes32 role, address account) internal {
         Storage.Layout storage layout = Storage.layout();
-        bytes32 grantedRoleKey = Storage._packKey(account, role);
-        bytes20 roleSuffix = bytes20(uint160(uint256(role)));
+        (bytes32 grantedRoleKey, bytes20 roleSuffix) = Storage._packKey(account, role);
         Storage.GrantedRoleData memory oldGrantedRoleData = layout._grantedRoles[grantedRoleKey];
         if (!(oldGrantedRoleData.exists && oldGrantedRoleData.roleSuffix == roleSuffix)) {
             revert RoleNotGranted(role, account);
