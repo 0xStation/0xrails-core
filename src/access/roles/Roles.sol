@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {IRoles} from "./interface/IRoles.sol";
 import {RolesStorage as Storage} from "./RolesStorage.sol";
 
-abstract contract RolesInternal is IRoles {
+abstract contract Roles is IRoles {
     /*===========
         VIEWS
     ===========*/
