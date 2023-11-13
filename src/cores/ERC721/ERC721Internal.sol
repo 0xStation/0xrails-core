@@ -2,10 +2,10 @@
 pragma solidity ^0.8.13;
 
 import {Initializable} from "../../lib/initializable/Initializable.sol";
-import {IERC721Internal, IERC721Receiver} from "./interface/IERC721.sol";
+import {IERC721, IERC721Receiver} from "./interface/IERC721.sol";
 import {ERC721Storage} from "./ERC721Storage.sol";
 
-abstract contract ERC721Internal is Initializable, IERC721Internal {
+abstract contract ERC721Internal is Initializable, IERC721 {
     /*=================
         INITIALIZER
     =================*/
@@ -30,42 +30,42 @@ abstract contract ERC721Internal is Initializable, IERC721Internal {
         return layout.currentIndex;
     }
 
-    function totalSupply() public view virtual returns (uint256) {
+    function _totalSupply() internal view returns (uint256) {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         return layout.currentIndex - layout.burnCounter - _startTokenId();
     }
 
-    function totalMinted() public view virtual returns (uint256) {
+    function _totalMinted() internal view returns (uint256) {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         return layout.currentIndex - _startTokenId();
     }
 
-    function totalBurned() public view virtual returns (uint256) {
+    function _totalBurned() internal view returns (uint256) {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         return layout.burnCounter;
     }
 
     // owner values
 
-    function balanceOf(address owner) public view virtual returns (uint256) {
+    function _balanceOf(address owner) internal view returns (uint256) {
         if (owner == address(0)) revert BalanceQueryForZeroAddress();
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         return layout.owners[owner].balance;
     }
 
-    function numberMinted(address owner) public view returns (uint256) {
+    function _numberMinted(address owner) internal view returns (uint256) {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         return layout.owners[owner].numMinted;
     }
 
-    function numberBurned(address owner) public view returns (uint256) {
+    function _numberBurned(address owner) internal view returns (uint256) {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         return layout.owners[owner].numBurned;
     }
 
     // token values
 
-    function ownerOf(uint256 tokenId) public view virtual returns (address) {
+    function _ownerOf(uint256 tokenId) internal view returns (address) {
         return _batchMarkerDataOf(tokenId).owner; // reverts if token not owned
     }
 
@@ -110,14 +110,14 @@ abstract contract ERC721Internal is Initializable, IERC721Internal {
 
     // approvals
 
-    function getApproved(uint256 tokenId) public view virtual returns (address) {
+    function _getApproved(uint256 tokenId) internal view returns (address) {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         if (!_exists(tokenId)) revert ApprovalQueryForNonexistentToken();
 
         return layout.tokenApprovals[tokenId];
     }
 
-    function isApprovedForAll(address owner, address operator) public view virtual returns (bool) {
+    function _isApprovedForAll(address owner, address operator) internal view returns (bool) {
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         return layout.operatorApprovals[owner][operator];
     }
@@ -132,10 +132,10 @@ abstract contract ERC721Internal is Initializable, IERC721Internal {
         if (operator == address(0)) {
             revert ApprovalInvalidOperator();
         }
-        address owner = ownerOf(tokenId);
+        address owner = _ownerOf(tokenId);
 
         if (msg.sender != owner) {
-            if (!isApprovedForAll(owner, msg.sender)) {
+            if (!_isApprovedForAll(owner, msg.sender)) {
                 revert ApprovalCallerNotOwnerNorApproved();
             }
         }
@@ -319,9 +319,9 @@ abstract contract ERC721Internal is Initializable, IERC721Internal {
     ====================*/
 
     function _checkCanTransfer(address account, uint256 tokenId) internal virtual {
-        if (ownerOf(tokenId) != msg.sender) {
-            if (!isApprovedForAll(account, msg.sender)) {
-                if (getApproved(tokenId) != msg.sender) {
+        if (_ownerOf(tokenId) != msg.sender) {
+            if (!_isApprovedForAll(account, msg.sender)) {
+                if (_getApproved(tokenId) != msg.sender) {
                     revert TransferCallerNotOwnerNorApproved();
                 }
             }

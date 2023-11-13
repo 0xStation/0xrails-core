@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {IERC721External} from "./interface/IERC721.sol";
+import {IERC721} from "./interface/IERC721.sol";
 import {ERC721Internal} from "./ERC721Internal.sol";
 import {ERC721Storage} from "./ERC721Storage.sol";
 
-abstract contract ERC721 is ERC721Internal, IERC721External {
+abstract contract ERC721 is ERC721Internal {
     /*===========
         VIEWS
     ===========*/
@@ -27,6 +27,46 @@ abstract contract ERC721 is ERC721Internal, IERC721External {
         return interfaceId == 0x01ffc9a7 // ERC165 interface ID for ERC165.
             || interfaceId == 0x80ac58cd // ERC165 interface ID for ERC721.
             || interfaceId == 0x5b5e139f; // ERC165 interface ID for ERC721Metadata.
+    }
+
+    /*===========
+        VIEWS
+    ===========*/
+
+    function totalSupply() public view virtual override returns (uint256) {
+        return _totalSupply();
+    }
+
+    function balanceOf(address owner) public view virtual override returns (uint256) {
+        return _balanceOf(owner);
+    }
+
+    function ownerOf(uint256 tokenId) public view virtual returns (address) {
+        return _ownerOf(tokenId);
+    }
+
+    function getApproved(uint256 tokenId) public view virtual returns (address) {
+        return _getApproved(tokenId);
+    }
+
+    function isApprovedForAll(address owner, address operator) public view virtual returns (bool) {
+        return _isApprovedForAll(owner, operator);
+    }
+
+    function totalMinted() public view virtual override returns (uint256) {
+        return _totalMinted();
+    }
+
+    function totalBurned() public view virtual override returns (uint256) {
+        return _totalBurned();
+    }
+
+    function numberMinted(address owner) public view override returns (uint256) {
+        return _numberMinted(owner);
+    }
+
+    function numberBurned(address owner) public view override returns (uint256) {
+        return _numberBurned(owner);
     }
 
     /*=============
@@ -55,8 +95,4 @@ abstract contract ERC721 is ERC721Internal, IERC721External {
         transferFrom(from, to, tokenId);
         _checkOnERC721Received(from, to, tokenId, data);
     }
-
-    /*====================
-        AUTHORIZATION
-    ====================*/
 }
