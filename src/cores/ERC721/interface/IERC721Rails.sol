@@ -6,7 +6,7 @@ interface IERC721Rails {
     /// @dev Function to mint ERC721Rails tokens to a recipient
     /// @param recipient The address of the recipient to receive the minted tokens.
     /// @param quantity The amount of tokens to mint and transfer to the recipient.
-    function mintTo(address recipient, uint256 quantity) external;
+    function mintTo(address recipient, uint256 quantity) external returns (uint256 mintStartTokenId);
 
     /// @dev Burn ERC721Rails tokens from the caller.
     /// @param tokenId The ID of the token to burn from the sender's balance.

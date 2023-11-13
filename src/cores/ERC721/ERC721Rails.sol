@@ -106,7 +106,10 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
     =============*/
 
     /// @inheritdoc IERC721Rails
-    function mintTo(address recipient, uint256 quantity) external onlyPermission(Operations.MINT) {
+    function mintTo(address recipient, uint256 quantity) 
+        external onlyPermission(Operations.MINT) returns (uint256 mintStartTokenId)
+    {
+        mintStartTokenId = _nextTokenId();
         _safeMint(recipient, quantity);
     }
 
