@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC721} from "src/cores/ERC721/ERC721.sol";
-import {IERC721, IERC721Internal} from "src/cores/ERC721/interface/IERC721.sol";
+import {IERC721} from "src/cores/ERC721/interface/IERC721.sol";
 import {ERC721Storage} from "src/cores/ERC721/ERC721Storage.sol";
 import {ERC721Harness} from "test/cores/ERC721/helpers/ERC721Harness.sol";
 import {ERC721ReceiverImplementer} from "test/cores/ERC721/helpers/ERC721ReceiverImplementer.sol";
@@ -41,14 +41,14 @@ contract ERC721Test is Test {
     }
 
     function test_mintRevertZeroQuantity(address to) public {
-        vm.expectRevert(IERC721Internal.MintZeroQuantity.selector);
+        vm.expectRevert(IERC721.MintZeroQuantity.selector);
         erc721.mint(to, 0);
         assertEq(erc721.totalMinted(), 0);
     }
 
     function test_mintRevertZeroAddress(uint8 quantity) public {
         vm.assume(quantity != 0);
-        vm.expectRevert(IERC721Internal.MintToZeroAddress.selector);
+        vm.expectRevert(IERC721.MintToZeroAddress.selector);
         erc721.mint(address(0x0), quantity);
         assertEq(erc721.totalMinted(), 0);
     }
@@ -71,7 +71,7 @@ contract ERC721Test is Test {
         vm.assume(quantity > 0);
 
         address to = address(this); // test contract doesn't implement onERC721Received()
-        err = abi.encodeWithSelector(IERC721Internal.TransferToNonERC721ReceiverImplementer.selector);
+        err = abi.encodeWithSelector(IERC721.TransferToNonERC721ReceiverImplementer.selector);
         vm.expectRevert(err);
         erc721.safeMint(to, quantity);
 
@@ -101,7 +101,7 @@ contract ERC721Test is Test {
             erc721.burn(tokenId);
             assertEq(erc721.totalSupply(), preBurnBalance - (i + 1));
             assertEq(erc721.balanceOf(to), preBurnBalance - (i + 1));
-            vm.expectRevert(IERC721Internal.OwnerQueryForNonexistentToken.selector);
+            vm.expectRevert(IERC721.OwnerQueryForNonexistentToken.selector);
             erc721.ownerOf(tokenId);
         }
         assertEq(erc721.totalBurned(), burnQuantity);
@@ -181,7 +181,7 @@ contract ERC721Test is Test {
 
         uint256 preTransferBalanceFrom = erc721.balanceOf(from);
         uint256 preTransferBalanceTo = erc721.balanceOf(to);
-        err = abi.encodeWithSelector(IERC721Internal.TransferToNonERC721ReceiverImplementer.selector);
+        err = abi.encodeWithSelector(IERC721.TransferToNonERC721ReceiverImplementer.selector);
         // attempt safeTransfers to this address
         for (uint256 i; i < transferQuantity; i++) {
             uint256 tokenId = i;
@@ -242,7 +242,7 @@ contract ERC721Test is Test {
             assertFalse(erc721.isApprovedForAll(from, operator));
 
             // make reverting approval
-            err = abi.encodeWithSelector(IERC721Internal.ApprovalInvalidOperator.selector);
+            err = abi.encodeWithSelector(IERC721.ApprovalInvalidOperator.selector);
             vm.expectRevert(err);
             vm.prank(from);
             erc721.approve(operator, i);
@@ -270,7 +270,7 @@ contract ERC721Test is Test {
             assertFalse(erc721.isApprovedForAll(from, someAddress));
 
             // make reverting approval as someAddress
-            err = abi.encodeWithSelector(IERC721Internal.ApprovalCallerNotOwnerNorApproved.selector);
+            err = abi.encodeWithSelector(IERC721.ApprovalCallerNotOwnerNorApproved.selector);
             vm.expectRevert(err);
             vm.prank(someAddress);
             erc721.approve(operator, i);
@@ -307,7 +307,7 @@ contract ERC721Test is Test {
         // no approval yet
         assertFalse(erc721.isApprovedForAll(from, badOperator));
 
-        err = abi.encodeWithSelector(IERC721Internal.ApprovalInvalidOperator.selector);
+        err = abi.encodeWithSelector(IERC721.ApprovalInvalidOperator.selector);
         vm.expectRevert(err);
         vm.prank(from);
         erc721.setApprovalForAll(badOperator, true);
@@ -413,7 +413,7 @@ contract ERC721Test is Test {
             assertEq(erc721.ownerOf(tokenId), from);
 
             // attempt transferFrom without approval
-            err = abi.encodeWithSelector(IERC721Internal.TransferCallerNotOwnerNorApproved.selector);
+            err = abi.encodeWithSelector(IERC721.TransferCallerNotOwnerNorApproved.selector);
             vm.expectRevert(err);
             erc721.transferFrom(from, to, tokenId);
 
