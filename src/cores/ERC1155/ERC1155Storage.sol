@@ -2,7 +2,8 @@
 pragma solidity ^0.8.13;
 
 library ERC1155Storage {
-    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("0xrails.ERC1155")) - 1));
+    // `keccak256(abi.encode(uint256(keccak256("0xrails.ERC1155")) - 1)) & ~bytes32(uint256(0xff));`
+    bytes32 internal constant SLOT = 0x952dbaf1612c9c8046b26f71d8522ed2497f086620534427664d0784cf404500;
 
     struct Layout {
         // id => account => balance

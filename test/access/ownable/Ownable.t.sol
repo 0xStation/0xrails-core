@@ -31,7 +31,7 @@ contract OwnableTest is Test, Ownable {
         assembly {
             slit := layout.slot
         }
-        bytes32 slot = keccak256(abi.encode(uint256(keccak256("0xrails.Owner")) - 1));
+        bytes32 slot = keccak256(abi.encode(uint256(keccak256("0xrails.Owner")) - 1)) & ~bytes32(uint256(0xff));
 
         assertEq(slit, slot);
     }
