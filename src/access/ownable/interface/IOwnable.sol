@@ -18,10 +18,6 @@ interface IOwnableInternal {
 }
 
 interface IOwnableExternal {
-    /// @dev Function to renounce all potential for ownership of the contract 
-    /// by assigning it to the zero address, which has no known private key.
-    function renounceOwnership() external;
-    
     /// @dev Function to commence ownership transfer by setting `newOwner` as pending
     /// @param newOwner The intended new owner to be set as pending, awaiting acceptance
     function transferOwnership(address newOwner) external;

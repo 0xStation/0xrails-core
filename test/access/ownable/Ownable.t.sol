@@ -36,20 +36,6 @@ contract OwnableTest is Test, Ownable {
         assertEq(slit, slot);
     }
 
-    function test_renounceOwnership() public {
-        vm.expectEmit(true, true, false, true);
-        emit OwnershipTransferred(initialOwner, address(0x0));
-        vm.prank(initialOwner);
-        renounceOwnership();
-
-        assertEq(owner(), address(0x0));
-        assertEq(pendingOwner(), address(0x0));
-        // check storage
-        OwnableStorage.Layout storage layout = OwnableStorage.layout();
-        assertEq(layout.owner, address(0x0));
-        assertEq(layout.pendingOwner, address(0x0));
-    }
-
     function test_transferOwnership(address someAddress) public {
         vm.assume(someAddress != address(0x0) && someAddress != initialOwner);
 

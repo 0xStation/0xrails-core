@@ -13,11 +13,6 @@ abstract contract Ownable is OwnableInternal, IOwnableExternal {
     =============*/
 
     /// @inheritdoc IOwnableExternal
-    function renounceOwnership() public virtual onlyOwner {
-        _transferOwnership(address(0));
-    }
-
-    /// @inheritdoc IOwnableExternal
     function transferOwnership(address newOwner) public virtual onlyOwner {
         _startOwnershipTransfer(newOwner);
     }
