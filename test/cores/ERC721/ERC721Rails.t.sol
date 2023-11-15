@@ -498,4 +498,18 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         }
         vm.stopPrank();
     }
+
+    // first-time ERC721A transfers of high-index tokenId minted in large batches 
+    // can result in exorbitant gas costs. In testing, we found batch mint sizes of 500
+    // to be a reasonable middle-ground for gas cost given likelihood of large batch mints 
+    // and subsequent fresh transfers of the highest index token in that batch
+    function test_batchMintMaxSize() public {
+        address gasVictim = createAccount();
+        
+        vm.prank(owner);
+        ERC721RailsProxy.mintTo(gasVictim, 500);
+
+        vm.prank(gasVictim);
+        ERC721RailsProxy.transferFrom(gasVictim, owner, 500);
+    }
 }

@@ -21,6 +21,11 @@ import {Initializable} from "../../lib/initializable/Initializable.sol";
 /// @notice This contract implements the Rails pattern to provide enhanced functionality for ERC721 tokens.
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
 contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IERC721Rails {
+
+    /// @dev Large batch mints of ERC721A tokens can result in high gas costs upon first transfer of high tokenIds
+    /// To improve UX for token owners unaware of this fact, a mint batch size of 500 is enforced
+    uint256 public constant MAX_MINT_BATCH_SIZE = 500;
+
     /// @notice Declaring this contract `Initializable()` invokes `_disableInitializers()`,
     /// in order to preemptively mitigate proxy privilege escalation attack vectors
     constructor() Initializable() {}
@@ -109,6 +114,8 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
     function mintTo(address recipient, uint256 quantity) 
         external onlyPermission(Operations.MINT) returns (uint256 mintStartTokenId)
     {
+        if (quantity > MAX_MINT_BATCH_SIZE) revert ExceedsMaxMintBatchSize(quantity);
+        
         mintStartTokenId = _nextTokenId();
         _safeMint(recipient, quantity);
     }
