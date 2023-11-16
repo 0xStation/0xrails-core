@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-interface IExtensionsInternal {
+interface IExtensions {
     struct Extension {
         bytes4 selector;
         address implementation;
@@ -16,11 +16,7 @@ interface IExtensionsInternal {
     error ExtensionDoesNotExist(bytes4 selector);
     error ExtensionAlreadyExists(bytes4 selector);
     error ExtensionUnchanged(bytes4 selector, address oldImplementation, address newImplementation);
-}
 
-/// @notice Since the Solidity compiler ignores inherited functions, function declarations are made
-/// at the top level so their selectors are properly XORed into a nonzero `interfaceId`
-interface IExtensions is IExtensionsInternal {
     /// @dev Function to check whether the given selector is mapped to an extension contract
     /// @param selector The function selector to query
     /// @return '' Boolean value identifying if the given selector is extended or not
