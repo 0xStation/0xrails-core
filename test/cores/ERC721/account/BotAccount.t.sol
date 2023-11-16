@@ -12,7 +12,7 @@ import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 import {IOwnableInternal} from "src/access/ownable/interface/IOwnable.sol";
-import {IPermissions, IPermissionsInternal} from "src/access/permissions/interface/IPermissions.sol";
+import {IPermissions} from "src/access/permissions/interface/IPermissions.sol";
 import {IGuards} from "src/guard/interface/IGuards.sol";
 import {IExtensions} from "src/extension/interface/IExtensions.sol";
 import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
@@ -193,7 +193,7 @@ contract BotAccountTest is Test {
 
     function test_addTurnkeyRevertPermissionDoesNotExist(address someAddress) public {
         err = abi.encodeWithSelector(
-            IPermissionsInternal.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this)
+            IPermissions.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this)
         );
         vm.expectRevert(err);
         botAccount.addPermission(Operations.CALL_PERMIT, someAddress);
@@ -243,7 +243,7 @@ contract BotAccountTest is Test {
 
         // attempt removal of added permission without pranking owner
         err = abi.encodeWithSelector(
-            IPermissionsInternal.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this)
+            IPermissions.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this)
         );
         vm.expectRevert(err);
         botAccount.removePermission(op, someAddress);

@@ -7,7 +7,7 @@ import {ERC721Rails} from "src/cores/ERC721/ERC721Rails.sol";
 import {IERC721} from "src/cores/ERC721/interface/IERC721.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {Permissions} from "src/access/permissions/Permissions.sol";
-import {IPermissions, IPermissionsInternal} from "src/access/permissions/interface/IPermissions.sol";
+import {IPermissions} from "src/access/permissions/interface/IPermissions.sol";
 import {Guards} from "src/guard/Guards.sol";
 import {IGuards} from "src/guard/interface/IGuards.sol";
 import {MetadataRouterExtension} from "src/extension/examples/metadataRouter/MetadataRouterExtension.sol";
@@ -166,7 +166,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         assertFalse(ERC721RailsProxy.supportsInterface(someInterfaceId));
 
         err = abi.encodeWithSelector(
-            IPermissionsInternal.PermissionDoesNotExist.selector, Operations.INTERFACE, address(this)
+            IPermissions.PermissionDoesNotExist.selector, Operations.INTERFACE, address(this)
         );
         vm.expectRevert(err);
         ERC721RailsProxy.addInterface(someInterfaceId);

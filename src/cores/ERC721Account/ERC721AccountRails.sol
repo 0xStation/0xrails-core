@@ -12,7 +12,7 @@ import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {ValidatorsStorage} from "src/validator/ValidatorsStorage.sol";
 import {Initializable} from "src/lib/initializable/Initializable.sol";
 import {Access} from "src/access/Access.sol";
-import {IPermissions, IPermissionsInternal} from "src/access/permissions/interface/IPermissions.sol";
+import {IPermissions} from "src/access/permissions/interface/IPermissions.sol";
 import {Extensions} from "src/extension/Extensions.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {ERC6551AccountLib} from "src/lib/ERC6551/lib/ERC6551AccountLib.sol";
@@ -61,7 +61,7 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
     /// @inheritdoc Account
     function withdrawFromEntryPoint(address payable recipient, uint256 amount) public virtual override {
         if (!_isAuthorized(Operations.ADMIN, msg.sender)) {
-            revert IPermissionsInternal.PermissionDoesNotExist(Operations.ADMIN, msg.sender);
+            revert IPermissions.PermissionDoesNotExist(Operations.ADMIN, msg.sender);
         }
 
         _updateState();
@@ -174,25 +174,25 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
     function _checkCanUpdateValidators() internal virtual override {
         _updateState();
         if (!_isAuthorized(Operations.VALIDATOR, msg.sender)) {
-            revert IPermissionsInternal.PermissionDoesNotExist(Operations.VALIDATOR, msg.sender);
+            revert IPermissions.PermissionDoesNotExist(Operations.VALIDATOR, msg.sender);
         }
     }
     function _checkCanUpdatePermissions() internal override {
         _updateState();
         if (!_isAuthorized(Operations.PERMISSIONS, msg.sender)) {
-            revert IPermissionsInternal.PermissionDoesNotExist(Operations.PERMISSIONS, msg.sender);
+            revert IPermissions.PermissionDoesNotExist(Operations.PERMISSIONS, msg.sender);
         }
     }
     function _checkCanUpdateGuards() internal override {
         _updateState();
         if (!_isAuthorized(Operations.GUARDS, msg.sender)) {
-            revert IPermissionsInternal.PermissionDoesNotExist(Operations.GUARDS, msg.sender);
+            revert IPermissions.PermissionDoesNotExist(Operations.GUARDS, msg.sender);
         }
     }
     function _checkCanUpdateInterfaces() internal override {
         _updateState();
         if (!_isAuthorized(Operations.INTERFACE, msg.sender)) {
-            revert IPermissionsInternal.PermissionDoesNotExist(Operations.INTERFACE, msg.sender);
+            revert IPermissions.PermissionDoesNotExist(Operations.INTERFACE, msg.sender);
         }
     }
 
@@ -206,7 +206,7 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         if (chainId == block.chainid) {
             require(msg.sender == owner(), "NOT_OWNER");
         } else if (!_isAccountGroupAdmin(msg.sender)) {
-            revert IPermissionsInternal.PermissionDoesNotExist(Operations.ADMIN, msg.sender);
+            revert IPermissions.PermissionDoesNotExist(Operations.ADMIN, msg.sender);
         }
     }
 
