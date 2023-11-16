@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-interface IGuardsInternal {
+interface IGuards {
     struct Guard {
         bytes8 operation;
         address implementation;
@@ -15,11 +15,7 @@ interface IGuardsInternal {
     error GuardDoesNotExist(bytes8 operation);
     error GuardUnchanged(bytes8 operation, address oldImplementation, address newImplementation);
     error GuardRejected(bytes8 operation, address guard);
-}
 
-/// @notice Since the Solidity compiler ignores inherited functions, function declarations are made
-/// at the top level so their selectors are properly XORed into a nonzero `interfaceId`
-interface IGuards is IGuardsInternal {
     /// @dev Perform checks before executing a specific operation and return guard information.
     /// @param operation The operation identifier to check.
     /// @param data Additional data associated with the operation.
