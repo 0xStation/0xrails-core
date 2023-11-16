@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-interface IInitializableInternal {
+interface IInitializable {
     // events
     event Initialized();
 
@@ -13,5 +13,3 @@ interface IInitializableInternal {
     /// @dev View function to return whether a proxy contract has been initialized.
     function initialized() external view returns (bool);
 }
-
-interface IInitializable is IInitializableInternal {}
