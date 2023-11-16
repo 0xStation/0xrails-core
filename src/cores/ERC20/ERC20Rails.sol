@@ -8,7 +8,6 @@ import {Access} from "../../access/Access.sol";
 import {ERC20} from "./ERC20.sol";
 import {IERC20} from "./interface/IERC20.sol";
 import {TokenMetadata} from "../TokenMetadata/TokenMetadata.sol";
-import {TokenMetadataInternal} from "../TokenMetadata/TokenMetadataInternal.sol";
 import {
     ITokenURIExtension, IContractURIExtension
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
@@ -69,14 +68,14 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
 
     /// @dev Function to return the name of a token implementation
     /// @return _ The returned ERC20 name string
-    function name() public view override(IERC20, TokenMetadataInternal) returns (string memory) {
-        return TokenMetadataInternal.name();
+    function name() public view override(IERC20, TokenMetadata) returns (string memory) {
+        return TokenMetadata.name();
     }
 
     /// @dev Function to return the symbol of a token implementation
     /// @return _ The returned ERC20 symbol string
-    function symbol() public view override(IERC20, TokenMetadataInternal) returns (string memory) {
-        return TokenMetadataInternal.symbol();
+    function symbol() public view override(IERC20, TokenMetadata) returns (string memory) {
+        return TokenMetadata.symbol();
     }
 
     /// @dev Returns the contract URI for this ERC20 token.

@@ -1,11 +1,26 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {ITokenMetadataExternal} from "./ITokenMetadata.sol";
-import {TokenMetadataInternal} from "./TokenMetadataInternal.sol";
+import {ITokenMetadata} from "./ITokenMetadata.sol";
 import {TokenMetadataStorage} from "./TokenMetadataStorage.sol";
 
-abstract contract TokenMetadata is TokenMetadataInternal, ITokenMetadataExternal {
+abstract contract TokenMetadata is ITokenMetadata {
+
+    /*===========
+        VIEWS
+    ===========*/
+
+    /// @inheritdoc ITokenMetadata
+    function name() public view virtual returns (string memory) {
+        TokenMetadataStorage.Layout storage layout = TokenMetadataStorage.layout();
+        return layout.name;
+    }
+
+    /// @inheritdoc ITokenMetadata
+    function symbol() public view virtual returns (string memory) {
+        TokenMetadataStorage.Layout storage layout = TokenMetadataStorage.layout();
+        return layout.symbol;
+    }
 
     /*=============
         SETTERS
@@ -21,6 +36,20 @@ abstract contract TokenMetadata is TokenMetadataInternal, ITokenMetadataExternal
     /// @param symbol_ The symbol string to set
     function setSymbol(string calldata symbol_) external canUpdateTokenMetadata {
         _setSymbol(symbol_);
+    }
+
+    /*===============
+        INTERNALS
+    ===============*/
+
+    function _setName(string calldata name_) internal {
+        TokenMetadataStorage.layout().name = name_;
+        emit NameUpdated(name_);
+    }
+
+    function _setSymbol(string calldata symbol_) internal {
+        TokenMetadataStorage.layout().symbol = symbol_;
+        emit SymbolUpdated(symbol_);
     }
 
     /*====================

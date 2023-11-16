@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-interface ITokenMetadataInternal {
+interface ITokenMetadata {
     // events
     event NameUpdated(string name);
     event SymbolUpdated(string symbol);
-
-    // errors
 
     /// @dev Function to return the name of a token implementation
     /// @return _ The returned name string
@@ -15,9 +13,7 @@ interface ITokenMetadataInternal {
     /// @dev Function to return the symbol of a token implementation
     /// @return _ The returned symbol string
     function symbol() external view returns (string calldata);
-}
 
-interface ITokenMetadataExternal {
     /// @dev Function to set the name for a token implementation
     /// @param name The name string to set
     function setName(string calldata name) external;
@@ -26,5 +22,3 @@ interface ITokenMetadataExternal {
     /// @param symbol The symbol string to set
     function setSymbol(string calldata symbol) external;
 }
-
-interface ITokenMetadata is ITokenMetadataInternal, ITokenMetadataExternal {}

@@ -9,7 +9,6 @@ import {Access} from "../../access/Access.sol";
 import {ERC721} from "./ERC721.sol";
 import {ERC721Internal} from "./ERC721Internal.sol";
 import {TokenMetadata} from "../TokenMetadata/TokenMetadata.sol";
-import {TokenMetadataInternal} from "../TokenMetadata/TokenMetadataInternal.sol";
 import {
     ITokenURIExtension, IContractURIExtension
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
@@ -78,14 +77,14 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
 
     /// @dev Function to return the name of a token implementation
     /// @return _ The returned ERC721 name string
-    function name() public view override(ERC721, TokenMetadataInternal) returns (string memory) {
-        return TokenMetadataInternal.name();
+    function name() public view override(ERC721, TokenMetadata) returns (string memory) {
+        return TokenMetadata.name();
     }
 
     /// @dev Function to return the symbol of a token implementation
     /// @return _ The returned ERC721 symbol string
-    function symbol() public view override(ERC721, TokenMetadataInternal) returns (string memory) {
-        return TokenMetadataInternal.symbol();
+    function symbol() public view override(ERC721, TokenMetadata) returns (string memory) {
+        return TokenMetadata.symbol();
     }
 
     /// @notice Contracts inheriting ERC721A are required to implement `tokenURI()`

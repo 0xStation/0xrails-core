@@ -8,7 +8,6 @@ import {Ownable, Ownable} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
 import {ERC1155} from "./ERC1155.sol";
 import {TokenMetadata} from "../TokenMetadata/TokenMetadata.sol";
-import {TokenMetadataInternal} from "../TokenMetadata/TokenMetadataInternal.sol";
 import {
     ITokenURIExtension, IContractURIExtension
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
@@ -60,14 +59,14 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
 
     /// @dev Function to return the name of a token implementation
     /// @return _ The returned ERC1155 name string
-    function name() public view override(ERC1155, TokenMetadataInternal) returns (string memory) {
-        return TokenMetadataInternal.name();
+    function name() public view override(ERC1155, TokenMetadata) returns (string memory) {
+        return TokenMetadata.name();
     }
 
     /// @dev Function to return the symbol of a token implementation
     /// @return _ The returned ERC1155 symbol string
-    function symbol() public view override(ERC1155, TokenMetadataInternal) returns (string memory) {
-        return TokenMetadataInternal.symbol();
+    function symbol() public view override(ERC1155, TokenMetadata) returns (string memory) {
+        return TokenMetadata.symbol();
     }
 
     /// @inheritdoc Rails
