@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {Test} from "forge-std/Test.sol";
 import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {ERC721Rails} from "src/cores/ERC721/ERC721Rails.sol";
-import {IERC721, IERC721Internal} from "src/cores/ERC721/interface/IERC721.sol";
+import {IERC721} from "src/cores/ERC721/interface/IERC721.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {Permissions} from "src/access/permissions/Permissions.sol";
 import {IPermissions, IPermissionsInternal} from "src/access/permissions/interface/IPermissions.sol";
@@ -193,7 +193,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
     function test_mintToRevertZeroQuantity(address to) public {
         vm.assume(to != address(0x0));
 
-        vm.expectRevert(IERC721Internal.MintZeroQuantity.selector);
+        vm.expectRevert(IERC721.MintZeroQuantity.selector);
         vm.prank(owner);
         ERC721RailsProxy.mintTo(to, 0);
 
@@ -204,7 +204,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
 
     function test_mintToRevertZeroAddress(uint8 quantity) public {
         vm.assume(quantity != 0);
-        vm.expectRevert(IERC721Internal.MintToZeroAddress.selector);
+        vm.expectRevert(IERC721.MintToZeroAddress.selector);
         vm.prank(owner);
         ERC721RailsProxy.mintTo(address(0x0), quantity);
         assertEq(ERC721RailsProxy.totalMinted(), 0);
@@ -215,7 +215,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         vm.assume(quantity > 0);
 
         address to = address(this); // test contract doesn't implement onERC721Received()
-        err = abi.encodeWithSelector(IERC721Internal.TransferToNonERC721ReceiverImplementer.selector);
+        err = abi.encodeWithSelector(IERC721.TransferToNonERC721ReceiverImplementer.selector);
         vm.expectRevert(err);
         vm.startPrank(owner);
         ERC721RailsProxy.mintTo(to, quantity);
@@ -245,7 +245,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         assertEq(ERC721RailsProxy.totalSupply(), quantity);
         assertEq(ERC721RailsProxy.totalBurned(), 0);
 
-        err = abi.encodeWithSelector(IERC721Internal.OwnerQueryForNonexistentToken.selector);
+        err = abi.encodeWithSelector(IERC721.OwnerQueryForNonexistentToken.selector);
         for (uint32 i; i < quantity;) {
             ++i;
             assertEq(ERC721RailsProxy.ownerOf(i), recipient);
@@ -302,7 +302,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
             assertFalse(ERC721RailsProxy.isApprovedForAll(from, operator));
 
             // make reverting approval
-            err = abi.encodeWithSelector(IERC721Internal.ApprovalInvalidOperator.selector);
+            err = abi.encodeWithSelector(IERC721.ApprovalInvalidOperator.selector);
             vm.expectRevert(err);
             vm.prank(from);
             ERC721RailsProxy.approve(operator, i);
@@ -332,7 +332,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
             assertFalse(ERC721RailsProxy.isApprovedForAll(from, someAddress));
 
             // make reverting approval as someAddress
-            err = abi.encodeWithSelector(IERC721Internal.ApprovalCallerNotOwnerNorApproved.selector);
+            err = abi.encodeWithSelector(IERC721.ApprovalCallerNotOwnerNorApproved.selector);
             vm.expectRevert(err);
             vm.prank(someAddress);
             ERC721RailsProxy.approve(operator, i);
@@ -374,7 +374,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         // no approval yet
         assertFalse(ERC721RailsProxy.isApprovedForAll(from, badOperator));
 
-        err = abi.encodeWithSelector(IERC721Internal.ApprovalInvalidOperator.selector);
+        err = abi.encodeWithSelector(IERC721.ApprovalInvalidOperator.selector);
         vm.expectRevert(err);
         vm.prank(from);
         ERC721RailsProxy.setApprovalForAll(badOperator, true);
@@ -487,7 +487,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
             assertEq(ERC721RailsProxy.ownerOf(tokenId), from);
 
             // attempt transferFrom without approval
-            err = abi.encodeWithSelector(IERC721Internal.TransferCallerNotOwnerNorApproved.selector);
+            err = abi.encodeWithSelector(IERC721.TransferCallerNotOwnerNorApproved.selector);
             vm.expectRevert(err);
             ERC721RailsProxy.transferFrom(from, to, tokenId);
 
