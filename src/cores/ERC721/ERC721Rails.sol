@@ -7,7 +7,7 @@ import {Rails} from "../../Rails.sol";
 import {Ownable, Ownable} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
 import {ERC721} from "./ERC721.sol";
-import {ERC721Internal} from "./ERC721Internal.sol";
+import {IERC721} from "./interface/IERC721.sol";
 import {TokenMetadata} from "../TokenMetadata/TokenMetadata.sol";
 import {
     ITokenURIExtension, IContractURIExtension
@@ -40,7 +40,7 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
         external
         initializer
     {
-        ERC721Internal._initialize();
+        ERC721._initialize();
         _setName(name_);
         _setSymbol(symbol_);
         if (initData.length > 0) {
@@ -77,13 +77,13 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
 
     /// @dev Function to return the name of a token implementation
     /// @return _ The returned ERC721 name string
-    function name() public view override(ERC721, TokenMetadata) returns (string memory) {
+    function name() public view override(IERC721, TokenMetadata) returns (string memory) {
         return TokenMetadata.name();
     }
 
     /// @dev Function to return the symbol of a token implementation
     /// @return _ The returned ERC721 symbol string
-    function symbol() public view override(ERC721, TokenMetadata) returns (string memory) {
+    function symbol() public view override(IERC721, TokenMetadata) returns (string memory) {
         return TokenMetadata.symbol();
     }
 
