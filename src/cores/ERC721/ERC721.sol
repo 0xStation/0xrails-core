@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import {IERC721, IERC721Receiver} from "./interface/IERC721.sol";
-import {ERC721} from "./ERC721.sol";
 import {ERC721Storage} from "./ERC721Storage.sol";
 import {Initializable} from "../../lib/initializable/Initializable.sol";
 
