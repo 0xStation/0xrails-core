@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 
 import {Rails} from "../../Rails.sol";
-import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
+import {Ownable, Ownable} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
 import {ERC721} from "./ERC721.sol";
 import {ERC721Internal} from "./ERC721Internal.sol";
@@ -30,9 +30,9 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
     /// in order to preemptively mitigate proxy privilege escalation attack vectors
     constructor() Initializable() {}
 
-    /// @dev Owner address is implemented using the `OwnableInternal` contract's function
-    function owner() public view override(Access, OwnableInternal) returns (address) {
-        return OwnableInternal.owner();
+    /// @dev Owner address is implemented using the `Ownable` contract's function
+    function owner() public view override(Access, Ownable) returns (address) {
+        return Ownable.owner();
     }
 
     /// @notice Cannot call initialize within a proxy constructor, only post-deployment in a factory

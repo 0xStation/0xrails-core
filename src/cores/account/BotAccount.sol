@@ -9,7 +9,7 @@ import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {ValidatorsStorage} from "src/validator/ValidatorsStorage.sol";
 import {Initializable} from "src/lib/initializable/Initializable.sol";
 import {Ownable} from "src/access/ownable/Ownable.sol";
-import {OwnableInternal} from "src/access/ownable/OwnableInternal.sol";
+import {Ownable} from "src/access/ownable/Ownable.sol";
 import {Access} from "src/access/Access.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
@@ -90,8 +90,8 @@ contract BotAccount is AccountRails, Ownable, Initializable {
     /// @notice This function must be overridden by contracts inheriting `Account` to delineate
     /// the type of Account: `Bot`, `Member`, or `Group`
     /// @dev Owner stored explicitly using OwnableStorage's ERC7201 namespace
-    function owner() public view virtual override(Access, OwnableInternal) returns (address) {
-        return OwnableInternal.owner();
+    function owner() public view virtual override(Access, Ownable) returns (address) {
+        return Ownable.owner();
     }
 
     /// @dev Function to withdraw funds using the EntryPoint's `withdrawTo()` function

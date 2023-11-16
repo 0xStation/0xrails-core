@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 import {Rails} from "../../Rails.sol";
-import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
+import {Ownable, Ownable} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
 import {ERC20} from "./ERC20.sol";
 import {IERC20} from "./interface/IERC20.sol";
@@ -23,9 +23,9 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
     /// in order to preemptively mitigate proxy privilege escalation attack vectors
     constructor() Initializable() {}
 
-    /// @dev Owner address is implemented using the `OwnableInternal` contract's function
-    function owner() public view override(Access, OwnableInternal) returns (address) {
-        return OwnableInternal.owner();
+    /// @dev Owner address is implemented using the `Ownable` contract's function
+    function owner() public view override(Access, Ownable) returns (address) {
+        return Ownable.owner();
     }
 
     /// @dev Initialize the ERC20Rails contract with the given owner, name, symbol, and initialization data.

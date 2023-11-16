@@ -11,7 +11,7 @@ import {Operations} from "src/lib/Operations.sol";
 import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
-import {IOwnableInternal} from "src/access/ownable/interface/IOwnable.sol";
+import {IOwnable} from "src/access/ownable/interface/IOwnable.sol";
 import {IPermissions} from "src/access/permissions/interface/IPermissions.sol";
 import {IGuards} from "src/guard/interface/IGuards.sol";
 import {IExtensions} from "src/extension/interface/IExtensions.sol";
