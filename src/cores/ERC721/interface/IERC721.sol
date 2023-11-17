@@ -22,6 +22,7 @@ interface IERC721 {
     error URIQueryForNonexistentToken();
     error MintERC2309QuantityExceedsLimit();
     error OwnershipNotInitializedForExtraData();
+    error ExceedsMaxMintBatchSize(uint256 quantity);
 
     // ERC721 spec
     function balanceOf(address owner) external view returns (uint256);

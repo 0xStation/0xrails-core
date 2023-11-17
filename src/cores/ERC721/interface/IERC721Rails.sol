@@ -3,8 +3,6 @@ pragma solidity ^0.8.13;
 
 /// @notice using the consistent Access layer, expose external functions for interacting with core token logic
 interface IERC721Rails {
-    error ExceedsMaxMintBatchSize(uint256 quantity);
-
     /// @dev Function to mint ERC721Rails tokens to a recipient
     /// @param recipient The address of the recipient to receive the minted tokens.
     /// @param quantity The amount of tokens to mint and transfer to the recipient.
