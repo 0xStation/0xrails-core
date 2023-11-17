@@ -6,6 +6,11 @@ import {IERC721, IERC721Receiver} from "./interface/IERC721.sol";
 import {ERC721Storage} from "./ERC721Storage.sol";
 
 abstract contract ERC721Internal is Initializable, IERC721 {
+
+    /// @dev Large batch mints of ERC721A tokens can result in high gas costs upon first transfer of high tokenIds
+    /// To improve UX for token owners unaware of this fact, a mint batch size of 500 is enforced
+    uint256 public constant MAX_MINT_BATCH_SIZE = 500;
+
     /*=================
         INITIALIZER
     =================*/
@@ -158,6 +163,7 @@ abstract contract ERC721Internal is Initializable, IERC721 {
 
     function _mint(address to, uint256 quantity) internal {
         if (quantity == 0) revert MintZeroQuantity();
+        if (quantity > MAX_MINT_BATCH_SIZE) revert ExceedsMaxMintBatchSize(quantity);
         if (to == address(0)) revert MintToZeroAddress();
 
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
