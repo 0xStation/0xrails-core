@@ -79,7 +79,7 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
     }
 
     /// @dev Returns the contract URI for this ERC20 token.
-    /// @notice Uses extended contract URI logic from the `ContractURIExtension` contract 
+    /// @notice Uses extended contract URI logic from the `ContractURIExtension` contract
     /// @return _ The returned contractURI string
     function contractURI() public view override returns (string memory) {
         // to avoid clashing selectors, use standardized `ext_` prefix
@@ -107,7 +107,12 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
     }
 
     /// @inheritdoc IERC20Rails
-    function transferFrom(address from, address to, uint256 value) public virtual override(ERC20, IERC20Rails) returns (bool) {
+    function transferFrom(address from, address to, uint256 value)
+        public
+        virtual
+        override(ERC20, IERC20Rails)
+        returns (bool)
+    {
         _checkCanTransfer(from, msg.sender, value);
         _transfer(from, to, value);
         return true;
@@ -186,7 +191,7 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
         // changes to core functionality must be restricted to owners to protect admins overthrowing
         _checkOwner();
     }
-    
+
     /// @dev Only the `owner` possesses UUPS upgrade rights
     function _authorizeUpgrade(address) internal view override {
         // changes to core functionality must be restricted to owners to protect admins overthrowing

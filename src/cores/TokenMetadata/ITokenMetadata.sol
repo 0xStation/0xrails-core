@@ -9,7 +9,7 @@ interface ITokenMetadata {
     /// @dev Function to return the name of a token implementation
     /// @return _ The returned name string
     function name() external view returns (string calldata);
-    
+
     /// @dev Function to return the symbol of a token implementation
     /// @return _ The returned symbol string
     function symbol() external view returns (string calldata);

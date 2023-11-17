@@ -64,7 +64,8 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
             UserOperation memory formattedUserOp = userOp;
             formattedUserOp.signature = formattedSig;
 
-            uint256 ret = IValidator(validator).validateUserOp(formattedUserOp, ethSignedUserOpHash, missingAccountFunds);
+            uint256 ret =
+                IValidator(validator).validateUserOp(formattedUserOp, ethSignedUserOpHash, missingAccountFunds);
 
             // if validator rejects sig, terminate early with status code 1
             if (ret != 0) return ret;
@@ -184,11 +185,17 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
     /// @dev Declare explicit ERC165 support for ERC1271 interface in addition to existing interfaces
     /// @param interfaceId The interfaceId to check for support
     /// @return _ Boolean indicating whether the contract supports the specified interface.
-    function supportsInterface(bytes4 interfaceId) public view virtual override(Rails, Validators, ERC1155Receiver) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Rails, Validators, ERC1155Receiver)
+        returns (bool)
+    {
         return (
-            interfaceId == type(IERC1271).interfaceId || interfaceId == type(IAccount).interfaceId 
-                || interfaceId == type(IERC1155Receiver).interfaceId
-                || Rails.supportsInterface(interfaceId) || Validators.supportsInterface(interfaceId)
+            interfaceId == type(IERC1271).interfaceId || interfaceId == type(IAccount).interfaceId
+                || interfaceId == type(IERC1155Receiver).interfaceId || Rails.supportsInterface(interfaceId)
+                || Validators.supportsInterface(interfaceId)
         );
     }
 

@@ -6,7 +6,6 @@ import {ERC721Storage} from "./ERC721Storage.sol";
 import {Initializable} from "../../lib/initializable/Initializable.sol";
 
 abstract contract ERC721 is Initializable, IERC721 {
-
     /// @dev Large batch mints of ERC721A tokens can result in high gas costs upon first transfer of high tokenIds
     /// To improve UX for token owners unaware of this fact, a mint batch size of 500 is enforced
     uint256 public constant MAX_MINT_BATCH_SIZE = 500;
@@ -127,7 +126,7 @@ abstract contract ERC721 is Initializable, IERC721 {
         return layout.currentIndex;
     }
 
-        /// @notice Returns the token data for the token marking this batch mint
+    /// @notice Returns the token data for the token marking this batch mint
     /// @dev If tokenId was minted in a batch and tokenId is not the first id in the batch,
     ///      then the returned data will be for a different tokenId.
     function _batchMarkerDataOf(uint256 tokenId) private view returns (ERC721Storage.TokenData memory) {

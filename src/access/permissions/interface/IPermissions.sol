@@ -20,7 +20,7 @@ interface IPermissions {
 
     /// @dev Function to hash an operation's `name` and typecast it to 8-bytes
     function hashOperation(string memory name) external view returns (bytes8);
-    
+
     /// @dev Function to check that an address retains the permission for an operation
     /// @param operation An 8-byte value derived by hashing the operation name and typecasting to bytes8
     /// @param account The address to query against storage for permission
@@ -33,7 +33,7 @@ interface IPermissions {
     /// @param operation The operation to permit
     /// @param account The account address to be granted permission for the operation
     function addPermission(bytes8 operation, address account) external;
-    
+
     /// @dev Function to remove permission for an address to carry out an operation
     /// @param operation The operation to restrict
     /// @param account The account address whose permission to remove

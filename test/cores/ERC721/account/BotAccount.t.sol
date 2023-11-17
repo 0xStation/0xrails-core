@@ -157,8 +157,7 @@ contract BotAccountTest is Test {
             uint256 expectedValidationData = 0;
             uint256 missingAccountFunds = 0;
             vm.prank(entryPointAddress);
-            uint256 returnedValidationData =
-                botAccount.validateUserOp(currentUserOp, userOpHash, missingAccountFunds);
+            uint256 returnedValidationData = botAccount.validateUserOp(currentUserOp, userOpHash, missingAccountFunds);
             assertEq(returnedValidationData, expectedValidationData);
         }
     }
@@ -192,9 +191,8 @@ contract BotAccountTest is Test {
     }
 
     function test_addTurnkeyRevertPermissionDoesNotExist(address someAddress) public {
-        err = abi.encodeWithSelector(
-            IPermissions.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this)
-        );
+        err =
+            abi.encodeWithSelector(IPermissions.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this));
         vm.expectRevert(err);
         botAccount.addPermission(Operations.CALL_PERMIT, someAddress);
     }
@@ -242,9 +240,8 @@ contract BotAccountTest is Test {
         botAccount.addPermission(op, someAddress);
 
         // attempt removal of added permission without pranking owner
-        err = abi.encodeWithSelector(
-            IPermissions.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this)
-        );
+        err =
+            abi.encodeWithSelector(IPermissions.PermissionDoesNotExist.selector, Operations.PERMISSIONS, address(this));
         vm.expectRevert(err);
         botAccount.removePermission(op, someAddress);
     }

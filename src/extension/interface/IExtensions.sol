@@ -26,16 +26,16 @@ interface IExtensions {
     /// @param selector The function selector to query for its extension.
     /// @return implementation The address of the extension contract for the function.
     function extensionOf(bytes4 selector) external view returns (address implementation);
-    
+
     /// @dev Function to get an array of all registered extension contracts.
     /// @return extensions An array containing information about all registered extensions.
     function getAllExtensions() external view returns (Extension[] memory extensions);
-    
+
     /// @dev Function to set a extension contract for a specific function selector.
     /// @param selector The function selector for which to set an extension contract.
     /// @param implementation The address of the extension contract to map to a function.
     function setExtension(bytes4 selector, address implementation) external;
-    
+
     /// @dev Function to remove the extension contract for a function.
     /// @param selector The function selector for which to remove its extension.
     function removeExtension(bytes4 selector) external;

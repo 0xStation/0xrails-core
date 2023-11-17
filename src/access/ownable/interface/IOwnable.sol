@@ -20,7 +20,7 @@ interface IOwnable {
     /// @dev Function to commence ownership transfer by setting `newOwner` as pending
     /// @param newOwner The intended new owner to be set as pending, awaiting acceptance
     function transferOwnership(address newOwner) external;
-    
+
     /// @dev Function to accept an offer of ownership, intended to be called
     /// only by the address that is currently set as `pendingOwner`
     function acceptOwnership() external;

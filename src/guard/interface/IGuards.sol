@@ -38,7 +38,7 @@ interface IGuards {
     /// @param operation The operation identifier.
     /// @return implementation The address of the guard contract for the operation.
     function guardOf(bytes8 operation) external view returns (address implementation);
-    
+
     /// @dev Get an array of all registered guard contracts.
     /// @return Guards An array containing information about all registered guard contracts.
     function getAllGuards() external view returns (Guard[] memory Guards);

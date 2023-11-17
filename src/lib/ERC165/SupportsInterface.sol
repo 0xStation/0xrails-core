@@ -5,7 +5,6 @@ import {ISupportsInterface} from "./ISupportsInterface.sol";
 import {SupportsInterfaceStorage} from "./SupportsInterfaceStorage.sol";
 
 abstract contract SupportsInterface is ISupportsInterface {
-
     /// @dev For explicit EIP165 compliance, the interfaceId of the standard IERC165 implementation
     /// which is derived from `bytes4(keccak256('supportsInterface(bytes4)'))`
     /// is stored directly as a constant in order to preserve Rails's ERC7201 namespace pattern

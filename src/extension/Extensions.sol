@@ -10,7 +10,6 @@ import {Address} from "openzeppelin-contracts/utils/Address.sol";
 /// @title Extensions - A contract for managing contract extensions via function delegation
 /// @notice This abstract contract provides functionality for extending function selectors using external contracts.
 abstract contract Extensions is IExtensions {
-
     /*==================
         CALL ROUTING
     ==================*/
@@ -61,7 +60,7 @@ abstract contract Extensions is IExtensions {
         return extensions;
     }
 
-    /// @dev Function to implement ERC-165 compliance 
+    /// @dev Function to implement ERC-165 compliance
     /// @param interfaceId The interface identifier to check.
     /// @return _ Boolean indicating whether the contract supports the specified interface.
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {

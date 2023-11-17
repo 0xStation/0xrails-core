@@ -5,7 +5,6 @@ import {ITokenMetadata} from "./ITokenMetadata.sol";
 import {TokenMetadataStorage} from "./TokenMetadataStorage.sol";
 
 abstract contract TokenMetadata is ITokenMetadata {
-
     /*===========
         VIEWS
     ===========*/

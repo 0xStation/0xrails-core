@@ -85,7 +85,7 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
     }
 
     /// @dev Returns the contract URI for this ERC20 token, a modern standard for NFTs
-    /// @notice Uses extended contract URI logic from the `ContractURIExtension` contract 
+    /// @notice Uses extended contract URI logic from the `ContractURIExtension` contract
     /// @return _ The returned contractURI string
     function contractURI() public view override returns (string memory) {
         // to avoid clashing selectors, use standardized `ext_` prefix

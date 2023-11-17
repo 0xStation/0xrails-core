@@ -8,7 +8,6 @@ import {OwnableStorage} from "./OwnableStorage.sol";
 /// @dev This contract provides access control by defining an owner address,
 /// which can be updated through a two-step pending acceptance system or even revoked if desired.
 abstract contract Ownable is IOwnable {
-
     /*===========
         VIEWS
     ===========*/

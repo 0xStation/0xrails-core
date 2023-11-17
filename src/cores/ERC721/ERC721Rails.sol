@@ -20,7 +20,6 @@ import {Initializable} from "../../lib/initializable/Initializable.sol";
 /// @notice This contract implements the Rails pattern to provide enhanced functionality for ERC721 tokens.
 /// @dev ERC721A chosen for only practical solution for large token supply allocations
 contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IERC721Rails {
-
     /// @notice Declaring this contract `Initializable()` invokes `_disableInitializers()`,
     /// in order to preemptively mitigate proxy privilege escalation attack vectors
     constructor() Initializable() {}
@@ -106,9 +105,11 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
     =============*/
 
     /// @inheritdoc IERC721Rails
-    function mintTo(address recipient, uint256 quantity) 
-        external onlyPermission(Operations.MINT) returns (uint256 mintStartTokenId)
-    {        
+    function mintTo(address recipient, uint256 quantity)
+        external
+        onlyPermission(Operations.MINT)
+        returns (uint256 mintStartTokenId)
+    {
         mintStartTokenId = _nextTokenId();
         _safeMint(recipient, quantity);
     }

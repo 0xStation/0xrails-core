@@ -13,11 +13,8 @@ library ERC6551AccountLib {
         address tokenContract,
         uint256 tokenId
     ) internal pure returns (address) {
-        bytes32 bytecodeHash = keccak256(
-            ERC6551BytecodeLib.getCreationCode(
-                _implementation, _salt, chainId, tokenContract, tokenId
-            )
-        );
+        bytes32 bytecodeHash =
+            keccak256(ERC6551BytecodeLib.getCreationCode(_implementation, _salt, chainId, tokenContract, tokenId));
 
         return Create2.computeAddress(_salt, bytecodeHash, registry);
     }
@@ -40,8 +37,7 @@ library ERC6551AccountLib {
 
         (bytes32 _salt, uint256 chainId, address tokenContract, uint256 tokenId) = context(account);
 
-        return account
-            == computeAddress(registry, _implementation, _salt, chainId, tokenContract, tokenId );
+        return account == computeAddress(registry, _implementation, _salt, chainId, tokenContract, tokenId);
     }
 
     function implementation(address account) internal view returns (address _implementation) {

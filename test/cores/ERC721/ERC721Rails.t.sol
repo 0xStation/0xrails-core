@@ -165,9 +165,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         // attempt to addInterface without permission
         assertFalse(ERC721RailsProxy.supportsInterface(someInterfaceId));
 
-        err = abi.encodeWithSelector(
-            IPermissions.PermissionDoesNotExist.selector, Operations.INTERFACE, address(this)
-        );
+        err = abi.encodeWithSelector(IPermissions.PermissionDoesNotExist.selector, Operations.INTERFACE, address(this));
         vm.expectRevert(err);
         ERC721RailsProxy.addInterface(someInterfaceId);
         assertFalse(ERC721RailsProxy.supportsInterface(someInterfaceId));
@@ -461,10 +459,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         assertEq(ERC721RailsProxy.totalMinted(), mintQuantity);
     }
 
-    function test_transferFromRevertTransferCallerNotOwnerNorApproved(
-        address badOperator,
-        uint8 mintQuantity
-    ) public {
+    function test_transferFromRevertTransferCallerNotOwnerNorApproved(address badOperator, uint8 mintQuantity) public {
         address from = createAccount();
         address to = createAccount();
         // prevent transfers, approvals to/from address(0x0)
@@ -499,13 +494,13 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         vm.stopPrank();
     }
 
-    // first-time ERC721A transfers of high-index tokenId minted in large batches 
+    // first-time ERC721A transfers of high-index tokenId minted in large batches
     // can result in exorbitant gas costs. In testing, we found batch mint sizes of 500
-    // to be a reasonable middle-ground for gas cost given likelihood of large batch mints 
+    // to be a reasonable middle-ground for gas cost given likelihood of large batch mints
     // and subsequent fresh transfers of the highest index token in that batch
     function test_batchMintMaxSize() public {
         address gasVictim = createAccount();
-        
+
         vm.prank(owner);
         ERC721RailsProxy.mintTo(gasVictim, 500);
 
