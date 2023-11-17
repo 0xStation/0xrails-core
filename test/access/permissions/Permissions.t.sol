@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import {Test} from "forge-std/Test.sol";
 import {Permissions} from "src/access/permissions/Permissions.sol";
 import {IPermissions} from "src/access/permissions/interface/IPermissions.sol";
-import {PermissionsInternal} from "src/access/permissions/PermissionsInternal.sol";
 import {PermissionsStorage} from "src/access/permissions/PermissionsStorage.sol";
 
 contract PermissionsTest is Test, Permissions {

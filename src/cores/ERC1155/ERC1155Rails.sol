@@ -4,11 +4,10 @@ pragma solidity ^0.8.13;
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 
 import {Rails} from "../../Rails.sol";
-import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
+import {Ownable, Ownable} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
 import {ERC1155} from "./ERC1155.sol";
 import {TokenMetadata} from "../TokenMetadata/TokenMetadata.sol";
-import {TokenMetadataInternal} from "../TokenMetadata/TokenMetadataInternal.sol";
 import {
     ITokenURIExtension, IContractURIExtension
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
@@ -23,9 +22,9 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
     /// in order to preemptively mitigate proxy privilege escalation attack vectors
     constructor() Initializable() {}
 
-    /// @dev Owner address is implemented using the `OwnableInternal` contract's function
-    function owner() public view override(Access, OwnableInternal) returns (address) {
-        return OwnableInternal.owner();
+    /// @dev Owner address is implemented using the `Ownable` contract's function
+    function owner() public view override(Access, Ownable) returns (address) {
+        return Ownable.owner();
     }
 
     /// @notice Cannot call initialize within a proxy constructor, only post-deployment in a factory
@@ -60,14 +59,14 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
 
     /// @dev Function to return the name of a token implementation
     /// @return _ The returned ERC1155 name string
-    function name() public view override(ERC1155, TokenMetadataInternal) returns (string memory) {
-        return TokenMetadataInternal.name();
+    function name() public view override(ERC1155, TokenMetadata) returns (string memory) {
+        return TokenMetadata.name();
     }
 
     /// @dev Function to return the symbol of a token implementation
     /// @return _ The returned ERC1155 symbol string
-    function symbol() public view override(ERC1155, TokenMetadataInternal) returns (string memory) {
-        return TokenMetadataInternal.symbol();
+    function symbol() public view override(ERC1155, TokenMetadata) returns (string memory) {
+        return TokenMetadata.symbol();
     }
 
     /// @inheritdoc Rails
@@ -86,7 +85,7 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
     }
 
     /// @dev Returns the contract URI for this ERC20 token, a modern standard for NFTs
-    /// @notice Uses extended contract URI logic from the `ContractURIExtension` contract 
+    /// @notice Uses extended contract URI logic from the `ContractURIExtension` contract
     /// @return _ The returned contractURI string
     function contractURI() public view override returns (string memory) {
         // to avoid clashing selectors, use standardized `ext_` prefix

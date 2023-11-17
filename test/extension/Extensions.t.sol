@@ -5,7 +5,6 @@ import {Test} from "forge-std/Test.sol";
 import {Extensions} from "src/extension/Extensions.sol";
 import {IExtensions} from "src/extension/interface/IExtensions.sol";
 import {IExtension} from "src/extension/interface/IExtension.sol";
-import {ExtensionsInternal} from "src/extension/ExtensionsInternal.sol";
 import {ExtensionsStorage} from "src/extension/ExtensionsStorage.sol";
 import {MetadataRouterExtension} from "src/extension/examples/metadataRouter/MetadataRouterExtension.sol";
 import {Contract} from "src/lib/Contract.sol";

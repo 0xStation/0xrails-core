@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
 import {ISupportsInterface} from "src/lib/ERC165/ISupportsInterface.sol";
-import {SupportsInterfaceInternal} from "src/lib/ERC165/SupportsInterfaceInternal.sol";
 import {SupportsInterfaceStorage} from "src/lib/ERC165/SupportsInterfaceStorage.sol";
 import {SupportsInterface} from "src/lib/ERC165/SupportsInterface.sol";
 import {IERC721Receiver} from "src/cores/ERC721/interface/IERC721.sol";

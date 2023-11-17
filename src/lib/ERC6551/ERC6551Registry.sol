@@ -46,19 +46,16 @@ interface IERC6551Registry {
      *
      * @return The computed address of the token bound account
      */
-    function account(
-        address implementation,
-        bytes32 salt,
-        uint256 chainId,
-        address tokenContract,
-        uint256 tokenId
-    ) external view returns (address);
+    function account(address implementation, bytes32 salt, uint256 chainId, address tokenContract, uint256 tokenId)
+        external
+        view
+        returns (address);
 }
 
 library ERC6551BytecodeLib {
     /**
      * @dev Returns the creation code of the token bound account for a non-fungible token
-     * 
+     *
      * @return the creation code of the token bound account
      */
     function getCreationCode(
@@ -88,9 +85,7 @@ contract ERC6551Registry is IERC6551Registry {
         address tokenContract,
         uint256 tokenId
     ) external returns (address) {
-        bytes memory code = ERC6551BytecodeLib.getCreationCode(
-            implementation, salt, chainId, tokenContract, tokenId
-        );
+        bytes memory code = ERC6551BytecodeLib.getCreationCode(implementation, salt, chainId, tokenContract, tokenId);
 
         address _account = Create2.computeAddress(salt, keccak256(code));
 
@@ -110,18 +105,13 @@ contract ERC6551Registry is IERC6551Registry {
     /**
      * @dev {See IERC6551Registry-account}
      */
-    function account(
-        address implementation,
-        bytes32 salt,
-        uint256 chainId,
-        address tokenContract,
-        uint256 tokenId
-    ) external view returns (address) {
-        bytes32 bytecodeHash = keccak256(
-            ERC6551BytecodeLib.getCreationCode(
-                implementation, salt, chainId, tokenContract, tokenId
-            )
-        );
+    function account(address implementation, bytes32 salt, uint256 chainId, address tokenContract, uint256 tokenId)
+        external
+        view
+        returns (address)
+    {
+        bytes32 bytecodeHash =
+            keccak256(ERC6551BytecodeLib.getCreationCode(implementation, salt, chainId, tokenContract, tokenId));
 
         return Create2.computeAddress(salt, bytecodeHash);
     }

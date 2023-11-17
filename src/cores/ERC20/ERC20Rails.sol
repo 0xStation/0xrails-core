@@ -3,12 +3,11 @@ pragma solidity ^0.8.13;
 
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 import {Rails} from "../../Rails.sol";
-import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
+import {Ownable, Ownable} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
 import {ERC20} from "./ERC20.sol";
 import {IERC20} from "./interface/IERC20.sol";
 import {TokenMetadata} from "../TokenMetadata/TokenMetadata.sol";
-import {TokenMetadataInternal} from "../TokenMetadata/TokenMetadataInternal.sol";
 import {
     ITokenURIExtension, IContractURIExtension
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
@@ -23,9 +22,9 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
     /// in order to preemptively mitigate proxy privilege escalation attack vectors
     constructor() Initializable() {}
 
-    /// @dev Owner address is implemented using the `OwnableInternal` contract's function
-    function owner() public view override(Access, OwnableInternal) returns (address) {
-        return OwnableInternal.owner();
+    /// @dev Owner address is implemented using the `Ownable` contract's function
+    function owner() public view override(Access, Ownable) returns (address) {
+        return Ownable.owner();
     }
 
     /// @dev Initialize the ERC20Rails contract with the given owner, name, symbol, and initialization data.
@@ -69,18 +68,18 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
 
     /// @dev Function to return the name of a token implementation
     /// @return _ The returned ERC20 name string
-    function name() public view override(IERC20, TokenMetadataInternal) returns (string memory) {
-        return TokenMetadataInternal.name();
+    function name() public view override(IERC20, TokenMetadata) returns (string memory) {
+        return TokenMetadata.name();
     }
 
     /// @dev Function to return the symbol of a token implementation
     /// @return _ The returned ERC20 symbol string
-    function symbol() public view override(IERC20, TokenMetadataInternal) returns (string memory) {
-        return TokenMetadataInternal.symbol();
+    function symbol() public view override(IERC20, TokenMetadata) returns (string memory) {
+        return TokenMetadata.symbol();
     }
 
     /// @dev Returns the contract URI for this ERC20 token.
-    /// @notice Uses extended contract URI logic from the `ContractURIExtension` contract 
+    /// @notice Uses extended contract URI logic from the `ContractURIExtension` contract
     /// @return _ The returned contractURI string
     function contractURI() public view override returns (string memory) {
         // to avoid clashing selectors, use standardized `ext_` prefix
@@ -108,7 +107,12 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
     }
 
     /// @inheritdoc IERC20Rails
-    function transferFrom(address from, address to, uint256 value) public virtual override(ERC20, IERC20Rails) returns (bool) {
+    function transferFrom(address from, address to, uint256 value)
+        public
+        virtual
+        override(ERC20, IERC20Rails)
+        returns (bool)
+    {
         _checkCanTransfer(from, msg.sender, value);
         _transfer(from, to, value);
         return true;
@@ -187,7 +191,7 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
         // changes to core functionality must be restricted to owners to protect admins overthrowing
         _checkOwner();
     }
-    
+
     /// @dev Only the `owner` possesses UUPS upgrade rights
     function _authorizeUpgrade(address) internal view override {
         // changes to core functionality must be restricted to owners to protect admins overthrowing

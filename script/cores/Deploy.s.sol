@@ -28,7 +28,7 @@ contract Deploy is ScriptUtils {
 
         bytes32 salt = ScriptUtils.create2Salt;
         string memory saltString = Strings.toHexString(uint256(salt), 32);
-        
+
         membershipImpl = new ERC721Rails{salt: salt}();
         pointsImpl = new ERC20Rails{salt: salt}();
         badgeImpl = new ERC1155Rails{salt: salt}();
