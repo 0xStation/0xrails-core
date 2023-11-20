@@ -30,7 +30,6 @@ contract BotAccountScript is ScriptUtils {
         address entryPointAddress = ScriptUtils.entryPointAddress;
 
         bytes32 salt = ScriptUtils.create2Salt;
-        string memory saltString = Strings.toHexString(uint256(salt), 32);
 
         address owner = ScriptUtils.stationFounderSafe;
         address turnkey = ScriptUtils.turnkey;

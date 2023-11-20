@@ -27,7 +27,6 @@ contract Deploy is ScriptUtils {
         vm.startBroadcast();
 
         bytes32 salt = ScriptUtils.create2Salt;
-        string memory saltString = Strings.toHexString(uint256(salt), 32);
 
         membershipImpl = new ERC721Rails{salt: salt}();
         pointsImpl = new ERC20Rails{salt: salt}();

@@ -32,7 +32,6 @@ contract BotAccountFactoryScript is ScriptUtils {
         address entryPointAddress = ScriptUtils.entryPointAddress;
 
         bytes32 salt = ScriptUtils.create2Salt;
-        string memory saltString = Strings.toHexString(uint256(salt), 32);
 
         address owner = ScriptUtils.symmetry;
         address turnkey = ScriptUtils.turnkey;
