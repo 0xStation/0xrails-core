@@ -3,7 +3,8 @@
 pragma solidity ^0.8.16;
 
 library ExtensionsStorage {
-    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("0xrails.Extensions")) - 1));
+    // `keccak256(abi.encode(uint256(keccak256("0xrails.Extensions")) - 1)) & ~bytes32(uint256(0xff));`
+    bytes32 internal constant SLOT = 0x24b223a3be882d5d1d257152fdb15a02ae59c6d11e58bc0c17888d15a9b15b00;
 
     struct Layout {
         bytes4[] _selectors;

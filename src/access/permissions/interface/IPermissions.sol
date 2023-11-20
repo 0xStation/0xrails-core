@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {PermissionsStorage} from "../PermissionsStorage.sol";
 
-interface IPermissionsInternal {
+interface IPermissions {
     struct Permission {
         bytes8 operation;
         address account;
@@ -17,14 +17,10 @@ interface IPermissionsInternal {
     // errors
     error PermissionAlreadyExists(bytes8 operation, address account);
     error PermissionDoesNotExist(bytes8 operation, address account);
-}
 
-/// @notice Since the Solidity compiler ignores inherited functions, function declarations are made
-/// at the top level so their selectors are properly XORed into a nonzero `interfaceId`
-interface IPermissions is IPermissionsInternal {
     /// @dev Function to hash an operation's `name` and typecast it to 8-bytes
     function hashOperation(string memory name) external view returns (bytes8);
-    
+
     /// @dev Function to check that an address retains the permission for an operation
     /// @param operation An 8-byte value derived by hashing the operation name and typecasting to bytes8
     /// @param account The address to query against storage for permission
@@ -37,7 +33,7 @@ interface IPermissions is IPermissionsInternal {
     /// @param operation The operation to permit
     /// @param account The account address to be granted permission for the operation
     function addPermission(bytes8 operation, address account) external;
-    
+
     /// @dev Function to remove permission for an address to carry out an operation
     /// @param operation The operation to restrict
     /// @param account The account address whose permission to remove

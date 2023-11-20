@@ -36,7 +36,8 @@ abstract contract Rails is Access, Guards, Extensions, SupportsInterface, Execut
     /// @inheritdoc Execute
     function _beforeExecuteCall(address to, uint256 value, bytes calldata data)
         internal
-        virtual override
+        virtual
+        override
         returns (address guard, bytes memory checkBeforeData)
     {
         return checkGuardBefore(Operations.CALL, abi.encode(to, value, data));
@@ -45,7 +46,8 @@ abstract contract Rails is Access, Guards, Extensions, SupportsInterface, Execut
     /// @inheritdoc Execute
     function _afterExecuteCall(address guard, bytes memory checkBeforeData, bytes memory executeData)
         internal
-        virtual override
+        virtual
+        override
     {
         checkGuardAfter(guard, checkBeforeData, executeData);
     }

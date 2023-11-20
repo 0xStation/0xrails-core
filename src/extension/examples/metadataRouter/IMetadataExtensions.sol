@@ -17,7 +17,7 @@ interface IMetadataRouter {
     /// @dev Returns the token URI
     /// @return '' The returned tokenURI string
     function tokenURI(address contractAddress, uint256 tokenId) external view returns (string memory);
-    
+
     /// @dev Returns the contract URI, a modern standard for NFTs
     /// @return '' The returned contractURI string
     function contractURI(address contractAddress) external view returns (string memory);

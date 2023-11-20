@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-interface IExtensionsInternal {
+interface IExtensions {
     struct Extension {
         bytes4 selector;
         address implementation;
@@ -16,11 +16,7 @@ interface IExtensionsInternal {
     error ExtensionDoesNotExist(bytes4 selector);
     error ExtensionAlreadyExists(bytes4 selector);
     error ExtensionUnchanged(bytes4 selector, address oldImplementation, address newImplementation);
-}
 
-/// @notice Since the Solidity compiler ignores inherited functions, function declarations are made
-/// at the top level so their selectors are properly XORed into a nonzero `interfaceId`
-interface IExtensions is IExtensionsInternal {
     /// @dev Function to check whether the given selector is mapped to an extension contract
     /// @param selector The function selector to query
     /// @return '' Boolean value identifying if the given selector is extended or not
@@ -30,16 +26,16 @@ interface IExtensions is IExtensionsInternal {
     /// @param selector The function selector to query for its extension.
     /// @return implementation The address of the extension contract for the function.
     function extensionOf(bytes4 selector) external view returns (address implementation);
-    
+
     /// @dev Function to get an array of all registered extension contracts.
     /// @return extensions An array containing information about all registered extensions.
     function getAllExtensions() external view returns (Extension[] memory extensions);
-    
+
     /// @dev Function to set a extension contract for a specific function selector.
     /// @param selector The function selector for which to set an extension contract.
     /// @param implementation The address of the extension contract to map to a function.
     function setExtension(bytes4 selector, address implementation) external;
-    
+
     /// @dev Function to remove the extension contract for a function.
     /// @param selector The function selector for which to remove its extension.
     function removeExtension(bytes4 selector) external;

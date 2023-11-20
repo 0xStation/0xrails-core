@@ -7,7 +7,7 @@ import {ERC721Rails} from "src/cores/ERC721/ERC721Rails.sol";
 import {IERC721} from "src/cores/ERC721/interface/IERC721.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {Permissions} from "src/access/permissions/Permissions.sol";
-import {IPermissions, IPermissionsInternal} from "src/access/permissions/interface/IPermissions.sol";
+import {IPermissions} from "src/access/permissions/interface/IPermissions.sol";
 import {Guards} from "src/guard/Guards.sol";
 import {IGuards} from "src/guard/interface/IGuards.sol";
 import {MetadataRouterExtension} from "src/extension/examples/metadataRouter/MetadataRouterExtension.sol";
@@ -165,9 +165,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         // attempt to addInterface without permission
         assertFalse(ERC721RailsProxy.supportsInterface(someInterfaceId));
 
-        err = abi.encodeWithSelector(
-            IPermissionsInternal.PermissionDoesNotExist.selector, Operations.INTERFACE, address(this)
-        );
+        err = abi.encodeWithSelector(IPermissions.PermissionDoesNotExist.selector, Operations.INTERFACE, address(this));
         vm.expectRevert(err);
         ERC721RailsProxy.addInterface(someInterfaceId);
         assertFalse(ERC721RailsProxy.supportsInterface(someInterfaceId));
@@ -461,10 +459,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         assertEq(ERC721RailsProxy.totalMinted(), mintQuantity);
     }
 
-    function test_transferFromRevertTransferCallerNotOwnerNorApproved(
-        address badOperator,
-        uint8 mintQuantity
-    ) public {
+    function test_transferFromRevertTransferCallerNotOwnerNorApproved(address badOperator, uint8 mintQuantity) public {
         address from = createAccount();
         address to = createAccount();
         // prevent transfers, approvals to/from address(0x0)
@@ -497,5 +492,19 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
             assertEq(ERC721RailsProxy.balanceOf(to), 0);
         }
         vm.stopPrank();
+    }
+
+    // first-time ERC721A transfers of high-index tokenId minted in large batches
+    // can result in exorbitant gas costs. In testing, we found batch mint sizes of 500
+    // to be a reasonable middle-ground for gas cost given likelihood of large batch mints
+    // and subsequent fresh transfers of the highest index token in that batch
+    function test_batchMintMaxSize() public {
+        address gasVictim = createAccount();
+
+        vm.prank(owner);
+        ERC721RailsProxy.mintTo(gasVictim, 500);
+
+        vm.prank(gasVictim);
+        ERC721RailsProxy.transferFrom(gasVictim, owner, 500);
     }
 }

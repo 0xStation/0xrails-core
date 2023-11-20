@@ -6,7 +6,7 @@ interface IExtension {
     /// @param selector The function selector to query.
     /// @return signature The signature string for the given function.
     function signatureOf(bytes4 selector) external pure returns (string memory signature);
-    
+
     /// @dev Function to get an array of all recognized function selectors.
     /// @return selectors An array containing all 4-byte function selectors.
     function getAllSelectors() external pure returns (bytes4[] memory selectors);

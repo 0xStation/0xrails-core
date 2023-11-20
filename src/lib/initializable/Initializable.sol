@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {IInitializableInternal} from "./IInitializable.sol";
+import {IInitializable} from "./IInitializable.sol";
 import {InitializableStorage} from "./InitializableStorage.sol";
 
-abstract contract Initializable is IInitializableInternal {
+abstract contract Initializable is IInitializable {
     /*===========
         LOCK
     ===========*/
@@ -59,7 +59,7 @@ abstract contract Initializable is IInitializableInternal {
         VIEWS
     ===========*/
 
-    /// @inheritdoc IInitializableInternal
+    /// @inheritdoc IInitializable
     function initialized() public view returns (bool) {
         InitializableStorage.Layout storage layout = InitializableStorage.layout();
         return layout._initialized;

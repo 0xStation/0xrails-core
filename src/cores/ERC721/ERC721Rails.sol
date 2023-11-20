@@ -4,12 +4,11 @@ pragma solidity ^0.8.13;
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 
 import {Rails} from "../../Rails.sol";
-import {Ownable, OwnableInternal} from "../../access/ownable/Ownable.sol";
+import {Ownable, Ownable} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
 import {ERC721} from "./ERC721.sol";
-import {ERC721Internal} from "./ERC721Internal.sol";
+import {IERC721} from "./interface/IERC721.sol";
 import {TokenMetadata} from "../TokenMetadata/TokenMetadata.sol";
-import {TokenMetadataInternal} from "../TokenMetadata/TokenMetadataInternal.sol";
 import {
     ITokenURIExtension, IContractURIExtension
 } from "../../extension/examples/metadataRouter/IMetadataExtensions.sol";
@@ -25,9 +24,9 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
     /// in order to preemptively mitigate proxy privilege escalation attack vectors
     constructor() Initializable() {}
 
-    /// @dev Owner address is implemented using the `OwnableInternal` contract's function
-    function owner() public view override(Access, OwnableInternal) returns (address) {
-        return OwnableInternal.owner();
+    /// @dev Owner address is implemented using the `Ownable` contract's function
+    function owner() public view override(Access, Ownable) returns (address) {
+        return Ownable.owner();
     }
 
     /// @notice Cannot call initialize within a proxy constructor, only post-deployment in a factory
@@ -36,7 +35,7 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
         external
         initializer
     {
-        ERC721Internal._initialize();
+        ERC721._initialize();
         _setName(name_);
         _setSymbol(symbol_);
         if (initData.length > 0) {
@@ -73,14 +72,14 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
 
     /// @dev Function to return the name of a token implementation
     /// @return _ The returned ERC721 name string
-    function name() public view override(ERC721, TokenMetadataInternal) returns (string memory) {
-        return TokenMetadataInternal.name();
+    function name() public view override(IERC721, TokenMetadata) returns (string memory) {
+        return TokenMetadata.name();
     }
 
     /// @dev Function to return the symbol of a token implementation
     /// @return _ The returned ERC721 symbol string
-    function symbol() public view override(ERC721, TokenMetadataInternal) returns (string memory) {
-        return TokenMetadataInternal.symbol();
+    function symbol() public view override(IERC721, TokenMetadata) returns (string memory) {
+        return TokenMetadata.symbol();
     }
 
     /// @notice Contracts inheriting ERC721A are required to implement `tokenURI()`
@@ -106,8 +105,10 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
     =============*/
 
     /// @inheritdoc IERC721Rails
-    function mintTo(address recipient, uint256 quantity) 
-        external onlyPermission(Operations.MINT) returns (uint256 mintStartTokenId)
+    function mintTo(address recipient, uint256 quantity)
+        external
+        onlyPermission(Operations.MINT)
+        returns (uint256 mintStartTokenId)
     {
         mintStartTokenId = _nextTokenId();
         _safeMint(recipient, quantity);

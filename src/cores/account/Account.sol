@@ -31,7 +31,8 @@ abstract contract Account is IAccount, ERC721Holder, ERC1155Holder {
     /// @dev Function to pre-fund the EntryPoint contract's `depositTo()` function
     /// using payable call context + this contract's native currency balance
     function preFundEntryPoint() public payable virtual {
-        uint256 totalFunds = msg.value + address(this).balance;
+        // `address(this).balance` includes `msg.value`
+        uint256 totalFunds = address(this).balance;
         IEntryPoint(entryPoint).depositTo{value: totalFunds}(address(this));
     }
 

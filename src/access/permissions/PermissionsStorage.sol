@@ -3,7 +3,8 @@
 pragma solidity ^0.8.8;
 
 library PermissionsStorage {
-    bytes32 internal constant SLOT = keccak256(abi.encode(uint256(keccak256("0xrails.Permissions")) - 1));
+    // `keccak256(abi.encode(uint256(keccak256("0xrails.Permissions")) - 1)) & ~bytes32(uint256(0xff));`
+    bytes32 internal constant SLOT = 0x9c5c344d590e19b509d94e6539bcccae12bdf46ca0b9e14840beae558bd13e00;
 
     struct Layout {
         uint256[] _permissionKeys;

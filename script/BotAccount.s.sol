@@ -28,7 +28,7 @@ contract BotAccountScript is ScriptUtils {
         vm.startBroadcast();
 
         address entryPointAddress = ScriptUtils.entryPointAddress;
-        
+
         bytes32 salt = ScriptUtils.create2Salt;
         string memory saltString = Strings.toHexString(uint256(salt), 32);
 
