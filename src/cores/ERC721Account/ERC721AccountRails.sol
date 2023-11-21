@@ -8,7 +8,7 @@ import {Address} from "openzeppelin-contracts/utils/Address.sol";
 import {AccountRails} from "src/cores/account/AccountRails.sol";
 import {Account} from "src/cores/account/Account.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
-import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
+import {UserOperationStruct} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {ValidatorsStorage} from "src/validator/ValidatorsStorage.sol";
 import {Initializable} from "src/lib/initializable/Initializable.sol";
 import {Access} from "src/access/Access.sol";

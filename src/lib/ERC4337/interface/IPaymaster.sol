@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.13;
 
-import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
+import {UserOperationStruct} from "src/lib/ERC4337/utils/UserOperation.sol";
 
 /// @title ERC-4337 IPaymaster Interface
 /// @author Original EIP-4337 Spec Authors: https://eips.ethereum.org/EIPS/eip-4337

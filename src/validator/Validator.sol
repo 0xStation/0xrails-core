@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {IValidator} from "src/validator/interface/IValidator.sol";
-import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
+import {UserOperationStruct} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {Ownable} from "src/access/ownable/Ownable.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 

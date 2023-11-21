@@ -5,7 +5,7 @@ import {Rails} from "src/Rails.sol";
 import {Account} from "src/cores/account/Account.sol";
 import {IAccount} from "src/lib/ERC4337/interface/IAccount.sol";
 import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
-import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
+import {UserOperationStruct} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {Validators} from "src/validator/Validators.sol";
 import {IValidator} from "src/validator/interface/IValidator.sol";
 import {Operations} from "src/lib/Operations.sol";
