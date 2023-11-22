@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {ERC6551AccountLib} from "src/lib/ERC6551/lib/ERC6551AccountLib.sol";
-import {IERC6551Account} from "src/lib/ERC6551/interface/IERC6551Account.sol";
+import {ERC6551AccountLib} from "./lib/ERC6551AccountLib.sol";
+import {IERC6551Account} from "./interface/IERC6551Account.sol";
 import {ERC6551AccountStorage} from "./ERC6551AccountStorage.sol";
 
 abstract contract ERC6551Account is IERC6551Account {

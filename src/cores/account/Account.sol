@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "src/lib/ERC4337/interface/IAccount.sol";
-import "src/lib/ERC4337/interface/IEntryPoint.sol";
+import "../../lib/ERC4337/interface/IAccount.sol";
+import "../../lib/ERC4337/interface/IEntryPoint.sol";
 import "openzeppelin-contracts/token/ERC721/utils/ERC721Holder.sol";
 import "openzeppelin-contracts/token/ERC1155/utils/ERC1155Holder.sol";
 

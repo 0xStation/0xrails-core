@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {UserOperationStruct} from "src/lib/ERC4337/utils/UserOperation.sol";
+import {UserOperation} from "../../ERC4337/utils/UserOperation.sol";
 
 /// @title ERC-4337 IAccount Interface
 /// @author Original EIP-4337 Spec Authors: https://eips.ethereum.org/EIPS/eip-4337

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {UserOperationStruct} from "src/lib/ERC4337/utils/UserOperation.sol";
+import {UserOperation} from "../../lib/ERC4337/utils/UserOperation.sol";
 
 interface IValidator {
     function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)

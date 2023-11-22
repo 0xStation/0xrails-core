@@ -5,22 +5,22 @@ pragma solidity ^0.8.13;
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
 
-import {AccountRails} from "src/cores/account/AccountRails.sol";
-import {Account} from "src/cores/account/Account.sol";
-import {IEntryPoint} from "src/lib/ERC4337/interface/IEntryPoint.sol";
-import {UserOperationStruct} from "src/lib/ERC4337/utils/UserOperation.sol";
-import {ValidatorsStorage} from "src/validator/ValidatorsStorage.sol";
-import {Initializable} from "src/lib/initializable/Initializable.sol";
-import {Access} from "src/access/Access.sol";
-import {IPermissions} from "src/access/permissions/interface/IPermissions.sol";
-import {Extensions} from "src/extension/Extensions.sol";
-import {Operations} from "src/lib/Operations.sol";
-import {ERC6551AccountLib} from "src/lib/ERC6551/lib/ERC6551AccountLib.sol";
+import {AccountRails} from "../../cores/account/AccountRails.sol";
+import {Account} from "../../cores/account/Account.sol";
+import {IEntryPoint} from "../../lib/ERC4337/interface/IEntryPoint.sol";
+import {UserOperation} from "../../lib/ERC4337/utils/UserOperation.sol";
+import {ValidatorsStorage} from "../../validator/ValidatorsStorage.sol";
+import {Initializable} from "../../lib/initializable/Initializable.sol";
+import {Access} from "../../access/Access.sol";
+import {IPermissions} from "../../access/permissions/interface/IPermissions.sol";
+import {Extensions} from "../../extension/Extensions.sol";
+import {Operations} from "../../lib/Operations.sol";
+import {ERC6551AccountLib} from "../../lib/ERC6551/lib/ERC6551AccountLib.sol";
 import {IERC721} from "../ERC721/interface/IERC721.sol";
 import {IERC721AccountRails} from "./interface/IERC721AccountRails.sol";
-import {ERC6551Account, IERC6551Account} from "src/lib/ERC6551/ERC6551Account.sol";
-import {ERC6551AccountStorage} from "src/lib/ERC6551/ERC6551AccountStorage.sol";
-import {IERC6551AccountGroup} from "src/lib/ERC6551AccountGroup/interface/IERC6551AccountGroup.sol";
+import {ERC6551Account, IERC6551Account} from "../../lib/ERC6551/ERC6551Account.sol";
+import {ERC6551AccountStorage} from "../../lib/ERC6551/ERC6551AccountStorage.sol";
+import {IERC6551AccountGroup} from "../../lib/ERC6551AccountGroup/interface/IERC6551AccountGroup.sol";
 
 /// @notice An ERC-4337 Account bound to an ERC-721 token via ERC-6551
 contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC721AccountRails {

@@ -8,7 +8,7 @@ import {BotAccount} from "src/cores/account/BotAccount.sol";
 import {BotAccountFactory} from "src/cores/account/factory/BotAccountFactory.sol";
 import {IAccountFactory} from "src/cores/account/factory/interface/IAccountFactory.sol";
 import {Operations} from "src/lib/Operations.sol";
-import {UserOperationStruct} from "src/lib/ERC4337/utils/UserOperation.sol";
+import {UserOperation} from "src/lib/ERC4337/utils/UserOperation.sol";
 import {IERC1271} from "openzeppelin-contracts/interfaces/IERC1271.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 import {IOwnable} from "src/access/ownable/interface/IOwnable.sol";
