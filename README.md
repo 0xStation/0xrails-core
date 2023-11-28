@@ -24,4 +24,8 @@ While Rails is in initial R&D, assistance on reviews for security and developer 
 
 ## License
 
-Rails is a free public good and we just request attribution for code or ideas that stem from this project. Direct inquiries for using Rails in your own project via [Twitter DM](https://twitter.com/ilikesymmetry). Note that Rails is currently un-audited with plans to audit in late 2023.
+Rails is a free public good and we just request attribution for code or ideas that stem from this project. Direct inquiries for using Rails in your own project via [Twitter DM](https://twitter.com/ilikesymmetry). 
+
+## Security
+
+GroupOS has recently completed a security audit by Sayfer Security. The audit report can be obtained by contacting us and will be published shortly.
