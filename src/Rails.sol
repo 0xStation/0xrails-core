@@ -62,19 +62,19 @@ abstract contract Rails is Access, Guards, Extensions, SupportsInterface, Execut
         internal 
         view 
         virtual 
-        override(ERC2771ContextInitializable, Context) 
+        override(Context, Access) 
         returns (address) 
     {
-        return ERC2771ContextInitializable._msgSender();
+        return super._msgSender();
     }
 
     function _msgData() 
         internal 
         view 
         virtual 
-        override(ERC2771ContextInitializable, Context) 
+        override(Access, Context) 
         returns (bytes calldata) 
     {
-        return ERC2771ContextInitializable._msgData();
+        return super._msgData();
     }
 }

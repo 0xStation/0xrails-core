@@ -3,9 +3,9 @@ pragma solidity ^0.8.13;
 
 import {IPermissions} from "./interface/IPermissions.sol";
 import {PermissionsStorage as Storage} from "./PermissionsStorage.sol";
-import {ERC2771ContextInitializable} from "src/lib/ERC2771/ERC2771ContextInitializable.sol";
+import {Context} from "openzeppelin-contracts/utils/Context.sol";
 
-abstract contract Permissions is IPermissions, ERC2771ContextInitializable {
+abstract contract Permissions is IPermissions, Context {
     /*===========
         VIEWS
     ===========*/

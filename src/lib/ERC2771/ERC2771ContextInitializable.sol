@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {Context} from "openzeppelin-contracts/utils/Context.sol";
-
 /// @title GroupOS ERC2771ContextInitializable
 /// @author 👦🏻👦🏻.eth
 /// @dev ERC2771Context variant enabling support for meta transactions in proxy contracts
 /// without the use of a constructor which would alter the create2 deployment address.
 /// Child contracts must call the `_forwarderInitializer()` in their proxy initializers
-abstract contract ERC2771ContextInitializable is Context {
+abstract contract ERC2771ContextInitializable {
     /// @dev To maximize trustlessness, the ERC2771 forwarder is treated as a singleton
     address private _trustedForwarder;
 
@@ -30,21 +28,21 @@ abstract contract ERC2771ContextInitializable is Context {
 
     /// @dev Override of `msg.sender` which returns an EOA originator if the Forwarder
     /// successfully authenticated the originator signed a meta-transaction
-    function _msgSender() internal view virtual override returns (address sender) {
+    function _msgSender() internal view virtual returns (address sender) {
         if (isTrustedForwarder(msg.sender)) {
             sender = address(bytes20(msg.data[msg.data.length - 20:]));
         } else {
-            return super._msgSender();
+            return msg.sender; //super._msgSender();
         }
     }
 
     /// @dev Override of `msg.data` which returns the relevant calldata if the Forwarder
     /// successfully authenticated the data signer and appended signer address to calldata
-    function _msgData() internal view virtual override returns (bytes calldata) {
+    function _msgData() internal view virtual returns (bytes calldata) {
         if (isTrustedForwarder(msg.sender)) {
             return msg.data[:msg.data.length - 20];
         } else {
-            return super._msgData();
+            return msg.data; // super._msgData();
         }
     }
 }
