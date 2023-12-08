@@ -1,8 +1,7 @@
-[submodule "lib/openzeppelin-contracts"]
-	path = lib/openzeppelin-contracts
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts/releases/tag/v4.9.4
-	branch = v4.9.4
 [submodule "lib/protocol-ops"]
 	path = lib/protocol-ops
 	url = https://github.com/0xStation/protocol-ops.git
 	branch = v1.1.0
+[submodule "lib/openzeppelin-contracts"]
+	path = lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts

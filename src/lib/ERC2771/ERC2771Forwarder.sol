@@ -3,11 +3,11 @@
 
 pragma solidity ^0.8.13;
 
-import {ERC2771Context} from "./ERC2771Context.sol";
+import {ERC2771Context} from "openzeppelin-contracts/metatx/ERC2771Context.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/ECDSA.sol";
 import {EIP712} from "openzeppelin-contracts/utils/cryptography/EIP712.sol";
-import {Nonces} from "./Nonces.sol";
-import {Address} from "./Address.sol";
+import {Address} from "openzeppelin-contracts/utils/Address.sol";
+import {NonceBitMap} from "../NonceBitMap.sol";
 
 /**
  * @dev A forwarder compatible with ERC2771 contracts. See {ERC2771Context}.
@@ -47,7 +47,7 @@ import {Address} from "./Address.sol";
  * ERC-1155 transfers specifically, consider rejecting the use of the `data` field, since it can be
  * used to execute arbitrary code.
  */
-contract ERC2771Forwarder is EIP712, Nonces {
+contract ERC2771Forwarder is EIP712, NonceBitMap {
     using ECDSA for bytes32;
 
     struct ForwardRequestData {
@@ -95,6 +95,11 @@ contract ERC2771Forwarder is EIP712, Nonces {
     error ERC2771UntrustfulTarget(address target, address forwarder);
 
     /**
+     * @dev The forwarded call failed.
+     */
+    error FailedInnerCall();
+    
+    /**
      * @dev See {EIP712-constructor}.
      */
     constructor(string memory name) EIP712(name, "1") {}
@@ -132,7 +137,7 @@ contract ERC2771Forwarder is EIP712, Nonces {
         }
 
         if (!_execute(request, true)) {
-            revert Address.FailedInnerCall();
+            revert FailedInnerCall();
         }
     }
 
@@ -226,7 +231,7 @@ contract ERC2771Forwarder is EIP712, Nonces {
                     request.to,
                     request.value,
                     request.gas,
-                    nonces(request.from),
+                    _usedNonces[request.from][0] + 1,
                     request.deadline,
                     keccak256(request.data)
                 )
@@ -276,7 +281,8 @@ contract ERC2771Forwarder is EIP712, Nonces {
         // Ignore an invalid request because requireValidRequest = false
         if (isTrustedForwarder && signerMatch && active) {
             // Nonce should be used before the call to prevent reusing by reentrancy
-            uint256 currentNonce = _useNonce(signer);
+            uint256 currentNonce = lastUsedNonce(signer, 0);
+            _useNonce(signer, currentNonce);
 
             uint256 reqGas = request.gas;
             address to = request.to;

@@ -6,7 +6,7 @@ import {console2} from "forge-std/console2.sol";
 import {ERC1967Proxy} from "openzeppelin-contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {ECDSA} from "openzeppelin-contracts/utils/cryptography/SignatureChecker.sol";
 import {ERC2771ContextInitializable} from "src/lib/ERC2771/ERC2771ContextInitializable.sol";
-import {ERC2771Forwarder} from "src/lib/ERC2771/tmp/ERC2771Forwarder.sol";
+import {ERC2771Forwarder} from "src/lib/ERC2771/ERC2771Forwarder.sol";
 import {ERC721Rails} from "src/cores/ERC721/ERC721Rails.sol";
 import {Operations} from "src/lib/Operations.sol";
 import {MockAccountDeployer} from "test/lib/MockAccount.sol";
@@ -103,7 +103,7 @@ contract ERC2771ForwarderTest is Test, MockAccountDeployer {
         });
 
         bytes32 valuesHash = keccak256(
-            abi.encode(FORWARD_REQUEST_TYPEHASH, forwardRequestData1.from, forwardRequestData1.to, forwardRequestData1.value, forwardRequestData1.gas, forwarder.nonces(owner), forwardRequestData1.deadline, keccak256(forwardRequestData1.data))
+            abi.encode(FORWARD_REQUEST_TYPEHASH, forwardRequestData1.from, forwardRequestData1.to, forwardRequestData1.value, forwardRequestData1.gas, forwarder.lastUsedNonce(forwardRequestData1.from, 0) + 1, forwardRequestData1.deadline, keccak256(forwardRequestData1.data))
         );
 
         bytes32 forwardRequestDataHash = ECDSA.toTypedDataHash(domainSeparator, valuesHash);
@@ -111,7 +111,6 @@ contract ERC2771ForwarderTest is Test, MockAccountDeployer {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, forwardRequestDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);
         forwardRequestData1.signature = sig;
-
 
         bool verified = forwarder.verify(forwardRequestData1);
         assertTrue(verified);
@@ -133,7 +132,7 @@ contract ERC2771ForwarderTest is Test, MockAccountDeployer {
         });
 
         bytes32 valuesHash = keccak256(
-            abi.encode(FORWARD_REQUEST_TYPEHASH, forwardRequestData1.from, forwardRequestData1.to, forwardRequestData1.value, forwardRequestData1.gas, forwarder.nonces(owner), forwardRequestData1.deadline, keccak256(forwardRequestData1.data))
+            abi.encode(FORWARD_REQUEST_TYPEHASH, forwardRequestData1.from, forwardRequestData1.to, forwardRequestData1.value, forwardRequestData1.gas, forwarder.lastUsedNonce(forwardRequestData1.from, 0) + 1, forwardRequestData1.deadline, keccak256(forwardRequestData1.data))
         );
 
         bytes32 forwardRequestDataHash = ECDSA.toTypedDataHash(domainSeparator, valuesHash);
@@ -163,7 +162,7 @@ contract ERC2771ForwarderTest is Test, MockAccountDeployer {
         });
 
         bytes32 valuesHash1 = keccak256(
-            abi.encode(FORWARD_REQUEST_TYPEHASH, forwardRequestData1.from, forwardRequestData1.to, forwardRequestData1.value, forwardRequestData1.gas, forwarder.nonces(owner), forwardRequestData1.deadline, keccak256(forwardRequestData1.data))
+            abi.encode(FORWARD_REQUEST_TYPEHASH, forwardRequestData1.from, forwardRequestData1.to, forwardRequestData1.value, forwardRequestData1.gas, forwarder.lastUsedNonce(forwardRequestData1.from, 0) + 1, forwardRequestData1.deadline, keccak256(forwardRequestData1.data))
         );
 
         bytes32 forwardRequestDataHash1 = ECDSA.toTypedDataHash(domainSeparator, valuesHash1);
@@ -185,7 +184,7 @@ contract ERC2771ForwarderTest is Test, MockAccountDeployer {
         });
 
         bytes32 valuesHash2 = keccak256(
-            abi.encode(FORWARD_REQUEST_TYPEHASH, forwardRequestData2.from, forwardRequestData2.to, forwardRequestData2.value, forwardRequestData2.gas, forwarder.nonces(from), forwardRequestData2.deadline, keccak256(forwardRequestData2.data))
+            abi.encode(FORWARD_REQUEST_TYPEHASH, forwardRequestData2.from, forwardRequestData2.to, forwardRequestData2.value, forwardRequestData2.gas, forwarder.lastUsedNonce(forwardRequestData1.from, 0) + 1, forwardRequestData2.deadline, keccak256(forwardRequestData2.data))
         );
 
         bytes32 forwardRequestDataHash2 = ECDSA.toTypedDataHash(domainSeparator, valuesHash2);
@@ -201,31 +200,5 @@ contract ERC2771ForwarderTest is Test, MockAccountDeployer {
         // which is a desirable outcome for testing
         forwarder.executeBatch(requests, payable(address(0x0)));
     }
-
-    // function test_executeFromController() public {
-    //     data1 = abi.encodeWithSelector(FreeMintController.mintTo.selector, address(ERC721RailsProxy, recipient));
-    //     forwardRequestData1= ERC2771Forwarder.ForwardRequestData({
-    //        from: from,
-    //        to: address(ERC721RailsProxy),
-    //        value: 0,
-    //        gas: 1000000,
-    //        deadline: type(uint48).max,
-    //        data: data1,
-    //        signature: ''
-    //     });
-
-    //     bytes32 valuesHash = keccak256(
-    //         abi.encode(FORWARD_REQUEST_TYPEHASH, forwardRequestData1.from, forwardRequestData1.to, forwardRequestData1.value, forwardRequestData1.gas, forwarder.nonces(owner), forwardRequestData1.deadline, keccak256(forwardRequestData1.data))
-    //     );
-
-    //     bytes32 forwardRequestDataHash = ECDSA.toTypedDataHash(domainSeparator, valuesHash);
-
-    //     (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey2, forwardRequestDataHash);
-    //     bytes memory sig = abi.encodePacked(r, s, v);
-    //     forwardRequestData1.signature = sig;
-
-    //     forwarder.execute(forwardRequestData1);
-    //     assertEq(ERC721RailsProxy.balanceOf(recipient), 1);
-    // }
 }
 
