@@ -12,6 +12,12 @@ abstract contract ERC2771ContextInitializable is Context {
     /// @dev To maximize trustlessness, the ERC2771 forwarder is treated as a singleton
     address private _trustedForwarder;
 
+    /// @dev Returns the address of the trusted forwarder
+    function trustedForwarder() public view virtual returns (address) {
+        return _trustedForwarder;
+    }
+
+    /// @dev Returns whether a given address is the trusted forwarder
     function isTrustedForwarder(address forwarder) public view virtual returns (bool) {
         return forwarder == _trustedForwarder;
     }
@@ -22,6 +28,8 @@ abstract contract ERC2771ContextInitializable is Context {
         _trustedForwarder = trustedForwarder_;
     } 
 
+    /// @dev Override of `msg.sender` which returns an EOA originator if the Forwarder
+    /// successfully authenticated the originator signed a meta-transaction
     function _msgSender() internal view virtual override returns (address sender) {
         if (isTrustedForwarder(msg.sender)) {
             sender = address(bytes20(msg.data[msg.data.length - 20:]));
@@ -30,6 +38,8 @@ abstract contract ERC2771ContextInitializable is Context {
         }
     }
 
+    /// @dev Override of `msg.data` which returns the relevant calldata if the Forwarder
+    /// successfully authenticated the data signer and appended signer address to calldata
     function _msgData() internal view virtual override returns (bytes calldata) {
         if (isTrustedForwarder(msg.sender)) {
             return msg.data[:msg.data.length - 20];
