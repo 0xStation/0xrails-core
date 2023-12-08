@@ -3,12 +3,14 @@ pragma solidity ^0.8.13;
 
 import {UUPSUpgradeable} from "openzeppelin-contracts/proxy/utils/UUPSUpgradeable.sol";
 import {Multicall} from "openzeppelin-contracts/utils/Multicall.sol";
+import {Context} from "openzeppelin-contracts/utils/Context.sol";
 import {Access} from "./access/Access.sol";
 import {Guards} from "./guard/Guards.sol";
 import {Extensions} from "./extension/Extensions.sol";
 import {SupportsInterface} from "./lib/ERC165/SupportsInterface.sol";
 import {Execute} from "./lib/Execute.sol";
 import {Operations} from "./lib/Operations.sol";
+import {ERC2771ContextInitializable} from "./lib/ERC2771/ERC2771ContextInitializable.sol";
 
 /**
  * A Solidity framework for creating complex and evolving onchain structures.
@@ -50,5 +52,29 @@ abstract contract Rails is Access, Guards, Extensions, SupportsInterface, Execut
         override
     {
         checkGuardAfter(guard, checkBeforeData, executeData);
+    }
+
+    /*=============
+        CONTEXT
+    =============*/
+
+    function _msgSender() 
+        internal 
+        view 
+        virtual 
+        override(ERC2771ContextInitializable, Context) 
+        returns (address) 
+    {
+        return ERC2771ContextInitializable._msgSender();
+    }
+
+    function _msgData() 
+        internal 
+        view 
+        virtual 
+        override(ERC2771ContextInitializable, Context) 
+        returns (bytes calldata) 
+    {
+        return ERC2771ContextInitializable._msgData();
     }
 }
