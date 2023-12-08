@@ -3,8 +3,9 @@ pragma solidity ^0.8.13;
 
 import {IPermissions} from "./interface/IPermissions.sol";
 import {PermissionsStorage as Storage} from "./PermissionsStorage.sol";
+import {ERC2771ContextInitializable} from "src/lib/ERC2771/ERC2771ContextInitializable.sol";
 
-abstract contract Permissions is IPermissions {
+abstract contract Permissions is IPermissions, ERC2771ContextInitializable {
     /*===========
         VIEWS
     ===========*/
@@ -58,7 +59,7 @@ abstract contract Permissions is IPermissions {
 
     /// @inheritdoc IPermissions
     function removePermission(bytes8 operation, address account) public virtual {
-        if (account != msg.sender) {
+        if (account != _msgSender()) {
             _checkCanUpdatePermissions();
         }
         _removePermission(operation, account);
@@ -112,7 +113,7 @@ abstract contract Permissions is IPermissions {
     ===================*/
 
     modifier onlyPermission(bytes8 operation) {
-        _checkPermission(operation, msg.sender);
+        _checkPermission(operation, _msgSender());
         _;
     }
 

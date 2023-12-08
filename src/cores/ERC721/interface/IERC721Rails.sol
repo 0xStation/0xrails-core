@@ -17,6 +17,7 @@ interface IERC721Rails {
     /// @param name The name of the ERC721 token.
     /// @param symbol The symbol of the ERC721 token.
     /// @param initData Additional initialization data if required by the contract.
-    function initialize(address owner, string calldata name, string calldata symbol, bytes calldata initData)
+    /// @param forwarder The ERC2771 trusted forwarder used to enable gasless meta transactions.
+    function initialize(address owner, string calldata name, string calldata symbol, bytes calldata initData, address forwarder)
         external;
 }

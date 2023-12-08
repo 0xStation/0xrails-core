@@ -33,12 +33,14 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
     /// @param name_ The name of the ERC20 token.
     /// @param symbol_ The symbol of the ERC20 token.
     /// @param initData The initialization data.
-    function initialize(address owner_, string calldata name_, string calldata symbol_, bytes calldata initData)
+    /// @param forwarder_ The ERC2771 trusted forwarder used to enable gasless meta transactions.
+    function initialize(address owner_, string calldata name_, string calldata symbol_, bytes calldata initData, address forwarder_)
         external
         initializer
     {
         _setName(name_);
         _setSymbol(symbol_);
+        _forwarderInitializer(forwarder_);
         if (initData.length > 0) {
             /// @dev if called within a constructor, self-delegatecall will not work because this address does not yet have
             /// bytecode implementing the init functions -> revert here with nicer error message

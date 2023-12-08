@@ -31,13 +31,14 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
 
     /// @notice Cannot call initialize within a proxy constructor, only post-deployment in a factory
     /// @inheritdoc IERC721Rails
-    function initialize(address owner_, string calldata name_, string calldata symbol_, bytes calldata initData)
+    function initialize(address owner_, string calldata name_, string calldata symbol_, bytes calldata initData, address forwarder_)
         external
         initializer
     {
         ERC721._initialize();
         _setName(name_);
         _setSymbol(symbol_);
+        _forwarderInitializer(forwarder_);
         if (initData.length > 0) {
             /// @dev if called within a constructor, self-delegatecall will not work because this address does not yet have
             /// bytecode implementing the init functions -> revert here with nicer error message
