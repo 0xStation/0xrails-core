@@ -2,11 +2,12 @@
 pragma solidity ^0.8.13;
 
 import {Address} from "openzeppelin-contracts/utils/Address.sol";
-
+import {IERC721Receiver} from "openzeppelin-contracts/token/ERC721/IERC721Receiver.sol";
 import {Rails} from "../../Rails.sol";
 import {Ownable, Ownable} from "../../access/ownable/Ownable.sol";
 import {Access} from "../../access/Access.sol";
 import {ERC721} from "./ERC721.sol";
+import {ERC721Storage} from "./ERC721Storage.sol";
 import {IERC721} from "./interface/IERC721.sol";
 import {TokenMetadata} from "../TokenMetadata/TokenMetadata.sol";
 import {
@@ -128,17 +129,17 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
         if (operator == address(0)) {
             revert ApprovalInvalidOperator();
         }
-        address owner = ownerOf(tokenId);
+        address holder = ownerOf(tokenId);
 
-        if (_msgSender() != owner) {
-            if (!isApprovedForAll(owner, _msgSender())) {
+        if (_msgSender() != holder) {
+            if (!isApprovedForAll(holder, _msgSender())) {
                 revert ApprovalCallerNotOwnerNorApproved();
             }
         }
 
         ERC721Storage.Layout storage layout = ERC721Storage.layout();
         layout.tokenApprovals[tokenId] = operator;
-        emit Approval(owner, operator, tokenId);
+        emit Approval(holder, operator, tokenId);
     }
 
     function _setApprovalForAll(address operator, bool approved) internal virtual override {
@@ -170,7 +171,7 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
         } else {
             operation = Operations.TRANSFER;
         }
-        bytes memory data = abi.encode(_msgsender(), from, to, startTokenId, quantity);
+        bytes memory data = abi.encode(_msgSender(), from, to, startTokenId, quantity);
 
         return checkGuardBefore(operation, data);
     }
