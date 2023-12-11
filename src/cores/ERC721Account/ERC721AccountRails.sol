@@ -120,10 +120,10 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         internal
         virtual
         override
-        returns (address guard, bytes memory checkBeforeData)
+        returns (address, bytes memory)
     {
         _updateState();
-        super._beforeExecuteCall(to, value, data);
+        return super._beforeExecuteCall(to, value, data);
     }
 
     /*===================

@@ -125,7 +125,7 @@ contract ERC2771ForwarderTest is Test, MockAccountDeployer {
            from: owner,
            to: address(ERC721RailsProxy),
            value: 0,
-           gas: 1000000,
+           gas: 2000000,
            deadline: type(uint48).max,
            data: data1,
            signature: ''
