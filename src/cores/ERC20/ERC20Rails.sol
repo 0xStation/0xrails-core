@@ -48,10 +48,10 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
                 revert CannotInitializeWhileConstructing();
             }
             // make msg.sender the owner to ensure they have all permissions for further initialization
-            _transferOwnership(msg.sender);
+            _transferOwnership(_msgSender());
             Address.functionDelegateCall(address(this), initData);
             // if sender and owner arg are different, transfer ownership to desired address
-            if (msg.sender != owner_) {
+            if (_msgSender() != owner_) {
                 _transferOwnership(owner_);
             }
         } else {
@@ -101,10 +101,16 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
     /// @inheritdoc IERC20Rails
     /// @dev Rework allowance to also allow permissioned users burn unconditionally
     function burnFrom(address from, uint256 amount) external returns (bool) {
-        if (!hasPermission(Operations.BURN, msg.sender)) {
-            _spendAllowance(from, msg.sender, amount);
+        if (!hasPermission(Operations.BURN, _msgSender())) {
+            _spendAllowance(from, _msgSender(), amount);
         }
         _burn(from, amount);
+        return true;
+    }
+
+    /// @dev Overridden to support ERC2771 meta-transactions
+    function transfer(address to, uint256 value) public virtual override returns (bool) {
+        _transfer(_msgSender(), to, value);
         return true;
     }
 
@@ -115,8 +121,30 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
         override(ERC20, IERC20Rails)
         returns (bool)
     {
-        _checkCanTransfer(from, msg.sender, value);
+        _checkCanTransfer(from, _msgSender(), value);
         _transfer(from, to, value);
+        return true;
+    }
+
+    function approve(address spender, uint256 value) public virtual override returns (bool) {
+        _approve(_msgSender(), spender, value);
+        return true;
+    }
+
+    function increaseAllowance(address spender, uint256 addedValue) public virtual override returns (bool) {
+        _approve(_msgSender(), spender, allowance(_msgSender(), spender) + addedValue);
+        return true;
+    }
+
+    function decreaseAllowance(address spender, uint256 requestedDecrease) public virtual override returns (bool) {
+        uint256 currentAllowance = allowance(_msgSender(), spender);
+        if (currentAllowance < requestedDecrease) {
+            revert ERC20FailedDecreaseAllowance(spender, currentAllowance, requestedDecrease);
+        }
+        unchecked {
+            _approve(_msgSender(), spender, currentAllowance - requestedDecrease);
+        }
+
         return true;
     }
 
@@ -140,7 +168,7 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
         } else {
             operation = Operations.TRANSFER;
         }
-        bytes memory data = abi.encode(msg.sender, from, to, amount);
+        bytes memory data = abi.encode(_msgSender(), from, to, amount);
 
         return checkGuardBefore(operation, data);
     }
@@ -165,27 +193,27 @@ contract ERC20Rails is Rails, Ownable, Initializable, TokenMetadata, ERC20, IERC
 
     /// @dev Restrict Permissions write access to the `Operations.PERMISSIONS` permission
     function _checkCanUpdatePermissions() internal view override {
-        _checkPermission(Operations.PERMISSIONS, msg.sender);
+        _checkPermission(Operations.PERMISSIONS, _msgSender());
     }
 
     /// @dev Restrict Guards write access to the `Operations.GUARDS` permission
     function _checkCanUpdateGuards() internal view override {
-        _checkPermission(Operations.GUARDS, msg.sender);
+        _checkPermission(Operations.GUARDS, _msgSender());
     }
 
     /// @dev Restrict calls via Execute to the `Operations.EXECUTE` permission
     function _checkCanExecuteCall() internal view override {
-        _checkPermission(Operations.CALL, msg.sender);
+        _checkPermission(Operations.CALL, _msgSender());
     }
 
     /// @dev Restrict ERC-165 write access to the `Operations.INTERFACE` permission
     function _checkCanUpdateInterfaces() internal view override {
-        _checkPermission(Operations.INTERFACE, msg.sender);
+        _checkPermission(Operations.INTERFACE, _msgSender());
     }
 
     /// @dev Restrict TokenMetadata write access to the `Operations.METADATA` permission
     function _checkCanUpdateTokenMetadata() internal view override {
-        _checkPermission(Operations.METADATA, msg.sender);
+        _checkPermission(Operations.METADATA, _msgSender());
     }
 
     /// @dev Only the `owner` possesses Extensions write access

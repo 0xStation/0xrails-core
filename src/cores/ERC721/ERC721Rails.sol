@@ -46,10 +46,10 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
                 revert CannotInitializeWhileConstructing();
             }
             // make msg.sender the owner to ensure they have all permissions for further initialization
-            _transferOwnership(msg.sender);
+            _transferOwnership(_msgSender());
             Address.functionDelegateCall(address(this), initData);
             // if sender and owner arg are different, transfer ownership to desired address
-            if (msg.sender != owner_) {
+            if (_msgSender() != owner_) {
                 _transferOwnership(owner_);
             }
         } else {
@@ -117,11 +117,37 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
 
     /// @inheritdoc IERC721Rails
     function burn(uint256 tokenId) external {
-        if (!hasPermission(Operations.BURN, msg.sender)) {
+        if (!hasPermission(Operations.BURN, _msgSender())) {
             _checkCanTransfer(ownerOf(tokenId), tokenId);
             /// @todo resolve gas inefficiency of reading ownerOf twice
         }
         _burn(tokenId);
+    }
+
+    function _approve(address operator, uint256 tokenId) internal virtual override {
+        if (operator == address(0)) {
+            revert ApprovalInvalidOperator();
+        }
+        address owner = ownerOf(tokenId);
+
+        if (_msgSender() != owner) {
+            if (!isApprovedForAll(owner, _msgSender())) {
+                revert ApprovalCallerNotOwnerNorApproved();
+            }
+        }
+
+        ERC721Storage.Layout storage layout = ERC721Storage.layout();
+        layout.tokenApprovals[tokenId] = operator;
+        emit Approval(owner, operator, tokenId);
+    }
+
+    function _setApprovalForAll(address operator, bool approved) internal virtual override {
+        if (operator == address(0)) {
+            revert ApprovalInvalidOperator();
+        }
+        ERC721Storage.Layout storage layout = ERC721Storage.layout();
+        layout.operatorApprovals[_msgSender()][operator] = approved;
+        emit ApprovalForAll(_msgSender(), operator, approved);
     }
 
     /*===========
@@ -144,7 +170,7 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
         } else {
             operation = Operations.TRANSFER;
         }
-        bytes memory data = abi.encode(msg.sender, from, to, startTokenId, quantity);
+        bytes memory data = abi.encode(_msgsender(), from, to, startTokenId, quantity);
 
         return checkGuardBefore(operation, data);
     }
@@ -158,36 +184,61 @@ contract ERC721Rails is Rails, Ownable, Initializable, TokenMetadata, ERC721, IE
         AUTHORIZATION
     ===================*/
 
+    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory data) internal virtual override {
+        if (to.code.length > 0) {
+            try IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, data) returns (bytes4 retval) {
+                if (retval != IERC721Receiver.onERC721Received.selector) {
+                    revert TransferToNonERC721ReceiverImplementer();
+                }
+            } catch (bytes memory reason) {
+                if (reason.length == 0) {
+                    revert TransferToNonERC721ReceiverImplementer();
+                } else {
+                    /// @solidity memory-safe-assembly
+                    assembly {
+                        revert(add(32, reason), mload(reason))
+                    }
+                }
+            }
+        }
+    }
+
     /// @dev Check for `Operations.TRANSFER` permission before ownership and approval
     function _checkCanTransfer(address account, uint256 tokenId) internal virtual override {
-        if (!hasPermission(Operations.TRANSFER, msg.sender)) {
-            super._checkCanTransfer(account, tokenId);
+        if (!hasPermission(Operations.TRANSFER, _msgSender())) {
+            if (ownerOf(tokenId) != _msgSender()) {
+                if (!isApprovedForAll(account, _msgSender())) {
+                    if (getApproved(tokenId) != _msgSender()) {
+                        revert TransferCallerNotOwnerNorApproved();
+                    }
+                }
+            }
         }
     }
 
     /// @dev Restrict Permissions write access to the `Operations.PERMISSIONS` permission
     function _checkCanUpdatePermissions() internal view override {
-        _checkPermission(Operations.PERMISSIONS, msg.sender);
+        _checkPermission(Operations.PERMISSIONS, _msgSender());
     }
 
     /// @dev Restrict Guards write access to the `Operations.GUARDS` permission
     function _checkCanUpdateGuards() internal view override {
-        _checkPermission(Operations.GUARDS, msg.sender);
+        _checkPermission(Operations.GUARDS, _msgSender());
     }
 
     /// @dev Restrict calls via Execute to the `Operations.EXECUTE` permission
     function _checkCanExecuteCall() internal view override {
-        _checkPermission(Operations.CALL, msg.sender);
+        _checkPermission(Operations.CALL, _msgSender());
     }
 
     /// @dev Restrict ERC-165 write access to the `Operations.INTERFACE` permission
     function _checkCanUpdateInterfaces() internal view override {
-        _checkPermission(Operations.INTERFACE, msg.sender);
+        _checkPermission(Operations.INTERFACE, _msgSender());
     }
 
     /// @dev Restrict TokenMetadata write access to the `Operations.METADATA` permission
     function _checkCanUpdateTokenMetadata() internal view override {
-        _checkPermission(Operations.METADATA, msg.sender);
+        _checkPermission(Operations.METADATA, _msgSender());
     }
 
     /// @dev Only the `owner` possesses Extensions write access
