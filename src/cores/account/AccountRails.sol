@@ -116,15 +116,7 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
 
         // collision of a signature's first 8 bytes with flag is very unlikely; impossible when incl validator address
         if (flag == VALIDATOR_FLAG && isValidator(validator)) {
-            uint256 len = signature.length - prepend;
-            bytes memory formattedSig = new bytes(len); //todo use calldata slice instead
-
-            // copy relevant data into new bytes array, ie `abi.encodePacked(signer, nestedSig)`
-            for (uint256 i; i < len; ++i) {
-                formattedSig[i] = signature[prepend + i];
-            }
-
-            // format call for Validator module
+            bytes calldata formattedSig = signature[prepend:];
             bytes4 ret = IValidator(validator).isValidSignature(hash, formattedSig);
 
             // validator will return either correct `magicValue` or error code `INVALID_SIGNER`
