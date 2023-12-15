@@ -54,7 +54,7 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
 
         bytes32 ethSignedUserOpHash = ECDSA.toEthSignedMessageHash(userOpHash);
 
-        // extract validator address using cheap calldata slicing before decoding
+        // try extracting packed validator data to check for modular validation format
         bytes8 flag = bytes8(userOp.signature[:8]);
         address validator = address(bytes20(userOp.signature[12:32]));
 
@@ -108,15 +108,13 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
     ///   - `bytes4(hex'ffffffff')` indicates a signature failure bubbled up from an external modular validator
     ///   - `bytes4(0)` indicates a default signature failure, ie not using the modular `VALIDATOR_FLAG`
     function isValidSignature(bytes32 hash, bytes calldata signature) public view returns (bytes4 magicValue) {
-        // set prepend length
-        uint256 prepend = 0x20;
         // try extracting packed validator data to check for modular validation format
-        bytes32 data = bytes32(signature[:prepend]);
-        (bytes8 flag, address validator) = (bytes8(data), address(uint160(uint256(data))));
+        bytes8 flag = bytes8(signature[:8]);
+        address validator = address(bytes20(signature[12:32]));
 
         // collision of a signature's first 8 bytes with flag is very unlikely; impossible when incl validator address
         if (flag == VALIDATOR_FLAG && isValidator(validator)) {
-            bytes calldata formattedSig = signature[prepend:];
+            bytes calldata formattedSig = signature[0x20:];
             bytes4 ret = IValidator(validator).isValidSignature(hash, formattedSig);
 
             // validator will return either correct `magicValue` or error code `INVALID_SIGNER`

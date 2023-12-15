@@ -26,10 +26,8 @@ contract OnlyOwnerValidator is Validator {
     {
         // prepend is 20 since only signer remains prepended after processing validator flag
         uint256 prepend = 20;
-        bytes memory signerData = userOp.signature[:prepend];
-        address signer = address((bytes20(signerData)));
-
-        bytes memory nestedSig = userOp.signature[prepend:];
+        address signer = address(bytes20(userOp.signature[:prepend]));
+        bytes calldata nestedSig = userOp.signature[prepend:];
 
         // terminate if recovered signer address does not match packed signer
         if (!SignatureChecker.isValidSignatureNow(signer, userOpHash, nestedSig)) return SIG_VALIDATION_FAILED;

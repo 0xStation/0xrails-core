@@ -90,23 +90,6 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         return _isAuthorizedForOperation(Operations.ADMIN, signer);
     }
 
-    /// @dev When evaluating signatures that don't contain the `VALIDATOR_FLAG`, authenticate only the owner
-    // function _isValidECDSASignature(bytes32 hash, bytes memory signature)
-    //     internal
-    //     view
-    //     virtual
-    //     override
-    //     returns (bool)
-    // {
-    //     // support non-modular signatures by recovering signer address and reverting malleable or invalid signatures
-    //     (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(hash, signature);
-    //     // return if signature is malformed
-    //     if (err != ECDSA.RecoverError.NoError) return false;
-
-    //     // return true only if signer is owner, owner-delegated, or AccountGroup admin
-    //     return _isAuthorized(Operations.ADMIN, signer);
-    // }
-
     function _isValidSigner(address signer, bytes memory) internal view override returns (bool) {
         return hasPermission(Operations.CALL, signer);
     }
