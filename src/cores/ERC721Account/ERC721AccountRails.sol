@@ -73,23 +73,6 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         super._checkSenderIsEntryPoint();
     }
 
-    /// @dev When evaluating signatures that don't contain the `VALIDATOR_FLAG`, authenticate only the owner
-    function _defaultValidateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 /*missingAccountFunds*/ )
-        internal
-        view
-        virtual
-        override
-        returns (bool)
-    {
-        // recover signer address and any error
-        (address signer, ECDSA.RecoverError err) = ECDSA.tryRecover(userOpHash, userOp.signature);
-        // return if signature is malformed
-        if (err != ECDSA.RecoverError.NoError) return false;
-
-        // return true only if signer is owner, owner-delegated, or AccountGroup admin
-        return _isAuthorizedForOperation(Operations.ADMIN, signer);
-    }
-
     function _isValidSigner(address signer, bytes memory) internal view override returns (bool) {
         return hasPermission(Operations.CALL, signer);
     }

@@ -179,16 +179,6 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
         _valid = SignatureChecker.isValidERC1271SignatureNow(_signer, _hash, _sig);
     }
 
-    /// @dev Function to recover and authenticate a signer address in the context of `validateUserOp()`,
-    /// called only on signatures that were not constructed using the modular verification flag
-    /// @notice Accounts do not express opinion on whether the `signer` is available, ie encoded into `userOp.signature`,
-    /// so the OZ ECDSA library should be used rather than the SignatureChecker
-    function _defaultValidateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
-        internal
-        view
-        virtual
-        returns (bool);
-
     /// @dev View function to limit callers to only the EntryPoint contract of this chain
     function _checkSenderIsEntryPoint() internal virtual {
         if (msg.sender != entryPoint) revert NotEntryPoint(msg.sender);
