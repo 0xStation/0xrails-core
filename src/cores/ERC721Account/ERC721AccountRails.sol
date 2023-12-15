@@ -36,10 +36,10 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
     function initialize(bytes memory initData) external initializer {
         if (initData.length > 0) {
             // make msg.sender an ADMIN to ensure they have all permissions for further initialization
-            _addPermission(Operations.ADMIN, msg.sender);
+            _addPermission(Operations.ADMIN, _msgSender());
             Address.functionDelegateCall(address(this), initData);
             // remove sender ADMIN permissions
-            _removePermission(Operations.ADMIN, msg.sender);
+            _removePermission(Operations.ADMIN, _msgSender());
         }
     }
 
@@ -60,8 +60,8 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
 
     /// @inheritdoc Account
     function withdrawFromEntryPoint(address payable recipient, uint256 amount) public virtual override {
-        if (!_isAuthorized(Operations.ADMIN, msg.sender)) {
-            revert IPermissions.PermissionDoesNotExist(Operations.ADMIN, msg.sender);
+        if (!_isAuthorized(Operations.ADMIN, _msgSender())) {
+            revert IPermissions.PermissionDoesNotExist(Operations.ADMIN, _msgSender());
         }
 
         _updateState();
@@ -120,10 +120,10 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         internal
         virtual
         override
-        returns (address guard, bytes memory checkBeforeData)
+        returns (address, bytes memory)
     {
         _updateState();
-        super._beforeExecuteCall(to, value, data);
+        return super._beforeExecuteCall(to, value, data);
     }
 
     /*===================
@@ -174,29 +174,29 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
 
     function _checkCanUpdateValidators() internal virtual override {
         _updateState();
-        if (!_isAuthorized(Operations.VALIDATOR, msg.sender)) {
-            revert IPermissions.PermissionDoesNotExist(Operations.VALIDATOR, msg.sender);
+        if (!_isAuthorized(Operations.VALIDATOR, _msgSender())) {
+            revert IPermissions.PermissionDoesNotExist(Operations.VALIDATOR, _msgSender());
         }
     }
 
     function _checkCanUpdatePermissions() internal override {
         _updateState();
-        if (!_isAuthorized(Operations.PERMISSIONS, msg.sender)) {
-            revert IPermissions.PermissionDoesNotExist(Operations.PERMISSIONS, msg.sender);
+        if (!_isAuthorized(Operations.PERMISSIONS, _msgSender())) {
+            revert IPermissions.PermissionDoesNotExist(Operations.PERMISSIONS, _msgSender());
         }
     }
 
     function _checkCanUpdateGuards() internal override {
         _updateState();
-        if (!_isAuthorized(Operations.GUARDS, msg.sender)) {
-            revert IPermissions.PermissionDoesNotExist(Operations.GUARDS, msg.sender);
+        if (!_isAuthorized(Operations.GUARDS, _msgSender())) {
+            revert IPermissions.PermissionDoesNotExist(Operations.GUARDS, _msgSender());
         }
     }
 
     function _checkCanUpdateInterfaces() internal override {
         _updateState();
-        if (!_isAuthorized(Operations.INTERFACE, msg.sender)) {
-            revert IPermissions.PermissionDoesNotExist(Operations.INTERFACE, msg.sender);
+        if (!_isAuthorized(Operations.INTERFACE, _msgSender())) {
+            revert IPermissions.PermissionDoesNotExist(Operations.INTERFACE, _msgSender());
         }
     }
 
@@ -207,9 +207,9 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         // revert if sender is neither owner nor AccountGroup admin, exclude permissions on this account
         (uint256 chainId,,) = ERC6551AccountLib.token();
         if (chainId == block.chainid) {
-            require(msg.sender == owner(), "NOT_OWNER");
-        } else if (!_isAccountGroupAdmin(msg.sender)) {
-            revert IPermissions.PermissionDoesNotExist(Operations.ADMIN, msg.sender);
+            require(_msgSender() == owner(), "NOT_OWNER");
+        } else if (!_isAccountGroupAdmin(_msgSender())) {
+            revert IPermissions.PermissionDoesNotExist(Operations.ADMIN, _msgSender());
         }
     }
 
@@ -219,6 +219,6 @@ contract ERC721AccountRails is AccountRails, ERC6551Account, Initializable, IERC
         address accountGroup = address(bytes20(bytecodeSalt));
 
         _updateState();
-        IERC6551AccountGroup(accountGroup).checkValidAccountUpgrade(msg.sender, address(this), newImplementation);
+        IERC6551AccountGroup(accountGroup).checkValidAccountUpgrade(_msgSender(), address(this), newImplementation);
     }
 }

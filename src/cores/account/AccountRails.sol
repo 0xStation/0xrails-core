@@ -203,7 +203,7 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
     /// only to either the owner or entities possessing `ADMIN` or `VALIDATOR` permissions
     /// @notice Can be overridden for more restrictive access if desired
     function _checkCanUpdateValidators() internal virtual override {
-        _checkPermission(Operations.VALIDATOR, msg.sender);
+        _checkPermission(Operations.VALIDATOR, _msgSender());
     }
 
     /// @dev Provides control over Turnkey addresses to the owner only
@@ -211,23 +211,23 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
     /// function call to be called by the owner for adding valid signer accounts such as Turnkeys,
     /// is restricted to only the owner
     function _checkCanUpdatePermissions() internal virtual override {
-        _checkPermission(Operations.PERMISSIONS, msg.sender);
+        _checkPermission(Operations.PERMISSIONS, _msgSender());
     }
 
     function _checkCanUpdateGuards() internal virtual override {
-        _checkPermission(Operations.GUARDS, msg.sender);
+        _checkPermission(Operations.GUARDS, _msgSender());
     }
 
     /// @dev Permission to `Call::call()` via signature validation is restricted to either
     /// the EntryPoint, the owner, or entities possessing the `CALL`or `ADMIN` permissions
     /// @notice Mutiny by Turnkeys is prevented by granting them only the `CALL_PERMIT` permission
     function _checkCanExecuteCall() internal view virtual override {
-        bool auth = (msg.sender == entryPoint || hasPermission(Operations.CALL, msg.sender));
-        if (!auth) revert PermissionDoesNotExist(Operations.CALL, msg.sender);
+        bool auth = (msg.sender == entryPoint || hasPermission(Operations.CALL, _msgSender()));
+        if (!auth) revert PermissionDoesNotExist(Operations.CALL, _msgSender());
     }
 
     /// @dev Provides control over ERC165 layout to addresses with `INTERFACE` permission
     function _checkCanUpdateInterfaces() internal virtual override {
-        _checkPermission(Operations.INTERFACE, msg.sender);
+        _checkPermission(Operations.INTERFACE, _msgSender());
     }
 }

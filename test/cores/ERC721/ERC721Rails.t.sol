@@ -45,7 +45,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         name = "Station";
         symbol = "STN";
         // include empty init data for setup
-        initData = abi.encodeWithSelector(ERC721Rails.initialize.selector, owner, name, symbol, "");
+        initData = abi.encodeWithSelector(ERC721Rails.initialize.selector, owner, name, symbol, "", address(0x0));
 
         ERC721RailsImpl = new ERC721Rails();
         ERC721RailsProxy = ERC721Rails(
@@ -84,7 +84,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         bytes memory permissionData =
             abi.encodeWithSelector(Permissions.addPermission.selector, Operations.METADATA, metadataOperator);
 
-        newProxy.initialize(owner, "", "", permissionData);
+        newProxy.initialize(owner, "", "", permissionData, address(0x0));
 
         // assert permission was set with initialize
         assertTrue(newProxy.hasPermission(Operations.METADATA, metadataOperator));
@@ -103,7 +103,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         bytes memory extensionData =
             abi.encodeWithSelector(Extensions.setExtension.selector, uriSelector, address(metadataRouterExtension));
 
-        newProxy.initialize(owner, "", "", extensionData);
+        newProxy.initialize(owner, "", "", extensionData, address(0x0));
         assertTrue(newProxy.hasExtended(uriSelector));
         assertEq(newProxy.extensionOf(uriSelector), address(metadataRouterExtension));
         Extensions.Extension[] memory extensions = newProxy.getAllExtensions();
@@ -121,7 +121,7 @@ contract ERC721RailsTest is Test, MockAccountDeployer {
         bytes memory guardData =
             abi.encodeWithSelector(Guards.setGuard.selector, Operations.MINT, address(timeRangeGuard));
 
-        newProxy.initialize(owner, "", "", guardData);
+        newProxy.initialize(owner, "", "", guardData, address(0x0));
         assertEq(newProxy.guardOf(Operations.MINT), address(timeRangeGuard));
         Guards.Guard[] memory guards = newProxy.getAllGuards();
         assertEq(guards.length, 1);

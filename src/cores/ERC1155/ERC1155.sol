@@ -161,7 +161,7 @@ abstract contract ERC1155 is IERC1155 {
         }
     }
 
-    /// @dev overriden from OZ by adding totalSupply math
+    /// @dev overridden from OZ by adding totalSupply math
     function _update(address from, address to, uint256[] memory ids, uint256[] memory values) internal virtual {
         if (ids.length != values.length) {
             revert ERC1155InvalidArrayLength(ids.length, values.length);
@@ -249,7 +249,7 @@ abstract contract ERC1155 is IERC1155 {
         uint256 id,
         uint256 value,
         bytes memory data
-    ) private {
+    ) internal {
         if (to.code.length > 0) {
             try IERC1155Receiver(to).onERC1155Received(operator, from, id, value, data) returns (bytes4 response) {
                 if (response != IERC1155Receiver.onERC1155Received.selector) {
@@ -277,7 +277,7 @@ abstract contract ERC1155 is IERC1155 {
         uint256[] memory ids,
         uint256[] memory values,
         bytes memory data
-    ) private {
+    ) internal {
         if (to.code.length > 0) {
             try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, values, data) returns (bytes4 response)
             {

@@ -15,6 +15,7 @@ import {Operations} from "../../lib/Operations.sol";
 import {PermissionsStorage} from "../../access/permissions/PermissionsStorage.sol";
 import {IERC1155Rails} from "./interface/IERC1155Rails.sol";
 import {Initializable} from "../../lib/initializable/Initializable.sol";
+import {ERC1155Storage} from "./ERC1155Storage.sol";
 
 /// @notice This contract implements the Rails pattern to provide enhanced functionality for ERC1155 tokens.
 contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, IERC1155Rails {
@@ -29,12 +30,13 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
 
     /// @notice Cannot call initialize within a proxy constructor, only post-deployment in a factory
     /// @inheritdoc IERC1155Rails
-    function initialize(address owner_, string calldata name_, string calldata symbol_, bytes calldata initData)
+    function initialize(address owner_, string calldata name_, string calldata symbol_, bytes calldata initData, address forwarder_)
         external
         initializer
     {
         _setName(name_);
         _setSymbol(symbol_);
+        _forwarderInitializer(forwarder_);
         if (initData.length > 0) {
             /// @dev if called within a constructor, self-delegatecall will not work because this address does not yet have
             /// bytecode implementing the init functions -> revert here with nicer error message
@@ -42,10 +44,10 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
                 revert CannotInitializeWhileConstructing();
             }
             // make msg.sender the owner to ensure they have all permissions for further initialization
-            _transferOwnership(msg.sender);
+            _transferOwnership(_msgSender());
             Address.functionDelegateCall(address(this), initData);
             // if sender and owner arg are different, transfer ownership to desired address
-            if (msg.sender != owner_) {
+            if (_msgSender() != owner_) {
                 _transferOwnership(owner_);
             }
         } else {
@@ -103,10 +105,83 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
 
     /// @inheritdoc IERC1155Rails
     function burnFrom(address from, uint256 tokenId, uint256 value) external {
-        if (!hasPermission(Operations.BURN, msg.sender)) {
+        if (!hasPermission(Operations.BURN, _msgSender())) {
             _checkCanTransfer(from);
         }
         _burn(from, tokenId, value);
+    }
+
+    /// @dev Overridden to support ERC2771 meta transactions
+    function setApprovalForAll(address operator, bool approved) public virtual override {
+        _setApprovalForAll(_msgSender(), operator, approved);
+    }
+
+    /// @dev Overridden to support ERC2771 meta transactions
+    function _updateWithAcceptanceCheck(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory values,
+        bytes memory data
+    ) internal virtual override {
+        _update(from, to, ids, values);
+        if (to != address(0)) {
+            address operator = _msgSender();
+            if (ids.length == 1) {
+                uint256 id = ids[0];
+                uint256 value = values[0];
+                _doSafeTransferAcceptanceCheck(operator, from, to, id, value, data);
+            } else {
+                _doSafeBatchTransferAcceptanceCheck(operator, from, to, ids, values, data);
+            }
+        }
+    }
+
+    /// @dev Overridden to support ERC2771 meta transactions
+    function _update(address from, address to, uint256[] memory ids, uint256[] memory values) internal virtual override {
+        if (ids.length != values.length) {
+            revert ERC1155InvalidArrayLength(ids.length, values.length);
+        }
+        ERC1155Storage.Layout storage layout = ERC1155Storage.layout();
+
+        // check before
+        (address guard, bytes memory beforeCheckData) = _beforeTokenTransfers(from, to, ids, values);
+
+        address operator = _msgSender();
+
+        for (uint256 i = 0; i < ids.length; ++i) {
+            uint256 id = ids[i];
+            uint256 value = values[i];
+
+            if (from != address(0)) {
+                uint256 fromBalance = layout.balances[id][from];
+                if (fromBalance < value) {
+                    revert ERC1155InsufficientBalance(from, fromBalance, value, id);
+                }
+                layout.balances[id][from] = fromBalance - value;
+            } else {
+                // increase total supply if minting
+                layout.totalSupply[id] += value;
+            }
+
+            if (to != address(0)) {
+                layout.balances[id][to] += value;
+            } else {
+                // decrease total supply if burning
+                layout.totalSupply[id] -= value;
+            }
+        }
+
+        if (ids.length == 1) {
+            uint256 id = ids[0];
+            uint256 value = values[0];
+            emit TransferSingle(operator, from, to, id, value);
+        } else {
+            emit TransferBatch(operator, from, to, ids, values);
+        }
+
+        // check after
+        _afterTokenTransfers(guard, beforeCheckData);
     }
 
     /*===========
@@ -129,7 +204,7 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
         } else {
             operation = Operations.TRANSFER;
         }
-        bytes memory data = abi.encode(msg.sender, from, to, ids, values);
+        bytes memory data = abi.encode(_msgSender(), from, to, ids, values);
 
         return checkGuardBefore(operation, data);
     }
@@ -145,34 +220,36 @@ contract ERC1155Rails is Rails, Ownable, Initializable, TokenMetadata, ERC1155, 
 
     /// @dev Check for `Operations.TRANSFER` permission before ownership and approval
     function _checkCanTransfer(address from) internal virtual override {
-        if (!hasPermission(Operations.TRANSFER, msg.sender)) {
-            super._checkCanTransfer(from);
+        if (!hasPermission(Operations.TRANSFER, _msgSender())) {
+            if (from != _msgSender() && !isApprovedForAll(from, _msgSender())) {
+                revert ERC1155MissingApprovalForAll(_msgSender(), from);
+            }
         }
     }
 
     /// @dev Restrict Permissions write access to the `Operations.PERMISSIONS` permission
     function _checkCanUpdatePermissions() internal view override {
-        _checkPermission(Operations.PERMISSIONS, msg.sender);
+        _checkPermission(Operations.PERMISSIONS, _msgSender());
     }
 
     /// @dev Restrict Guards write access to the `Operations.GUARDS` permission
     function _checkCanUpdateGuards() internal view override {
-        _checkPermission(Operations.GUARDS, msg.sender);
+        _checkPermission(Operations.GUARDS, _msgSender());
     }
 
     /// @dev Restrict calls via Execute to the `Operations.EXECUTE` permission
     function _checkCanExecuteCall() internal view override {
-        _checkPermission(Operations.CALL, msg.sender);
+        _checkPermission(Operations.CALL, _msgSender());
     }
 
     /// @dev Restrict ERC-165 write access to the `Operations.INTERFACE` permission
     function _checkCanUpdateInterfaces() internal view override {
-        _checkPermission(Operations.INTERFACE, msg.sender);
+        _checkPermission(Operations.INTERFACE, _msgSender());
     }
 
     /// @dev Restrict TokenMetadata write access to the `Operations.METADATA` permission
     function _checkCanUpdateTokenMetadata() internal view override {
-        _checkPermission(Operations.METADATA, msg.sender);
+        _checkPermission(Operations.METADATA, _msgSender());
     }
 
     /// @dev Only the `owner` possesses Extensions write access

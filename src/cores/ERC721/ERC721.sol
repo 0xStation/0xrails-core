@@ -167,7 +167,7 @@ abstract contract ERC721 is Initializable, IERC721 {
 
     // approvals
 
-    function _approve(address operator, uint256 tokenId) internal {
+    function _approve(address operator, uint256 tokenId) internal virtual {
         if (operator == address(0)) {
             revert ApprovalInvalidOperator();
         }
@@ -184,7 +184,7 @@ abstract contract ERC721 is Initializable, IERC721 {
         emit Approval(owner, operator, tokenId);
     }
 
-    function _setApprovalForAll(address operator, bool approved) internal {
+    function _setApprovalForAll(address operator, bool approved) internal virtual {
         if (operator == address(0)) {
             revert ApprovalInvalidOperator();
         }
@@ -368,7 +368,7 @@ abstract contract ERC721 is Initializable, IERC721 {
         }
     }
 
-    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory data) internal {
+    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory data) internal virtual {
         if (to.code.length > 0) {
             try IERC721Receiver(to).onERC721Received(msg.sender, from, tokenId, data) returns (bytes4 retval) {
                 if (retval != IERC721Receiver.onERC721Received.selector) {

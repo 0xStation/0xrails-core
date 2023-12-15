@@ -63,14 +63,14 @@ contract InitializableTest is Test {
         // expect AlreadyInitialized() error when calling initialize on already-initialized proxy
         err = abi.encodeWithSelector(AlreadyInitialized.selector);
         vm.expectRevert(err);
-        proxy.initialize(owner, name, symbol, "");
+        proxy.initialize(owner, name, symbol, "", address(0x0));
     }
 
     function test_initializeImplementationRevertDisabled() public {
         bytes memory maliciousMintToCall = abi.encodeWithSelector(ERC721Rails.mintTo.selector, address(this), 42069);
 
         vm.expectRevert();
-        implementation.initialize(address(this), "", "", maliciousMintToCall);
+        implementation.initialize(address(this), "", "", maliciousMintToCall, address(0x0));
         assertEq(proxy.balanceOf(address(this)), 0);
     }
 
@@ -84,7 +84,7 @@ contract InitializableTest is Test {
 
         // attempt on impl
         vm.expectRevert();
-        implementation.initialize(address(this), "", "", transferOwnerCall);
+        implementation.initialize(address(this), "", "", transferOwnerCall, address(0x0));
 
         // attempt unauthorized transferOwnership() call nested within UUPS upgradeToAndCall()
         vm.expectRevert();
@@ -95,6 +95,6 @@ contract InitializableTest is Test {
 
         // attempt on impl
         vm.expectRevert();
-        implementation.initialize(address(this), "", "", upgradeCall);
+        implementation.initialize(address(this), "", "", upgradeCall, address(0x0));
     }
 }
