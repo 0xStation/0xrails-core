@@ -59,7 +59,7 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
         address validator = address(bytes20(userOp.signature[12:32]));
 
         if (flag == VALIDATOR_FLAG && isValidator(validator)) {
-            bytes memory formattedSig = userOp.signature[32:];
+            bytes calldata formattedSig = userOp.signature[32:];
 
             // copy userOp into memory and format for Validator module
             UserOperation memory formattedUserOp = userOp;
@@ -72,9 +72,19 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
             if (ret != 0) return ret;
         } else {
             // support non-modular signatures by default
-            // authenticate signer, terminating early with status code 1 on failure
-            bool validSigner = _defaultValidateUserOp(userOp, ethSignedUserOpHash, missingAccountFunds);
-            if (!validSigner) return 1;
+            address signer;
+            bool validSig;
+            // check if `v == 0` instead of the standard 27/28, in which case it is a contract signature
+            if (userOp.signature[64] == 0) {
+                (signer, validSig) = _isValidContractSignature(userOpHash, userOp.signature);
+            } else {
+                (signer, validSig) = _isValidECDSASignature(userOpHash, userOp.signature);
+            }
+
+            // to save gas, terminate early if a signature or authorization error was encountered
+            if (!validSig || !_isAuthorizedSigner(signer)) {
+                return 1;
+            }
         }
 
         /// @notice BLS sig aggregator and timestamp expiry are not currently supported by this contract
@@ -124,7 +134,7 @@ abstract contract AccountRails is Account, Rails, Validators, IERC1271 {
             address signer;
             bool validSig;
             // check if `v == 0` instead of the standard 27/28, in which case it is a contract signature
-            if (signature[64] == 0) { // todo : move if/else block into  _defaultIsValidSignature() and introduce _isAuthorizedSigner() for returned signer
+            if (signature[64] == 0) {
                 (signer, validSig) = _isValidContractSignature(hash, signature);
             } else {
                 (signer, validSig) = _isValidECDSASignature(hash, signature);

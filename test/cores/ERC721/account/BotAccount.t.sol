@@ -337,7 +337,7 @@ contract BotAccountTest is Test {
         UserOperation memory newUserOp = userOp;
 
         bytes32 newUserOpHash = callPermitValidator.getUserOpHash(newUserOp);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivatekey, ECDSA.toEthSignedMessageHash(newUserOpHash));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivatekey, newUserOpHash);
         bytes memory sig = abi.encodePacked(r, s, v);
 
         newUserOp.signature = sig;
@@ -402,5 +402,37 @@ contract BotAccountTest is Test {
         bytes4 retVal = botAccount.isValidSignature(newUserOpHash, contractSignature);
         bytes4 expectedVal = botAccount.isValidSignature.selector;
         assertEq(retVal, expectedVal);
+    }
+
+    function test_validateUserOpSignatureFromSmartContract() public {
+        bytes32 contractSignerSalt = bytes32(uint256(salt) + 1);
+        uint256 contractSignerOwnerPrivKey = 0xc0ffee;
+        address contractSignerOwner = vm.addr(contractSignerOwnerPrivKey);
+        BotAccount contractSigner = BotAccount(payable(botAccountFactoryProxy.createBotAccount(contractSignerSalt, contractSignerOwner, address(callPermitValidator), turnkeyArray)));
+
+        assertEq(contractSigner.owner(), contractSignerOwner);
+        assertTrue(contractSigner.hasPermission(Operations.CALL_PERMIT, testTurnkey));
+        
+        // smart contract signature params- v == 0 is used as a flag for contract signatures
+        bytes32 contractSignatureR = bytes32(abi.encode(address(contractSigner))); // encoded signer address (smart contract, not originator)
+        uint256 contractSignatureS = 65; // offset of EOA originator's signature, permissioned on contractSigner via ERC1271
+        uint8 contractSignatureV = 0;
+
+        // sign an example userOp
+        UserOperation memory newUserOp = userOp;
+        bytes32 newUserOpHash = callPermitValidator.getUserOpHash(newUserOp);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(contractSignerOwnerPrivKey, newUserOpHash);
+        bytes memory originatorSignature = abi.encodePacked(r, s, v);
+
+        bytes memory contractSignature = abi.encodePacked(contractSignatureR, contractSignatureS, contractSignatureV, originatorSignature);
+        newUserOp.signature = contractSignature;
+        
+        // add permission to smart contract signer
+        vm.prank(owner);
+        botAccount.addPermission(Operations.CALL_PERMIT, address(contractSigner));
+
+        vm.prank(entryPointAddress);
+        uint256 retUint = botAccount.validateUserOp(newUserOp, newUserOpHash, 0);
+        assertEq(retUint, 0); // expect 4337 success code 0
     }
 }
