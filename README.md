@@ -1,4 +1,4 @@
-# Rails 🧙
+# 0xRails 🧙
 
 _A Solidity framework for creating complex and evolving onchain structures._
 
@@ -16,7 +16,7 @@ For more information about the GroupOS protocol as well as our technical docs, [
 
 ## Deployments
 
-### View contract addresses of live deployments using 0xRails [at the GroupOS repository](https://github.com/0xStation/groupos#onchain-deployments)
+### View contract addresses of live deployments using 0xRails [in the `0xrails-periphery` repository](https://github.com/0xStation/0xrails-periphery#onchain-deployments)
 
 ## Contributing
 
